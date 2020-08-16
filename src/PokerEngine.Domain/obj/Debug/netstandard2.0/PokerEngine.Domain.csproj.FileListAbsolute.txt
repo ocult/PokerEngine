@@ -1,0 +1,9 @@
+D:\sln\PokerEngine\src\PokerEngine.Domain\bin\Debug\netstandard2.0\PokerEngine.Domain.deps.json
+D:\sln\PokerEngine\src\PokerEngine.Domain\bin\Debug\netstandard2.0\PokerEngine.Domain.dll
+D:\sln\PokerEngine\src\PokerEngine.Domain\bin\Debug\netstandard2.0\PokerEngine.Domain.pdb
+D:\sln\PokerEngine\src\PokerEngine.Domain\obj\Debug\netstandard2.0\PokerEngine.Domain.csprojAssemblyReference.cache
+D:\sln\PokerEngine\src\PokerEngine.Domain\obj\Debug\netstandard2.0\PokerEngine.Domain.AssemblyInfoInputs.cache
+D:\sln\PokerEngine\src\PokerEngine.Domain\obj\Debug\netstandard2.0\PokerEngine.Domain.AssemblyInfo.cs
+D:\sln\PokerEngine\src\PokerEngine.Domain\obj\Debug\netstandard2.0\PokerEngine.Domain.csproj.CoreCompileInputs.cache
+D:\sln\PokerEngine\src\PokerEngine.Domain\obj\Debug\netstandard2.0\PokerEngine.Domain.dll
+D:\sln\PokerEngine\src\PokerEngine.Domain\obj\Debug\netstandard2.0\PokerEngine.Domain.pdb

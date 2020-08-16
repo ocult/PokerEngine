@@ -1,0 +1,86 @@
+{
+  "version": 3,
+  "targets": {
+    ".NETCoreApp,Version=v3.1": {
+      "PokerEngine.Domain/1.0.0": {
+        "type": "project",
+        "framework": ".NETStandard,Version=v2.0",
+        "compile": {
+          "bin/placeholder/PokerEngine.Domain.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/PokerEngine.Domain.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "PokerEngine.Domain/1.0.0": {
+      "type": "project",
+      "path": "../PokerEngine.Domain/PokerEngine.Domain.csproj",
+      "msbuildProject": "../PokerEngine.Domain/PokerEngine.Domain.csproj"
+    }
+  },
+  "projectFileDependencyGroups": {
+    ".NETCoreApp,Version=v3.1": [
+      "PokerEngine.Domain >= 1.0.0"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\anjomar\\.nuget\\packages\\": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "D:\\sln\\PokerEngine\\src\\PokerEngine.Console\\PokerEngine.Console.csproj",
+      "projectName": "PokerEngine.Console",
+      "projectPath": "D:\\sln\\PokerEngine\\src\\PokerEngine.Console\\PokerEngine.Console.csproj",
+      "packagesPath": "C:\\Users\\anjomar\\.nuget\\packages\\",
+      "outputPath": "D:\\sln\\PokerEngine\\src\\PokerEngine.Console\\obj\\",
+      "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "C:\\Users\\anjomar\\AppData\\Roaming\\NuGet\\NuGet.Config"
+      ],
+      "originalTargetFrameworks": [
+        "netcoreapp3.1"
+      ],
+      "sources": {
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "netcoreapp3.1": {
+          "projectReferences": {
+            "D:\\sln\\PokerEngine\\src\\PokerEngine.Domain\\PokerEngine.Domain.csproj": {
+              "projectPath": "D:\\sln\\PokerEngine\\src\\PokerEngine.Domain\\PokerEngine.Domain.csproj"
+            }
+          }
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      }
+    },
+    "frameworks": {
+      "netcoreapp3.1": {
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "frameworkReferences": {
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.401\\RuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}
