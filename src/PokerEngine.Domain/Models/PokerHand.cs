@@ -9,6 +9,17 @@ namespace PokerEngine.Domain.Models
         #region Basic
         public Card[] Cards { get; private set; }
 
+        public PokerHand(string pokerHand)
+        {
+            if (string.IsNullOrWhiteSpace(pokerHand) || pokerHand.Count(c => c == ',') != 4)
+            {
+                throw new ArgumentException(nameof(pokerHand));
+            }
+
+            var cards = pokerHand.Split(",").Select(s => new Card(s.Trim()));
+            this = new PokerHand(cards.ToArray());
+        }
+
         public PokerHand(Card card1, Card card2, Card card3, Card card4, Card card5)
             : this(new Card[] { card1, card2, card3, card4, card5 }) { }
 

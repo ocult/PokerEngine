@@ -10,7 +10,32 @@ namespace PokerEngine.Domain.Models
 
         public Card(string name)        
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrWhiteSpace(name) || name.Length != 2)
+            {
+                throw new ArgumentException(nameof(name));
+            }
+            name = name.ToUpper();
+
+            Suit = name[1] switch
+            {
+                'C' => SuitEnum.Clubs,
+                'H' => SuitEnum.Hearts,
+                'S' => SuitEnum.Spades,
+                'D' => SuitEnum.Diamonds,
+                _ => throw new ArgumentException(nameof(name))
+            };
+
+            Value = name[0] switch
+            {
+                'A' => 14,
+                'T' => 10,
+                'J' => 11,
+                'Q' => 12,
+                'K' => 13,
+                _ => ushort.Parse(name[0].ToString())
+            };
+
+            Name = name;
         }
 
         public Card(ushort value, SuitEnum suit)
@@ -111,9 +136,9 @@ namespace PokerEngine.Domain.Models
 
     public enum SuitEnum
     {
-        Clubs,
-        Hearts,
-        Diamonds,
-        Spades
+        Clubs = 1,
+        Hearts = 2,
+        Spades = 3,
+        Diamonds = 4
     }
 }
