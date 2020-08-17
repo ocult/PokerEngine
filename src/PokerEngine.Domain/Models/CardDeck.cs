@@ -13,9 +13,9 @@ namespace PokerEngine.Domain.Models
             for (ushort i = 2; i < 15; i++)
             {
                 Cards.Add(new Card(i, SuitEnum.Clubs));
-                Cards.Add(new Card(i, SuitEnum.Diamonds));
                 Cards.Add(new Card(i, SuitEnum.Hearts));
                 Cards.Add(new Card(i, SuitEnum.Spades));
+                Cards.Add(new Card(i, SuitEnum.Diamonds));
             }
         }
 
@@ -46,7 +46,12 @@ namespace PokerEngine.Domain.Models
 
         public void PowerShuffle()
         {
-
+            var rng = new Random();
+            var limit = rng.Next();
+            for (var i = 0; i < limit; ++i)
+            {
+                Shuffle();
+            }
         }
     }
 }
