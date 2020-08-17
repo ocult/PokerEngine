@@ -55,7 +55,7 @@ namespace PokerEngine.XunitTest
             var s4 = GetCharSuit(se4);
             var s5 = GetCharSuit(se5);
             var hand = new PokerHand($"2{s2}, A{s1}, 4{s4}, 5{s5}, 3{s3}");
-            Assert.Equal(HandRankingEnum.StraightFlush, hand.HandRanking);
+            Assert.Equal(HandRankingEnum.Straight, hand.HandRanking);
             Assert.Collection(hand.Cards,
                               (c) => Assert.Equal(new Card($"5{s5}"), c),
                               (c) => Assert.Equal(new Card($"4{s4}"), c),
