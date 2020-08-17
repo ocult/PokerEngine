@@ -95,7 +95,14 @@ namespace PokerEngine.Domain.Models
 
         public override bool Equals(object obj)
         {
-            return base.Equals(obj);
+            if (obj == null || obj.GetType() != typeof(Card))
+            {
+                return false;
+            }
+            var card = (Card)obj;
+            var value = Value == 1 ? 14 : Value;
+            var cardValue = card.Value == 1 ? 14 : card.Value;
+            return value == cardValue && Suit == card.Suit;
         }
 
         public override int GetHashCode()

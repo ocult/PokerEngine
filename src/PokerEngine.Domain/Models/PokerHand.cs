@@ -29,7 +29,7 @@ namespace PokerEngine.Domain.Models
             {
                 throw new ArgumentOutOfRangeException(nameof(cards));
             }
-            Cards = cards.OrderByDescending(c => c).ToArray();
+            Cards = Reorder(cards);
             HandRanking = HandRankingEnum.HighCard;
             _qualified = false;
             _fourOfKind = null;
@@ -41,6 +41,11 @@ namespace PokerEngine.Domain.Models
             _pair = null;
             _threeOfKind = null;
             QualifyHand();
+        }
+
+        private static Card[] Reorder(Card[] cards)
+        {
+            return cards.OrderByDescending(c => c.Value).ToArray();
         }
 
         private static bool TryGetPokerHand(object obj, out PokerHand pokerHand)
@@ -101,6 +106,11 @@ namespace PokerEngine.Domain.Models
             Qualify(ThreeOfKind(), HandRankingEnum.ThreeOfKind);
             Qualify(TwoPairs(), HandRankingEnum.TwoPairs);
             Qualify(Pair(), HandRankingEnum.Pair);
+            if (HandRanking == HandRankingEnum.StraightFlush
+                || HandRanking == HandRankingEnum.Straight)
+            {
+                Cards = Reorder(Cards);
+            }
         }
 
         private void Qualify(Func<PokerHand, bool> qualify, HandRankingEnum ranking)
@@ -316,7 +326,7 @@ namespace PokerEngine.Domain.Models
                 && this[4].Value == 2)
             {
                 Cards[0] = new Card(1, this[0].Suit);
-                Cards.OrderByDescending(c => c.Value);
+                Cards = Reorder(Cards);
             }
             var init = this[0].Value;
             return this[1].Value == init - 1
