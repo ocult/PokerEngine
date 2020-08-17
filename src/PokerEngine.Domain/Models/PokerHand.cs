@@ -83,7 +83,14 @@ namespace PokerEngine.Domain.Models
 
         public override string ToString()
         {
-            return $"{Cards[0]}, {Cards[1]}, {Cards[2]}, {Cards[3]}, {Cards[4]}";
+            var cards = $"[{Cards[0]}, {Cards[1]}, {Cards[2]}, {Cards[3]}, {Cards[4]}]";
+            switch(HandRanking)
+            {
+                case HandRankingEnum.RoyalStraightFlush:
+                    return $"Royal straight flush of {this[0].Suit} {cards}";
+                default:                    
+                    return $"High card {cards}";
+            }
         }
 
 

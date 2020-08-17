@@ -13,14 +13,16 @@ namespace PokerEngine.XunitTest
         private const ushort V4 = 4;
 
         [Theory]
-        [InlineData('C')]
-        [InlineData('H')]
-        [InlineData('S')]
-        [InlineData('D')]
-        public void PokerHand_RoyalStraightFlush(char suit)
+        [InlineData(SuitEnum.Clubs)]
+        [InlineData(SuitEnum.Hearts)]
+        [InlineData(SuitEnum.Spades)]
+        [InlineData(SuitEnum.Diamonds)]
+        public void PokerHand_RoyalStraightFlush(SuitEnum se)
         {
+            var suit = GetCharSuit(se);
             var hand = new PokerHand($"T{suit},Q{suit},J{suit},K{suit},A{suit}");
             Assert.Equal(HandRankingEnum.RoyalStraightFlush, hand.HandRanking);
+            Assert.Equal($"Royal straight flush of {se} [A{suit}, K{suit}, Q{suit}, J{suit}, T{suit}]", hand.ToString());
         }
 
         [Theory(DisplayName = "Check all straight flush possibilities")]
