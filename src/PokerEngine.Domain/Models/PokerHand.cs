@@ -84,13 +84,12 @@ namespace PokerEngine.Domain.Models
         public override string ToString()
         {
             var cards = $"[{Cards[0]}, {Cards[1]}, {Cards[2]}, {Cards[3]}, {Cards[4]}]";
-            switch(HandRanking)
+            return HandRanking switch
             {
-                case HandRankingEnum.RoyalStraightFlush:
-                    return $"Royal straight flush of {this[0].Suit} {cards}";
-                default:                    
-                    return $"High card {cards}";
-            }
+                HandRankingEnum.RoyalStraightFlush => $"Royal straight flush of {this[0].Suit} {cards}",
+                HandRankingEnum.StraightFlush => $"A {this[0].Name[0]}-high straight flush of {this[0].Suit} {cards}",
+                _ => $"High card {cards}",
+            };
         }
 
 
@@ -113,18 +112,13 @@ namespace PokerEngine.Domain.Models
             Qualify(ThreeOfKind(), HandRankingEnum.ThreeOfKind);
             Qualify(TwoPairs(), HandRankingEnum.TwoPairs);
             Qualify(Pair(), HandRankingEnum.Pair);
-            if (HandRanking == HandRankingEnum.StraightFlush
-                || HandRanking == HandRankingEnum.Straight)
-            {
-                Cards = Reorder(Cards);
-            }
         }
 
-        private void Qualify(Func<PokerHand, bool> qualify, HandRankingEnum ranking)
+        private void Qualify(Func<PokerHand, PokerHand> qualify, HandRankingEnum ranking)
         {
             if (!_qualified)
             {
-                _qualified = qualify(this);
+                this = qualify(this);
 
                 if (_qualified)
                 {
@@ -133,51 +127,59 @@ namespace PokerEngine.Domain.Models
             }
         }
 
-        private static Func<PokerHand, bool> RoyalStraightFlush()
+        private static Func<PokerHand, PokerHand> RoyalStraightFlush()
         {
-            return (my) => my.CheckFlush()
+            return (my) =>
+            {
+                my._qualified = my.CheckFlush()
                          && my[0].Value == 14
                          && my[1].Value == 13
                          && my[2].Value == 12
                          && my[3].Value == 11
                          && my[4].Value == 10;
+                return my;
+            };
         }
 
-        private static Func<PokerHand, bool> StraightFlush()
+        private static Func<PokerHand, PokerHand> StraightFlush()
         {
-            return (my) => my.CheckFlush() && my.CheckStraight();
+            return (my) =>
+            {
+                my._qualified = my.CheckFlush() && my.CheckStraight();
+                return my;
+            };
         }
 
-        private static Func<PokerHand, bool> FourOfKind()
+        private static Func<PokerHand, PokerHand> FourOfKind()
         {
             return (my) =>
             {
                 var refKind = my[1].Value;
-                var result = my[2].Value == refKind
+                my._qualified = my[2].Value == refKind
                              && my[3].Value == refKind;
 
-                result = result && (my[0].Value == refKind || my[4].Value == refKind);
-                if (result)
+                my._qualified = my._qualified && (my[0].Value == refKind || my[4].Value == refKind);
+                if (my._qualified)
                 {
                     my._fourOfKind = refKind;
                     my._kicker = my[my[0].Value == refKind ? 0 : 4];
                     my.Cards = Reorder(my[my[0].Value == refKind ? 4 : 0], my[1], my[2], my[3], my._kicker.Value);
                 }
-                return result;
+                return my;
             };
         }
 
-        private static Func<PokerHand, bool> FullHouse()
+        private static Func<PokerHand, PokerHand> FullHouse()
         {
             return (my) =>
             {
-                var result = my[0].Value == my[1].Value
+                my._qualified = my[0].Value == my[1].Value
                              && my[3].Value == my[4].Value;
 
-                result = result && (my[2].Value == my[0].Value
+                my._qualified = my._qualified && (my[2].Value == my[0].Value
                                     || my[2].Value == my[4].Value);
 
-                if (result)
+                if (my._qualified)
                 {
                     if (my[2].Value == my[0].Value)
                     {
@@ -190,25 +192,33 @@ namespace PokerEngine.Domain.Models
                         my._pair = my[0].Value;
                     }
                 }
-                return result;
+                return my;
             };
         }
 
-        private static Func<PokerHand, bool> Flush()
-        {
-            return (my) => my.CheckFlush();
-        }
-
-        private static Func<PokerHand, bool> Straight()
-        {
-            return (my) => my.CheckStraight();
-        }
-
-        private static Func<PokerHand, bool> ThreeOfKind()
+        private static Func<PokerHand, PokerHand> Flush()
         {
             return (my) =>
             {
-                var result = false;
+                my._qualified = my.CheckFlush();
+                return my;
+            };
+        }
+
+        private static Func<PokerHand, PokerHand> Straight()
+        {
+            return (my) =>
+            {
+                my._qualified = my.CheckStraight();
+                return my;
+            };
+        }
+
+        private static Func<PokerHand, PokerHand> ThreeOfKind()
+        {
+            return (my) =>
+            {
+                my._qualified = false;
                 if (my[2].Value == my[0].Value)
                 {
                     my._threeOfKind = my[0].Value;
@@ -217,7 +227,7 @@ namespace PokerEngine.Domain.Models
                 }
                 else if (my[2].Value == my[4].Value)
                 {
-                    result = true;
+                    my._qualified = true;
                     my._threeOfKind = my[4].Value;
                     my._kicker = my[0];
                     my._secondKicker = my[1];
@@ -225,24 +235,24 @@ namespace PokerEngine.Domain.Models
                 }
                 else if (my[2].Value == my[1].Value && my[2].Value == my[3].Value)
                 {
-                    result = true;
+                    my._qualified = true;
                     my._threeOfKind = my[2].Value;
                     my._kicker = my[0];
                     my._secondKicker = my[4];
                     my.Cards = Reorder(my[1], my[2], my[3], my._kicker.Value, my._secondKicker.Value);
                 }
-                return result;
+                return my;
             };
         }
 
-        private static Func<PokerHand, bool> TwoPairs()
+        private static Func<PokerHand, PokerHand> TwoPairs()
         {
             return (my) =>
             {
-                var result = false;
+                my._qualified = false;
                 if (my[1].Value == my[2].Value && my[3].Value == my[4].Value)
                 {
-                    result = true;
+                    my._qualified = true;
                     my._kicker = my[0];
                     my._highPair = my[1].Value;
                     my._lowPair = my[3].Value;
@@ -250,7 +260,7 @@ namespace PokerEngine.Domain.Models
                 }
                 else if (my[0].Value == my[1].Value && my[3].Value == my[4].Value)
                 {
-                    result = true;
+                    my._qualified = true;
                     my._kicker = my[2];
                     my._highPair = my[0].Value;
                     my._lowPair = my[3].Value;
@@ -258,23 +268,23 @@ namespace PokerEngine.Domain.Models
                 }
                 else if (my[0].Value == my[1].Value && my[2].Value == my[3].Value)
                 {
-                    result = true;
+                    my._qualified = true;
                     my._kicker = my[4];
                     my._highPair = my[0].Value;
                     my._lowPair = my[2].Value;
                 }
-                return result;
+                return my;
             };
         }
 
-        private static Func<PokerHand, bool> Pair()
+        private static Func<PokerHand, PokerHand> Pair()
         {
             return (my) =>
             {
-                var result = false;
+                my._qualified = false;
                 if (my[0].Value == my[1].Value)
                 {
-                    result = true;
+                    my._qualified = true;
                     my._pair = my[0].Value;
                     my._kicker = my[2];
                     my._secondKicker = my[3];
@@ -282,7 +292,7 @@ namespace PokerEngine.Domain.Models
                 }
                 else if (my[1].Value == my[2].Value)
                 {
-                    result = true;
+                    my._qualified = true;
                     my._pair = my[1].Value;
                     my._kicker = my[0];
                     my._secondKicker = my[3];
@@ -291,7 +301,7 @@ namespace PokerEngine.Domain.Models
                 }
                 else if (my[2].Value == my[3].Value)
                 {
-                    result = true;
+                    my._qualified = true;
                     my._pair = my[2].Value;
                     my._kicker = my[0];
                     my._secondKicker = my[1];
@@ -300,14 +310,14 @@ namespace PokerEngine.Domain.Models
                 }
                 else if (my[3].Value == my[4].Value)
                 {
-                    result = true;
+                    my._qualified = true;
                     my._pair = my[3].Value;
                     my._kicker = my[0];
                     my._secondKicker = my[1];
                     my._lastKicker = my[2];
                     my.Cards = Reorder(my[3], my[4], my._kicker.Value, my._secondKicker.Value, my._lastKicker.Value);
                 }
-                return result;
+                return my;
             };
         }
         private static Card[] Reorder(Card card1, Card card2, Card card3, Card card4, Card card5)
@@ -343,7 +353,7 @@ namespace PokerEngine.Domain.Models
         }
         #endregion
 
-        #region Special private fields
+        #region Comparing
         private ushort? _fourOfKind;
         private Card? _kicker;
         private Card? _secondKicker;
@@ -352,20 +362,74 @@ namespace PokerEngine.Domain.Models
         private ushort? _pair;
         private ushort? _highPair;
         private ushort? _lowPair;
-        #endregion
-    }
 
-    public enum HandRankingEnum
-    {
-        HighCard = 1,
-        Pair = 2,
-        TwoPairs = 3,
-        ThreeOfKind = 4,
-        Straight = 5,
-        Flush = 6,
-        FullHouse = 7,
-        FourOfKind = 8,
-        StraightFlush = 9,
-        RoyalStraightFlush = 10
-    }
+        public static bool operator > (PokerHand handA, PokerHand handB)
+        {
+            if (handA.HandRanking != handB.HandRanking)
+            {
+                return handA.HandRanking > handB.HandRanking;
+            }
+            return handA.HandRanking switch
+            {
+                HandRankingEnum.RoyalStraightFlush => false,
+                HandRankingEnum.FourOfKind => handA._fourOfKind > handB._fourOfKind 
+                                              || handA._kicker > handB._kicker,
+                HandRankingEnum.FullHouse => handA._threeOfKind > handB._threeOfKind 
+                                             || handA._pair > handB._pair,
+                HandRankingEnum.ThreeOfKind => handA._threeOfKind > handB._threeOfKind
+                                               || handA._kicker > handB._kicker
+                                               || handA._secondKicker > handB._secondKicker,
+                HandRankingEnum.TwoPairs => handA._highPair > handB._highPair
+                                            || handA._lowPair > handB._lowPair
+                                            || handA._kicker > handB._kicker,
+                HandRankingEnum.Pair => handA._pair > handB._pair
+                                        || handA._kicker > handB._kicker
+                                        || handA._secondKicker > handB._secondKicker
+                                        || handA._lastKicker > handB._lastKicker,
+                _ => handA[0] > handB[0]
+                     || handA[1] > handB[1]
+                     || handA[2] > handB[2]
+                     || handA[3] > handB[3]
+                     || handA[4] > handB[4]
+            };
+        }
+
+        public static bool operator < (PokerHand handA, PokerHand handB)
+        {
+            return handB > handA;
+        }
+
+        public static bool operator >= (PokerHand handA, PokerHand handB)
+        {
+            if (handA.HandRanking != handB.HandRanking)
+            {
+                return handA.HandRanking >= handB.HandRanking;
+            }
+            return handA[0] >= handB[0]
+                   || handA[1] >= handB[1]
+                   || handA[2] >= handB[2]
+                   || handA[3] >= handB[3]
+                   || handA[4] >= handB[4];
+        }
+
+        public static bool operator <= (PokerHand handA, PokerHand handB)
+        {
+            return handB >= handA;
+        }
+    #endregion
+}
+
+public enum HandRankingEnum
+{
+    HighCard = 1,
+    Pair = 2,
+    TwoPairs = 3,
+    ThreeOfKind = 4,
+    Straight = 5,
+    Flush = 6,
+    FullHouse = 7,
+    FourOfKind = 8,
+    StraightFlush = 9,
+    RoyalStraightFlush = 10
+}
 }

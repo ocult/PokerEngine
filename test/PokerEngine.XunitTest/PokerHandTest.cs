@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using PokerEngine.Domain.Models;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace PokerEngine.XunitTest
 {
