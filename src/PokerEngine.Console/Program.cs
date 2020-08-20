@@ -30,14 +30,15 @@ namespace PokerEngine.Console
                 MSC.WriteLine("What's yours cards?");
                 cards = MSC.ReadLine();
             }
+            cards = cards.ToUpperInvariant();
 
-            if (cards == "quit" || cards == "exit" || cards == "q")
+            if (cards.StartsWith("QUIT") || cards.StartsWith("EXIT") || cards == "Q")
             {
                 return;
             }
             try
             {
-                if (cards.StartsWith("texas"))
+                if (cards.StartsWith("TEXAS"))
                 {
                     var strPlayers = string.Join("", cards.Skip(6)).Trim();
                     if (!ushort.TryParse(strPlayers, out var players))
@@ -48,7 +49,7 @@ namespace PokerEngine.Console
                     ReadCards();
                     return;
                 }
-                else if (cards.StartsWith("random") || cards.StartsWith("texas"))
+                else if (cards.StartsWith("RANDOM"))
                 {
                     var strPlayers = string.Join("", cards.Skip(7)).Trim();
                     if (!ushort.TryParse(strPlayers, out var players))
@@ -92,6 +93,7 @@ namespace PokerEngine.Console
                 playersCards[i] = playersCards[i].Append(_deck.Pick());
                 MSC.WriteLine($"Player #{i} have [{playersCards[i].ElementAt(0)}, {playersCards[i].ElementAt(1)}] in hand");
             }
+            MSC.Read();
             _deck.Pick();
             _deck.Pick();
             var tableCards = new List<Card>
@@ -101,20 +103,20 @@ namespace PokerEngine.Console
                 _deck.Pick()
             };
             MSC.WriteLine($"Table flop is [{tableCards[0]}, {tableCards[1]}, {tableCards[2]}]");
+            MSC.ReadLine();
             _deck.Pick();
             tableCards.Add(_deck.Pick());
             MSC.WriteLine($"Table turn is {tableCards[3]}");
+            MSC.ReadLine();
             _deck.Pick();
             tableCards.Add(_deck.Pick());
             MSC.WriteLine($"Table river is {tableCards[4]}");
+            MSC.ReadLine();
 
             var hands = new Dictionary<ushort, PokerHand>();
             for (ushort i = 1; i <= players; i++)
             {
-                var possibleHands = new List<PokerHand>
-                {
-                    new PokerHand(tableCards.ToArray())
-                };
+                var possibleHands = new List<PokerHand>();
                 for (ushort c = 0; c < 5; c++)
                 {
                     var card1 = c != 0 ? tableCards[0] : playersCards[i].ElementAt(0);
@@ -143,22 +145,18 @@ namespace PokerEngine.Console
 
                     possibleHands.Add(new PokerHand(card1, card2, card3, card4, card5));
                 }
-                
-                var bestHand = PrintPossibles(possibleHands, i).First();
+
+                var bestHand = possibleHands.OrderBy(h => h).First();
+                MSC.WriteLine($"A player #{i} best possible hand is {bestHand}");
                 hands.Add(i, bestHand);
             }
+            hands.Add(0, new PokerHand(tableCards.ToArray()));
             var playersHands = hands.OrderBy((a) => a.Value).ToList();
-            PrintWinner(playersHands);
-        }
 
-        private static IOrderedEnumerable<PokerHand> PrintPossibles(List<PokerHand> possibleHands, ushort? p = null)
-        {
-            var rankedHands = possibleHands.OrderBy(hand => hand);
-            foreach (var item in rankedHands)
-            {
-                MSC.WriteLine($"A player #{p} possible hand is {item}");
-            }
-            return rankedHands;
+            MSC.ReadLine();
+            PrintWinner(playersHands);
+            _deck = new CardDeck();
+            _deck.PowerShuffle();
         }
 
         private static void RandomCards(ushort players)
@@ -176,11 +174,11 @@ namespace PokerEngine.Console
         private static void PrintWinner(List<KeyValuePair<ushort, PokerHand>> playersHands)
         {
             var win = playersHands.FirstOrDefault().Key;
-            MSC.WriteLine($"The winner is player #{win}".ToUpperInvariant());
+            MSC.WriteLine(win == 0 ? "The table winner" : $"The winner is player #{win}".ToUpperInvariant());
             MSC.WriteLine($"Ranked players hands:");
             foreach (var item in playersHands)
             {
-                MSC.WriteLine($"Player #{item.Key} haves {item.Value}");
+                MSC.WriteLine(item.Key == 0 ? $"Table has {item.Value}" : $"Player #{item.Key} has {item.Value}");
             }
         }
     }

@@ -92,6 +92,17 @@ namespace PokerEngine.XunitTest
             Assert.Equal(fullName, hand.ToString());
         }
 
+        [Theory]
+        [InlineData("AC, KC, JH, 9D, 3D", "AC, KC, JH, 9D, 6S", 1)]
+        [InlineData("AC, KC, JH, 9D, 5D", "AC, KC, JH, 9D, 4S", -1)]
+        [InlineData("AC, KC, JH, 9D, 4D", "AC, KC, JH, 9D, 4S", 0)]
+        public void CompareTwoHands(string cardsA, string cardsB, int compare)
+        {
+            var handA = new PokerHand(cardsA);
+            var handB = new PokerHand(cardsB);
+            Assert.Equal(compare, handA.CompareTo(handB));
+        }
+
         public static IEnumerable<object[]> NotFlushSuits()
         {
             uint s1 = 1;

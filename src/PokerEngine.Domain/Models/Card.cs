@@ -2,7 +2,7 @@ using System;
 
 namespace PokerEngine.Domain.Models
 {
-    public struct Card : IComparable<Card>
+    public struct Card : IComparable<Card>, IEquatable<Card>
     {
         public string Name { get; private set; }
         public string ValueName => GetValueName(Value);
@@ -127,16 +127,20 @@ namespace PokerEngine.Domain.Models
             return Name;
         }
 
+        public bool Equals(Card other)
+        {
+            var value = Value == 1 ? 14 : Value;
+            var cardValue = other.Value == 1 ? 14 : other.Value;
+            return value == cardValue && Suit == other.Suit;
+        }
+
         public override bool Equals(object obj)
         {
             if (obj == null || obj.GetType() != typeof(Card))
             {
                 return false;
             }
-            var card = (Card)obj;
-            var value = Value == 1 ? 14 : Value;
-            var cardValue = card.Value == 1 ? 14 : card.Value;
-            return value == cardValue && Suit == card.Suit;
+            return Equals((Card)obj);            
         }
 
         public override int GetHashCode()

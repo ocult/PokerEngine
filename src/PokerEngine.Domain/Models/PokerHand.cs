@@ -383,24 +383,20 @@ namespace PokerEngine.Domain.Models
             {
                 HandRankingEnum.RoyalStraightFlush => false,
                 HandRankingEnum.FourOfKind => handA._fourOfKind > handB._fourOfKind
-                                              || handA._kicker > handB._kicker,
+                                              || (handA._fourOfKind == handB._fourOfKind && handA._kicker > handB._kicker),
                 HandRankingEnum.FullHouse => handA._threeOfKind > handB._threeOfKind
-                                             || handA._pair > handB._pair,
+                                             || (handA._threeOfKind == handB._threeOfKind && handA._pair > handB._pair),
                 HandRankingEnum.ThreeOfKind => handA._threeOfKind > handB._threeOfKind
-                                               || handA._kicker > handB._kicker
-                                               || handA._secondKicker > handB._secondKicker,
+                                               || (handA._threeOfKind == handB._threeOfKind && handA._kicker > handB._kicker)
+                                               || (handA._kicker == handB._kicker && handA._secondKicker > handB._secondKicker),
                 HandRankingEnum.TwoPairs => handA._highPair > handB._highPair
-                                            || handA._lowPair > handB._lowPair
-                                            || handA._kicker > handB._kicker,
+                                            || (handA._highPair == handB._highPair && handA._lowPair > handB._lowPair)
+                                            || (handA._lowPair == handB._lowPair && handA._kicker > handB._kicker),
                 HandRankingEnum.Pair => handA._pair > handB._pair
-                                        || handA._kicker > handB._kicker
-                                        || handA._secondKicker > handB._secondKicker
-                                        || handA._lastKicker > handB._lastKicker,
-                _ => handA[0] > handB[0]
-                     || (handA[0].Value == handB[0].Value && handA[1] > handB[1])
-                     || (handA[1].Value == handB[1].Value && handA[2] > handB[2])
-                     || (handA[2].Value == handB[2].Value && handA[3] > handB[3])
-                     || (handA[3].Value == handB[3].Value && handA[4] > handB[4])
+                                        || (handA._pair == handB._pair && handA._kicker > handB._kicker)
+                                        || (handA._kicker == handB._kicker && handA._secondKicker > handB._secondKicker)
+                                        || (handA._secondKicker == handB._secondKicker && handA._lastKicker > handB._lastKicker),
+                _ => Compare(handA, handB) ?? false
             };
         }
 
@@ -415,11 +411,34 @@ namespace PokerEngine.Domain.Models
             {
                 return handA.HandRanking > handB.HandRanking;
             }
-            return handA[0] >= handB[0]
-                   || (handA[0].Value == handB[0].Value && handA[1] >= handB[1])
-                   || (handA[1].Value == handB[1].Value && handA[2] >= handB[2])
-                   || (handA[2].Value == handB[2].Value && handA[3] >= handB[3])
-                   || (handA[3].Value == handB[3].Value && handA[4] >= handB[4]);
+
+            return Compare(handA, handB) ?? handA[4].Value == handB[4].Value;
+        }
+
+        private static bool? Compare(PokerHand handA, PokerHand handB)
+        {
+            _ = Check(handA, handB, 0, out bool? result);
+            _ = result.HasValue || Check(handA, handB, 1, out result);
+            _ = result.HasValue || Check(handA, handB, 2, out result);
+            _ = result.HasValue || Check(handA, handB, 3, out result);
+            _ = result.HasValue || Check(handA, handB, 4, out result);
+            return result;
+        }
+
+        public static bool Check(PokerHand handA, PokerHand handB, ushort index, out bool? result)
+        {
+            result = null;
+            if (handA[index] > handB[index])
+            {
+                result = true;                
+                return false;
+            }
+            else if (handA[index] < handB[index])
+            {
+                result = false;
+                return false;
+            }
+            return true;
         }
 
         public static bool operator <=(PokerHand handA, PokerHand handB)
