@@ -2,10 +2,11 @@ using System;
 
 namespace PokerEngine.Domain.Models
 {
-    public struct Card
+    public struct Card : IComparable<Card>
     {
         public string Name { get; private set; }
         public string ValueName => GetValueName(Value);
+        public string LowerValueName => ValueName.ToLowerInvariant();
         public SuitEnum Suit { get; }
         public ushort Value { get; }
 
@@ -90,16 +91,16 @@ namespace PokerEngine.Domain.Models
         }
 
         
-        public static string GetValueName(ushort value)
+        public static string GetValueName(ushort value, bool pluralize = false)
         {
-            return value switch
+            var name = value switch
             {
                 1 => "Ace",
                 2 => "Two",
                 3 => "Three",
                 4 => "Four",
                 5 => "Five",
-                6 => "Sixe",
+                6 => "Six",
                 7 => "Seven",
                 8 => "Eight",
                 9 => "Nine",
@@ -110,10 +111,15 @@ namespace PokerEngine.Domain.Models
                 14 => "Ace",
                 _ => value.ToString(),
             };
+            return !pluralize ? name : value switch
+            {
+                6 => "Sixes",
+                _ => $"{name}s"
+            };
         }
-        public static string GetLowerValueName(ushort value)
+        public static string GetLowerValueName(ushort value, bool pluralize = false)
         {
-            return GetValueName(value).ToLowerInvariant();
+            return GetValueName(value, pluralize).ToLowerInvariant();
         }
 
         public override string ToString()
@@ -136,6 +142,11 @@ namespace PokerEngine.Domain.Models
         public override int GetHashCode()
         {
             return base.GetHashCode();
+        }
+
+        public int CompareTo(Card other)
+        {
+            return this >= other ? this > other ? -1 : 0 : 1;
         }
 
         public static bool operator ==(Card cardA, Card cardB)

@@ -82,7 +82,8 @@ namespace PokerEngine.XunitTest
         [InlineData("JH,TH,9H,QH,8H", HandRankingEnum.StraightFlush, "A queen-high straight flush of Hearts")]
         [InlineData("6S,TS,9S,7S,8S", HandRankingEnum.StraightFlush, "A ten-high straight flush of Spades")]
         [InlineData("3D,AD,4D,2D,5D", HandRankingEnum.StraightFlush, "A five-high straight flush of Diamonds")]
-        [InlineData("AD,AH,AS,AC,KC", HandRankingEnum.FourOfKind, "A four of a kind, aces with a king kicker")]
+        [InlineData("AD,AH,AS,AC,6C", HandRankingEnum.FourOfKind, "A four of aces with a six kicker")]
+        [InlineData("6D,6S,6H,6C,AH", HandRankingEnum.FourOfKind, "A four of sixes with a ace kicker")]
         public void PokerHandRankingName(string cards, HandRankingEnum rank, string name)
         {
             var hand = new PokerHand(cards);

@@ -91,13 +91,13 @@ namespace PokerEngine.Domain.Models
             {
                 HandRankingEnum.RoyalStraightFlush => $"A royal straight flush of {this[0].Suit}",
                 HandRankingEnum.StraightFlush => $"A {this[0].ValueName.ToLowerInvariant()}-high straight flush of {this[0].Suit}",
-                HandRankingEnum.FourOfKind => $"A four of a kind, {Card.GetLowerValueName(_fourOfKind.Value)}s with a {_kicker.Value.ValueName} kicker",
-                HandRankingEnum.FullHouse => $"A full house, {Card.GetLowerValueName(_threeOfKind.Value)}s over {Card.GetLowerValueName(_pair.Value)}s",
+                HandRankingEnum.FourOfKind => $"A four of {Card.GetLowerValueName(_fourOfKind.Value, true)} with a {_kicker.Value.LowerValueName} kicker",
+                HandRankingEnum.FullHouse => $"A full house, {Card.GetLowerValueName(_threeOfKind.Value, true)} over {Card.GetLowerValueName(_pair.Value, true)}",
                 HandRankingEnum.Flush => $"A {this[0].ValueName.ToLowerInvariant()}-high flush of {this[0].Suit}",
                 HandRankingEnum.Straight => $"A {this[0].ValueName.ToLowerInvariant()}-high straight",
-                HandRankingEnum.ThreeOfKind => $"A three of a kind, {Card.GetLowerValueName(_threeOfKind.Value)}s with a {_kicker.Value.ValueName} kicker",
-                HandRankingEnum.TwoPairs => $"A two pairs, {Card.GetLowerValueName(_highPair.Value)}s and {Card.GetLowerValueName(_lowPair.Value)}s with {_kicker} kicker",
-                HandRankingEnum.Pair => $"A pair, {Card.GetLowerValueName(_pair.Value)}s with a {_kicker.Value.ValueName} kicker",
+                HandRankingEnum.ThreeOfKind => $"A three of {Card.GetLowerValueName(_threeOfKind.Value, true)} with a {_kicker.Value.LowerValueName} kicker",
+                HandRankingEnum.TwoPairs => $"A two pairs, {Card.GetLowerValueName(_highPair.Value, true)} and {Card.GetLowerValueName(_lowPair.Value, true)} with {_kicker.Value.LowerValueName} kicker",
+                HandRankingEnum.Pair => $"A pair of {Card.GetLowerValueName(_pair.Value, true)} with a {_kicker.Value.LowerValueName} kicker",
                 _ => $"A {this[0].ValueName.ToLowerInvariant()} high card",
             };
             return $"{name} {CardsString}";
@@ -397,10 +397,10 @@ namespace PokerEngine.Domain.Models
                                         || handA._secondKicker > handB._secondKicker
                                         || handA._lastKicker > handB._lastKicker,
                 _ => handA[0] > handB[0]
-                     || handA[1] > handB[1]
-                     || handA[2] > handB[2]
-                     || handA[3] > handB[3]
-                     || handA[4] > handB[4]
+                     || (handA[0].Value == handB[0].Value && handA[1] > handB[1])
+                     || (handA[1].Value == handB[1].Value && handA[2] > handB[2])
+                     || (handA[2].Value == handB[2].Value && handA[3] > handB[3])
+                     || (handA[3].Value == handB[3].Value && handA[4] > handB[4])
             };
         }
 
@@ -413,13 +413,13 @@ namespace PokerEngine.Domain.Models
         {
             if (handA.HandRanking != handB.HandRanking)
             {
-                return handA.HandRanking >= handB.HandRanking;
+                return handA.HandRanking > handB.HandRanking;
             }
             return handA[0] >= handB[0]
-                   || handA[1] >= handB[1]
-                   || handA[2] >= handB[2]
-                   || handA[3] >= handB[3]
-                   || handA[4] >= handB[4];
+                   || (handA[0].Value == handB[0].Value && handA[1] >= handB[1])
+                   || (handA[1].Value == handB[1].Value && handA[2] >= handB[2])
+                   || (handA[2].Value == handB[2].Value && handA[3] >= handB[3])
+                   || (handA[3].Value == handB[3].Value && handA[4] >= handB[4]);
         }
 
         public static bool operator <=(PokerHand handA, PokerHand handB)
@@ -429,7 +429,7 @@ namespace PokerEngine.Domain.Models
 
         public int CompareTo(PokerHand a)
         {
-            return this > a ? -1 : 1;
+            return this >= a ? this > a ? -1 : 0 : 1;
         }
         #endregion
     }
