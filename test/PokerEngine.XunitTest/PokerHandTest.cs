@@ -11,7 +11,7 @@ namespace PokerEngine.XunitTest
         private const ushort V1 = 1;
         private const ushort V2 = 2;
         private const ushort V3 = 3;
-        private const ushort V4 = 4;
+        private const ushort V4 = 4;       
 
         [Theory]
         [InlineData(SuitEnum.Clubs)]
@@ -72,6 +72,25 @@ namespace PokerEngine.XunitTest
             Assert.Equal(HandRankingEnum.Straight, hand.HandRanking);
         }
 
+
+        [Theory(DisplayName = "Check ranking and names")]
+        [InlineData("TC,JC,QC,KC,AC", HandRankingEnum.RoyalStraightFlush, "A royal straight flush of Clubs")]
+        [InlineData("TH,QH,JH,KH,AH", HandRankingEnum.RoyalStraightFlush, "A royal straight flush of Hearts")]
+        [InlineData("JS,TS,QS,KS,AS", HandRankingEnum.RoyalStraightFlush, "A royal straight flush of Spades")]
+        [InlineData("JD,TD,AD,QD,KD", HandRankingEnum.RoyalStraightFlush, "A royal straight flush of Diamonds")]
+        [InlineData("JC,TC,9C,QC,KC", HandRankingEnum.StraightFlush, "A king-high straight flush of Clubs")]
+        [InlineData("JH,TH,9H,QH,8H", HandRankingEnum.StraightFlush, "A queen-high straight flush of Hearts")]
+        [InlineData("6S,TS,9S,7S,8S", HandRankingEnum.StraightFlush, "A ten-high straight flush of Spades")]
+        [InlineData("3D,AD,4D,2D,5D", HandRankingEnum.StraightFlush, "A five-high straight flush of Diamonds")]
+        [InlineData("AD,AH,AS,AC,KC", HandRankingEnum.FourOfKind, "A four of a kind, aces with a king kicker")]
+        public void PokerHandRankingName(string cards, HandRankingEnum rank, string name)
+        {
+            var hand = new PokerHand(cards);
+            var fullName = $"{name} {hand.CardsString}";
+            Assert.Equal(rank, hand.HandRanking);
+            Assert.Equal(fullName, hand.ToString());
+        }
+
         public static IEnumerable<object[]> NotFlushSuits()
         {
             uint s1 = 1;
@@ -128,6 +147,7 @@ namespace PokerEngine.XunitTest
             }
         }
 
+        #region Helpers
         private static char GetCharSuit(SuitEnum s1)
         {
             return GetCharSuit((uint)s1);
@@ -185,5 +205,6 @@ namespace PokerEngine.XunitTest
             var shuffle = new Random();
             return defaultSuit ?? (SuitEnum)shuffle.Next(1, 4);
         }
+        #endregion
     }
 }

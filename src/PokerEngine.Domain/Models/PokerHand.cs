@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace PokerEngine.Domain.Models
 {
-    public struct PokerHand
+    public struct PokerHand : IComparable<PokerHand>
     {
         #region Basic
         public Card[] Cards { get; private set; }
@@ -81,22 +81,26 @@ namespace PokerEngine.Domain.Models
                    + Cards[4].GetHashCode();
         }
 
+        public static string GetCardsString(IList<Card> cards) => $"{cards[0]}, {cards[1]}, {cards[2]}, {cards[3]}, {cards[4]}";
+
+        public string CardsString => $"[{GetCardsString(Cards)}]";
+
         public override string ToString()
         {
-            var cards = $"[{Cards[0]}, {Cards[1]}, {Cards[2]}, {Cards[3]}, {Cards[4]}]";
-            return HandRanking switch
+            string name = HandRanking switch
             {
-                HandRankingEnum.RoyalStraightFlush => $"A royal straight flush of {this[0].Suit} {cards}",                
-                HandRankingEnum.StraightFlush => $"A {this[0].ValueName.ToLowerInvariant()}-high straight flush of {this[0].Suit} {cards}",
-                HandRankingEnum.FourOfKind => $"A four of a kind, {Card.GetLowerValueName(_fourOfKind.Value)}s with {_kicker} kicker {cards}",
-                HandRankingEnum.FullHouse => $"A full house, {Card.GetLowerValueName(_threeOfKind.Value)}s over {Card.GetLowerValueName(_pair.Value)}s {cards}",
-                HandRankingEnum.Flush => $"A {this[0].ValueName.ToLowerInvariant()}-high flush of {this[0].Suit} {cards}",
-                HandRankingEnum.Straight => $"A {this[0].ValueName.ToLowerInvariant()}-high straight {cards}",
-                HandRankingEnum.ThreeOfKind => $"A three of a kind, {Card.GetLowerValueName(_threeOfKind.Value)}s with {_kicker} kicker {cards}",
-                HandRankingEnum.TwoPairs => $"A two pairs, {Card.GetLowerValueName(_highPair.Value)}s and {Card.GetLowerValueName(_lowPair.Value)}s with {_kicker} kicker {cards}",
-                HandRankingEnum.Pair => $"A pair, {Card.GetLowerValueName(_pair.Value)}s with {_kicker} kicker {cards}",
-                _ => $"High card {cards}",
+                HandRankingEnum.RoyalStraightFlush => $"A royal straight flush of {this[0].Suit}",
+                HandRankingEnum.StraightFlush => $"A {this[0].ValueName.ToLowerInvariant()}-high straight flush of {this[0].Suit}",
+                HandRankingEnum.FourOfKind => $"A four of a kind, {Card.GetLowerValueName(_fourOfKind.Value)}s with a {_kicker.Value.ValueName} kicker",
+                HandRankingEnum.FullHouse => $"A full house, {Card.GetLowerValueName(_threeOfKind.Value)}s over {Card.GetLowerValueName(_pair.Value)}s",
+                HandRankingEnum.Flush => $"A {this[0].ValueName.ToLowerInvariant()}-high flush of {this[0].Suit}",
+                HandRankingEnum.Straight => $"A {this[0].ValueName.ToLowerInvariant()}-high straight",
+                HandRankingEnum.ThreeOfKind => $"A three of a kind, {Card.GetLowerValueName(_threeOfKind.Value)}s with a {_kicker.Value.ValueName} kicker",
+                HandRankingEnum.TwoPairs => $"A two pairs, {Card.GetLowerValueName(_highPair.Value)}s and {Card.GetLowerValueName(_lowPair.Value)}s with {_kicker} kicker",
+                HandRankingEnum.Pair => $"A pair, {Card.GetLowerValueName(_pair.Value)}s with a {_kicker.Value.ValueName} kicker",
+                _ => $"A {this[0].ValueName.ToLowerInvariant()} high card",
             };
+            return $"{name} {CardsString}";
         }
 
         public Card this[int i] => Cards[i];
@@ -168,8 +172,8 @@ namespace PokerEngine.Domain.Models
                 if (my._qualified)
                 {
                     my._fourOfKind = refKind;
-                    my._kicker = my[my[0].Value == refKind ? 0 : 4];
-                    my.Cards = Reorder(my[my[0].Value == refKind ? 4 : 0], my[1], my[2], my[3], my._kicker.Value);
+                    my._kicker = my[my[0].Value == refKind ? 4 : 0];
+                    my.Cards = Reorder(my[my[0].Value == refKind ? 0 : 4], my[1], my[2], my[3], my._kicker.Value);
                 }
                 return my;
             };
@@ -369,7 +373,7 @@ namespace PokerEngine.Domain.Models
         private ushort? _highPair;
         private ushort? _lowPair;
 
-        public static bool operator > (PokerHand handA, PokerHand handB)
+        public static bool operator >(PokerHand handA, PokerHand handB)
         {
             if (handA.HandRanking != handB.HandRanking)
             {
@@ -378,9 +382,9 @@ namespace PokerEngine.Domain.Models
             return handA.HandRanking switch
             {
                 HandRankingEnum.RoyalStraightFlush => false,
-                HandRankingEnum.FourOfKind => handA._fourOfKind > handB._fourOfKind 
+                HandRankingEnum.FourOfKind => handA._fourOfKind > handB._fourOfKind
                                               || handA._kicker > handB._kicker,
-                HandRankingEnum.FullHouse => handA._threeOfKind > handB._threeOfKind 
+                HandRankingEnum.FullHouse => handA._threeOfKind > handB._threeOfKind
                                              || handA._pair > handB._pair,
                 HandRankingEnum.ThreeOfKind => handA._threeOfKind > handB._threeOfKind
                                                || handA._kicker > handB._kicker
@@ -400,12 +404,12 @@ namespace PokerEngine.Domain.Models
             };
         }
 
-        public static bool operator < (PokerHand handA, PokerHand handB)
+        public static bool operator <(PokerHand handA, PokerHand handB)
         {
             return handB > handA;
         }
 
-        public static bool operator >= (PokerHand handA, PokerHand handB)
+        public static bool operator >=(PokerHand handA, PokerHand handB)
         {
             if (handA.HandRanking != handB.HandRanking)
             {
@@ -418,24 +422,29 @@ namespace PokerEngine.Domain.Models
                    || handA[4] >= handB[4];
         }
 
-        public static bool operator <= (PokerHand handA, PokerHand handB)
+        public static bool operator <=(PokerHand handA, PokerHand handB)
         {
             return handB >= handA;
         }
-    #endregion
-}
 
-public enum HandRankingEnum
-{
-    HighCard = 1,
-    Pair = 2,
-    TwoPairs = 3,
-    ThreeOfKind = 4,
-    Straight = 5,
-    Flush = 6,
-    FullHouse = 7,
-    FourOfKind = 8,
-    StraightFlush = 9,
-    RoyalStraightFlush = 10
-}
+        public int CompareTo(PokerHand a)
+        {
+            return this > a ? -1 : 1;
+        }
+        #endregion
+    }
+
+    public enum HandRankingEnum
+    {
+        HighCard = 1,
+        Pair = 2,
+        TwoPairs = 3,
+        ThreeOfKind = 4,
+        Straight = 5,
+        Flush = 6,
+        FullHouse = 7,
+        FourOfKind = 8,
+        StraightFlush = 9,
+        RoyalStraightFlush = 10
+    }
 }
