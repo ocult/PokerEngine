@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using PokerEngine.Domain.Models;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace PokerEngine.XunitTest
 {
@@ -11,7 +10,7 @@ namespace PokerEngine.XunitTest
         private const ushort V1 = 1;
         private const ushort V2 = 2;
         private const ushort V3 = 3;
-        private const ushort V4 = 4;       
+        private const ushort V4 = 4;
 
         [Theory]
         [InlineData(SuitEnum.Clubs)]
@@ -23,7 +22,7 @@ namespace PokerEngine.XunitTest
             var suit = GetCharSuit(se);
             var hand = new PokerHand($"T{suit},Q{suit},J{suit},K{suit},A{suit}");
             Assert.Equal(HandRankingEnum.RoyalStraightFlush, hand.HandRanking);
-            Assert.Equal($"Royal straight flush of {se} [A{suit}, K{suit}, Q{suit}, J{suit}, T{suit}]", hand.ToString());
+            Assert.Equal($"A royal straight flush of {se} [A{suit}, K{suit}, Q{suit}, J{suit}, T{suit}]", hand.ToString());
         }
 
         [Theory(DisplayName = "Check all straight flush possibilities")]
@@ -54,7 +53,13 @@ namespace PokerEngine.XunitTest
             var s2 = GetCharSuit(se2);
             var s3 = GetCharSuit(se3);
             var s4 = GetCharSuit(se4);
-            var s5 = GetCharSuit(se5);
+            var s5 = GetCharSuit(se5);            
+            if (s1 == 'X' || s2 == 'X' ||s3 == 'X' ||s4 == 'X' ||s5 == 'X' )
+            {
+                Console.Error.WriteLine($"Theory args are invalid [{se1},{se2},{se3},{se4},{se5}]");
+                return;
+            }
+
             var hand = new PokerHand($"2{s2}, A{s1}, 4{s4}, 5{s5}, 3{s3}");
             Assert.Equal(HandRankingEnum.Straight, hand.HandRanking);
             Assert.Collection(hand.Cards,
@@ -110,29 +115,30 @@ namespace PokerEngine.XunitTest
             uint s3 = 1;
             uint s4 = 1;
             uint s5 = 0;
-            var executing = true;
 
-            while (executing)
+            List<object[]> list = new List<object[]>();
+
+            while (true)
             {
                 ++s5;
                 if (s5 == 5)
                 {
-                    s5 = 0;
+                    s5 = 1;
                     ++s4;
                 }
                 else if (s4 == 5)
                 {
-                    s4 = 0;
+                    s4 = 1;
                     ++s3;
                 }
                 else if (s3 == 5)
                 {
-                    s3 = 0;
+                    s3 = 1;
                     ++s2;
                 }
                 else if (s2 == 5)
                 {
-                    s2 = 0;
+                    s2 = 1;
                     ++s1;
                 }
                 else if (s1 == 5)
@@ -140,23 +146,22 @@ namespace PokerEngine.XunitTest
                     break;
                 }
 
-                if (s1 == s2 &&
-                    s1 == s3 &&
-                    s1 == s4 &&
-                    s1 == s5)
+                if (s1 != s2 ||
+                    s1 != s3 ||
+                    s1 != s4 ||
+                    s1 != s5)
                 {
-                    continue;
+                    list.Add(new object[]
+                    {
+                        (SuitEnum)s1,
+                        (SuitEnum)s2,
+                        (SuitEnum)s3,
+                        (SuitEnum)s4,
+                        (SuitEnum)s5
+                    });
                 }
-
-                yield return new object[]
-                {
-                    (SuitEnum)s1,
-                    (SuitEnum)s2,
-                    (SuitEnum)s3,
-                    (SuitEnum)s4,
-                    (SuitEnum)s5
-                };
             }
+            return list;
         }
 
         #region Helpers
@@ -173,7 +178,7 @@ namespace PokerEngine.XunitTest
                 2u => 'H',
                 3u => 'S',
                 4u => 'D',
-                _ => 'C'
+                _ => 'X'
             };
         }
 
