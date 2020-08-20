@@ -5,10 +5,11 @@ namespace PokerEngine.Domain.Models
     public struct Card
     {
         public string Name { get; private set; }
-        public SuitEnum Suit {get; }
+        public string ValueName => GetValueName(Value);
+        public SuitEnum Suit { get; }
         public ushort Value { get; }
 
-        public Card(string name)        
+        public Card(string name)
         {
             if (string.IsNullOrWhiteSpace(name) || name.Length != 2)
             {
@@ -47,7 +48,7 @@ namespace PokerEngine.Domain.Models
 
             Value = value;
             Suit = suit;
-            
+
             switch (value)
             {
                 case 1:
@@ -65,7 +66,7 @@ namespace PokerEngine.Domain.Models
                     break;
                 case 13:
                     Name = "K";
-                    break;                    
+                    break;
                 default:
                     Name = Value.ToString();
                     break;
@@ -86,6 +87,28 @@ namespace PokerEngine.Domain.Models
                     Name += "S";
                     break;
             }
+        }
+
+        
+        public static string GetValueName(ushort value)
+        {
+            return value switch
+            {
+                1 => "Ace",
+                3 => "Three",
+                5 => "Five",
+                6 => "Sixe",
+                10 => "Ten",
+                11 => "Jack",
+                12 => "Queen",
+                13 => "King",
+                14 => "Ace",
+                _ => value.ToString(),
+            };
+        }
+        public static string GetLowerValueName(ushort value)
+        {
+            return GetValueName(value).ToLowerInvariant();
         }
 
         public override string ToString()
@@ -110,32 +133,32 @@ namespace PokerEngine.Domain.Models
             return base.GetHashCode();
         }
 
-        public static bool operator == (Card cardA, Card cardB)
+        public static bool operator ==(Card cardA, Card cardB)
         {
             return cardA.Equals(cardB);
         }
 
-        public static bool operator != (Card cardA, Card cardB)
+        public static bool operator !=(Card cardA, Card cardB)
         {
             return !cardA.Equals(cardB);
         }
 
-        public static bool operator > (Card cardA, Card cardB)
+        public static bool operator >(Card cardA, Card cardB)
         {
             return cardA.Value > cardB.Value;
         }
 
-        public static bool operator < (Card cardA, Card cardB)
+        public static bool operator <(Card cardA, Card cardB)
         {
             return cardA.Value < cardB.Value;
         }
 
-        public static bool operator >= (Card cardA, Card cardB)
+        public static bool operator >=(Card cardA, Card cardB)
         {
             return cardA.Value >= cardB.Value;
         }
 
-        public static bool operator <= (Card cardA, Card cardB)
+        public static bool operator <=(Card cardA, Card cardB)
         {
             return cardA.Value <= cardB.Value;
         }

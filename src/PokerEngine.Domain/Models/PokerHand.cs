@@ -86,12 +86,18 @@ namespace PokerEngine.Domain.Models
             var cards = $"[{Cards[0]}, {Cards[1]}, {Cards[2]}, {Cards[3]}, {Cards[4]}]";
             return HandRanking switch
             {
-                HandRankingEnum.RoyalStraightFlush => $"Royal straight flush of {this[0].Suit} {cards}",
-                HandRankingEnum.StraightFlush => $"A {this[0].Name[0]}-high straight flush of {this[0].Suit} {cards}",
+                HandRankingEnum.RoyalStraightFlush => $"A royal straight flush of {this[0].Suit} {cards}",                
+                HandRankingEnum.StraightFlush => $"A {this[0].ValueName.ToLowerInvariant()}-high straight flush of {this[0].Suit} {cards}",
+                HandRankingEnum.FourOfKind => $"A four of a kind, {Card.GetLowerValueName(_fourOfKind.Value)}s with {_kicker} kicker {cards}",
+                HandRankingEnum.FullHouse => $"A full house, {Card.GetLowerValueName(_threeOfKind.Value)}s over {Card.GetLowerValueName(_pair.Value)}s {cards}",
+                HandRankingEnum.Flush => $"A {this[0].ValueName.ToLowerInvariant()}-high flush of {this[0].Suit} {cards}",
+                HandRankingEnum.Straight => $"A {this[0].ValueName.ToLowerInvariant()}-high straight {cards}",
+                HandRankingEnum.ThreeOfKind => $"A three of a kind, {Card.GetLowerValueName(_threeOfKind.Value)}s with {_kicker} kicker {cards}",
+                HandRankingEnum.TwoPairs => $"A two pairs, {Card.GetLowerValueName(_highPair.Value)}s and {Card.GetLowerValueName(_lowPair.Value)}s with {_kicker} kicker {cards}",
+                HandRankingEnum.Pair => $"A pair, {Card.GetLowerValueName(_pair.Value)}s with {_kicker} kicker {cards}",
                 _ => $"High card {cards}",
             };
         }
-
 
         public Card this[int i] => Cards[i];
         #endregion
