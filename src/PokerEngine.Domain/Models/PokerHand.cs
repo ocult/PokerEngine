@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace PokerEngine.Domain.Models
 {
     public struct PokerHand : IComparable<PokerHand>
@@ -48,18 +44,18 @@ namespace PokerEngine.Domain.Models
             return cards.OrderByDescending(c => c.Value).ToArray();
         }
 
-        private static bool TryGetPokerHand(object obj, out PokerHand pokerHand)
+        private static bool TryGetPokerHand(object? obj, out PokerHand pokerHand)
         {
             pokerHand = default;
-            if (obj == null || obj.GetType() != typeof(PokerHand))
+            if (obj is not PokerHand hand)
             {
                 return false;
             }
-            pokerHand = (PokerHand)obj;
+            pokerHand = hand;
             return true;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (!TryGetPokerHand(obj, out var pokerHand))
             {
@@ -91,13 +87,13 @@ namespace PokerEngine.Domain.Models
             {
                 HandRankingEnum.RoyalStraightFlush => $"A royal straight flush of {this[0].Suit}",
                 HandRankingEnum.StraightFlush => $"A {this[0].ValueName.ToLowerInvariant()}-high straight flush of {this[0].Suit}",
-                HandRankingEnum.FourOfKind => $"A four of {Card.GetLowerValueName(_fourOfKind.Value, true)} with a {_kicker.Value.LowerValueName} kicker",
-                HandRankingEnum.FullHouse => $"A full house, {Card.GetLowerValueName(_threeOfKind.Value, true)} over {Card.GetLowerValueName(_pair.Value, true)}",
+                HandRankingEnum.FourOfKind => $"A four of {Card.GetLowerValueName(_fourOfKind!.Value, true)} with a {_kicker!.Value.LowerValueName} kicker",
+                HandRankingEnum.FullHouse => $"A full house, {Card.GetLowerValueName(_threeOfKind!.Value, true)} over {Card.GetLowerValueName(_pair!.Value, true)}",
                 HandRankingEnum.Flush => $"A {this[0].ValueName.ToLowerInvariant()}-high flush of {this[0].Suit}",
                 HandRankingEnum.Straight => $"A {this[0].ValueName.ToLowerInvariant()}-high straight",
-                HandRankingEnum.ThreeOfKind => $"A three of {Card.GetLowerValueName(_threeOfKind.Value, true)} with a {_kicker.Value.LowerValueName} kicker",
-                HandRankingEnum.TwoPairs => $"A two pairs, {Card.GetLowerValueName(_highPair.Value, true)} and {Card.GetLowerValueName(_lowPair.Value, true)} with {_kicker.Value.LowerValueName} kicker",
-                HandRankingEnum.Pair => $"A pair of {Card.GetLowerValueName(_pair.Value, true)} with a {_kicker.Value.LowerValueName} kicker",
+                HandRankingEnum.ThreeOfKind => $"A three of {Card.GetLowerValueName(_threeOfKind!.Value, true)} with a {_kicker!.Value.LowerValueName} kicker",
+                HandRankingEnum.TwoPairs => $"A two pairs, {Card.GetLowerValueName(_highPair!.Value, true)} and {Card.GetLowerValueName(_lowPair!.Value, true)} with {_kicker!.Value.LowerValueName} kicker",
+                HandRankingEnum.Pair => $"A pair of {Card.GetLowerValueName(_pair!.Value, true)} with a {_kicker!.Value.LowerValueName} kicker",
                 _ => $"A {this[0].ValueName.ToLowerInvariant()} high card",
             };
             return $"{name} {CardsString}";

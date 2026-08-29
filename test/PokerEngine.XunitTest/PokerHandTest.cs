@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using PokerEngine.Domain.Models;
 using Xunit;
 
@@ -184,16 +182,16 @@ namespace PokerEngine.XunitTest
 
         public static IEnumerable<object[]> StraightPars(bool flush)
         {
-            var suit = flush ? SuitEnum.Clubs : (SuitEnum?)null;
+            SuitEnum? suit = flush ? SuitEnum.Clubs : null;
             foreach (var item in NotFlushSuits())
             {
                 do
                 {
-                    var s1 = flush ? suit.Value : (SuitEnum)item[0];
-                    var s2 = flush ? suit.Value : (SuitEnum)item[1];
-                    var s3 = flush ? suit.Value : (SuitEnum)item[2];
-                    var s4 = flush ? suit.Value : (SuitEnum)item[3];
-                    var s5 = flush ? suit.Value : (SuitEnum)item[4];
+                    var s1 = flush ? suit!.Value : (SuitEnum)item[0]!;
+                    var s2 = flush ? suit!.Value : (SuitEnum)item[1]!;
+                    var s3 = flush ? suit!.Value : (SuitEnum)item[2]!;
+                    var s4 = flush ? suit!.Value : (SuitEnum)item[3]!;
+                    var s5 = flush ? suit!.Value : (SuitEnum)item[4]!;
                     for (ushort i = 5; i < (flush ? 14 : 15); ++i)
                     {
                         var cards = new Card[5]
@@ -206,9 +204,12 @@ namespace PokerEngine.XunitTest
                         };
                         yield return new object[] { new PokerHand(cards) };
                     }
-                    if (flush) { ++suit; }
+                    if (flush)
+                    {
+                        suit = (SuitEnum?)((int)suit!.Value + 1);
+                    }
                 }
-                while (flush && (uint)suit <= 4u);
+                while (flush && (uint)suit! <= 4u);
 
                 if (flush)
                 {

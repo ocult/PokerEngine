@@ -1,5 +1,3 @@
-using System;
-
 namespace PokerEngine.Domain.Models
 {
     public struct Card : IComparable<Card>, IEquatable<Card>
@@ -134,13 +132,13 @@ namespace PokerEngine.Domain.Models
             return value == cardValue && Suit == other.Suit;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            if (obj == null || obj.GetType() != typeof(Card))
+            if (obj is not Card card)
             {
                 return false;
             }
-            return Equals((Card)obj);            
+            return Equals(card);
         }
 
         public override int GetHashCode()

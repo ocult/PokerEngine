@@ -1,29 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using PokerEngine.Domain.Models;
+﻿using PokerEngine.Domain.Models;
 using MSC = System.Console;
 
-namespace PokerEngine.Console
+internal class Program
 {
-    class Program
+    private static void Main(string[] args)
     {
-        private static CardDeck _deck;
-        static void Main(string[] args)
+        CardDeck? _deck = null;
+        string? cards = null;
+        _deck = new CardDeck();
+        _deck.PowerShuffle();
+
+        if (args != null && args.Length > 0)
         {
-            string cards = null;
-            _deck = new CardDeck();
-            _deck.PowerShuffle();
-
-            if (args != null && args.Length > 0)
-            {
-                cards = args.Length > 1 ? string.Join(',', args) : args[0];
-                MSC.WriteLine($"Your cards are {cards}");
-            }
-            ReadCards(cards);
+            cards = args.Length > 1 ? string.Join(',', args) : args[0];
+            MSC.WriteLine($"Your cards are {cards}");
         }
+        ReadCards(cards);
 
-        static void ReadCards(string cards = null)
+        void ReadCards(string? cards = null)
         {
             if (cards is null)
             {
@@ -80,7 +74,7 @@ namespace PokerEngine.Console
             }
         }
 
-        private static void TexasHoldem(ushort players)
+        void TexasHoldem(ushort players)
         {
             var playersCards = new Dictionary<ushort, IEnumerable<Card>>();
 
@@ -159,7 +153,7 @@ namespace PokerEngine.Console
             _deck.PowerShuffle();
         }
 
-        private static void RandomCards(ushort players)
+        void RandomCards(ushort players)
         {
             var hands = new Dictionary<ushort, PokerHand>();
             for (ushort i = 1; i <= players; i++)
@@ -171,7 +165,7 @@ namespace PokerEngine.Console
             PrintWinner(playersHands);
         }
 
-        private static void PrintWinner(List<KeyValuePair<ushort, PokerHand>> playersHands)
+        void PrintWinner(List<KeyValuePair<ushort, PokerHand>> playersHands)
         {
             var win = playersHands.FirstOrDefault().Key;
             MSC.WriteLine(win == 0 ? "The table winner" : $"The winner is player #{win}".ToUpperInvariant());
