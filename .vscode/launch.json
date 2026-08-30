@@ -2,6 +2,15 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Debug Front-End (.NET)",
+      "url": "http://localhost:5000",
+      "webRoot": "${workspaceFolder}/src/PokerEngine.Web/wwwroot",
+      "sourceMaps": true,
+      "trace": true
+    },
+    {
       "name": ".NET Core Launch (web)",
       "type": "coreclr",
       "request": "launch",
@@ -18,7 +27,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "sourceFileMap": {
-        "/Views": "${workspaceFolder}/Views"
+        "/Views": "${workspaceFolder}/src/PokerEngine.Web/wwwroot"
       }
     },
     {
