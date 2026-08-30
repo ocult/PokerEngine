@@ -142,7 +142,7 @@ function createResultRawBlock(labelText, value, templateSelector = '#result-raw-
   }
 
   if (pre) {
-    pre.textContent = value ?? 'Resultado aparecerá aqui.';
+    pre.textContent = value ?? 'Result appears here.';
   }
 
   if (block) {
@@ -165,7 +165,7 @@ function createHandSummaryBlock(titleText, rankingText, descriptionText, cardsTe
   }
 
   if (title) {
-    title.textContent = titleText || 'Minha Mão';
+    title.textContent = titleText || 'My hand';
   }
 
   if (ranking) {

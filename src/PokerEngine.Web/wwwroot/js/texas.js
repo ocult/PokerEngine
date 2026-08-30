@@ -28,7 +28,7 @@ function createPlayerCard(player, cards, isWinner) {
   const cardsContainer = fragment.querySelector('.card-row');
 
   card.dataset.player = String(player);
-  title.textContent = `Jogador ${player}${isWinner ? ' • Campeão' : ''}`;
+  title.textContent = `Player #${player}${isWinner ? ' • Winner' : ''}`;
 
   cards.forEach((item) => {
     cardsContainer.appendChild(createCardToken(item));
@@ -45,14 +45,14 @@ function createBestHandCard(entry, index, winnerPlayer) {
   const description = fragment.querySelector('.best-hand-description');
   const cardsContainer = fragment.querySelector('.card-row');
 
-  const displayName = entry.player === 0 ? 'Mesa' : `Jogador ${entry.player}`;
+  const displayName = entry.player === 0 ? 'Table' : `Player #${entry.player}`;
   const isWinner = entry.player === winnerPlayer;
   const medalClass = index === 0 ? 'podium-gold' : index === 1 ? 'podium-silver' : index === 2 ? 'podium-bronze' : '';
   const className = medalClass ? `player-card-box ${medalClass}` : 'player-card-box';
 
   card.dataset.player = String(entry.player);
   card.className = className;
-  title.textContent = `${displayName}${isWinner ? ' • Campeão' : ''}`;
+  title.textContent = `${displayName}${isWinner ? ' • Winner' : ''}`;
   ranking.textContent = entry.ranking || '-';
 
   const descriptionText = (entry.description || '-').includes('[') && (entry.description || '-').includes(']')
@@ -123,7 +123,7 @@ function renderTexasSuccess(payload) {
 
   const winnerPlayer = payload.winner ? payload.winner.player : null;
   winnerSummary.dataset.winnerPlayer = String(winnerPlayer ?? '');
-  winnerSummary.textContent = payload.winner ? `${payload.winner.player === 0 ? 'Mesa' : `Jogador ${payload.winner.player}`} — ${payload.winner.ranking}` : '-';
+  winnerSummary.textContent = payload.winner ? `${payload.winner.player === 0 ? 'Table' : `Player #${payload.winner.player}`} — ${payload.winner.ranking}` : '-';
 
   renderPlayerList(payload.holeCards);
   renderBestHands(payload.bestHands ?? []);
@@ -144,7 +144,7 @@ if (texasForm) {
     const payload = await response.json();
 
     if (!response.ok) {
-      renderTexasError(payload.error ?? 'Falha ao executar o Texas Holdem.');
+      renderTexasError(payload.error ?? 'Fail to execute the Texas Hold\'em.');
       return;
     }
 

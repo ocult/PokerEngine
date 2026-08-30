@@ -4,20 +4,20 @@ const handResult = document.querySelector('#hand-result');
 function renderError(message) {
   handResult.innerHTML = '';
   handResult.classList.add('is-error');
-  handResult.appendChild(createHandSummaryBlock('Mão', '-', message, ''));
-  handResult.appendChild(createResultRawBlock('Resposta da API', message));
+  handResult.appendChild(createHandSummaryBlock('My hand', '-', message, ''));
+  handResult.appendChild(createResultRawBlock('API Response', message));
 }
 
 function renderSuccess(payload) {
   handResult.innerHTML = '';
   handResult.classList.remove('is-error');
   handResult.appendChild(createHandSummaryBlock(
-    'Mão',
+    'My hand',
     payload.ranking ?? '-',
     payload.description ?? '-',
     payload.cards ?? ''
   ));
-  handResult.appendChild(createResultRawBlock('Resposta da API', JSON.stringify(payload, null, 2)));
+  handResult.appendChild(createResultRawBlock('API Response', JSON.stringify(payload, null, 2)));
 }
 
 if (handForm) {
@@ -34,7 +34,7 @@ if (handForm) {
     const payload = await response.json();
 
     if (!response.ok) {
-      renderError(payload.error ?? 'Falha ao avaliar a mão.');
+      renderError(payload.error ?? 'Fail to evaluate the hand.');
       return;
     }
 

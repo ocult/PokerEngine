@@ -30,7 +30,7 @@ public static class HandEndpoints
     {
         if (string.IsNullOrWhiteSpace(cards))
         {
-            return Results.BadRequest(new { error = "Informe 5 cartas no formato AC, KC, QH, JD, TS." });
+            return Results.BadRequest(new { error = "Input 5 cards. Use the format AC, KC, QH, JD, TS." });
         }
 
         try
@@ -55,7 +55,7 @@ public static class HandEndpoints
         string[] values = cards.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         if (values.Length != 5)
         {
-            throw new ArgumentException("É necessário informar exatamente 5 cartas.");
+            throw new ArgumentException("You need to input exactly 5 cards.");
         }
 
         return string.Join(", ", values.Select(card => card.ToUpperInvariant()));

@@ -26,14 +26,14 @@ public static class TexasHoldemEndpoints
 
         return ushort.TryParse(players, out ushort parsedPlayers)
             ? EvaluateTexasHoldem(parsedPlayers)
-            : Results.BadRequest(new { error = "Informe um número de jogadores válido." });
+            : Results.BadRequest(new { error = "You need to input a valid player number." });
     }
 
     private static IResult EvaluateTexasHoldem(ushort players)
     {
         if (players is 0 or > 21)
         {
-            return Results.BadRequest(new { error = "Informe um número de jogadores entre 1 e 21." });
+            return Results.BadRequest(new { error = "You need to input a valid number of players between 1 and 21." });
         }
 
         TexasHoldemGame game = new(players);
