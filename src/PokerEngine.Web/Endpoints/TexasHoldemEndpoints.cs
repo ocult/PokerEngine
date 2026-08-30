@@ -52,9 +52,6 @@ public static class TexasHoldemEndpoints
                 item => item.Key,
                 item => new[] { item.Value.FirstCard.ToString(), item.Value.SecondCard.ToString() }),
             communityCards = game.CommunityCards.Select(card => card.ToString()).ToArray(),
-            flop = flop.Select(card => card.ToString()).ToArray(),
-            turn = turn.Select(card => card.ToString()).ToArray(),
-            river = river.Select(card => card.ToString()).ToArray(),
             bestHands = bestHands.Select(item => new
             {
                 player = item.Key,
