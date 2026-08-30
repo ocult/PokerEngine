@@ -127,7 +127,7 @@ internal class Program
             PrintWinner(playersHands);
         }
 
-        void PrintWinner(List<KeyValuePair<ushort, PokerHand>> playersHands)
+        void PrintWinner(IReadOnlyList<KeyValuePair<ushort, PokerHand>> playersHands)
         {
             ushort win = playersHands.FirstOrDefault().Key;
             MSC.WriteLine(win == 0 ? "The table winner" : $"The winner is player #{win}".ToUpperInvariant());
