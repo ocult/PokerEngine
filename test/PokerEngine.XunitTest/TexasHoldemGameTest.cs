@@ -54,34 +54,58 @@ namespace PokerEngine.XunitTest
         [Fact]
         public void TexasHoldemGame_WithKnownDeck_BurnsAndDealsCommunityCardsInOrder()
         {
-            var game = new TexasHoldemGame(5, PokerHandTestHelper.CreateOrderedDeck());
+            var deck = new CardDeck();
+            var cards = deck.Cards.ToArray();
+            var p1c1 = cards[0];
+            var p2c1 = cards[1];
+            var p3c1 = cards[2];
+            var p4c1 = cards[3];
+            var p5c1 = cards[4];
+            var p1c2 = cards[5];
+            var p2c2 = cards[6];
+            var p3c2 = cards[7];
+            var p4c2 = cards[8];
+            var p5c2 = cards[9];
+            var flop1 = cards[12];
+            var flop2 = cards[13];
+            var flop3 = cards[14];
+            var turnExpected = cards[16];
+            var riverExpected = cards[18];
+            var game = new TexasHoldemGame(5, deck);
 
-            Assert.Equal(new Card(2, SuitEnum.Clubs), game.PlayersCards[1].FirstCard);
-            Assert.Equal(new Card(3, SuitEnum.Hearts), game.PlayersCards[1].SecondCard);
-            Assert.Equal(new Card(2, SuitEnum.Hearts), game.PlayersCards[2].FirstCard);
-            Assert.Equal(new Card(3, SuitEnum.Spades), game.PlayersCards[2].SecondCard);
-            Assert.Equal(new Card(2, SuitEnum.Spades), game.PlayersCards[3].FirstCard);
-            Assert.Equal(new Card(3, SuitEnum.Diamonds), game.PlayersCards[3].SecondCard);
-            Assert.Equal(new Card(2, SuitEnum.Diamonds), game.PlayersCards[4].FirstCard);
-            Assert.Equal(new Card(4, SuitEnum.Clubs), game.PlayersCards[4].SecondCard);
-            Assert.Equal(new Card(3, SuitEnum.Clubs), game.PlayersCards[5].FirstCard);
-            Assert.Equal(new Card(4, SuitEnum.Hearts), game.PlayersCards[5].SecondCard);
+            Assert.Equal(p1c1, game.PlayersCards[1].FirstCard);
+            Assert.Equal(p1c2, game.PlayersCards[1].SecondCard);
+
+            Assert.Equal(p2c1, game.PlayersCards[2].FirstCard);
+            Assert.Equal(p2c2, game.PlayersCards[2].SecondCard);
+
+            Assert.Equal(p3c1, game.PlayersCards[3].FirstCard);
+            Assert.Equal(p3c2, game.PlayersCards[3].SecondCard);
+
+            Assert.Equal(p4c1, game.PlayersCards[4].FirstCard);
+            Assert.Equal(p4c2, game.PlayersCards[4].SecondCard);
+            
+            Assert.Equal(p5c1, game.PlayersCards[5].FirstCard);
+            Assert.Equal(p5c2, game.PlayersCards[5].SecondCard);
+            Assert.Equal(TexasHoldemStage.PreFlop, game.Stage);
 
             var flop = game.Continue();
-            Assert.Equal(new Card(5, SuitEnum.Clubs), flop[0]);
-            Assert.Equal(new Card(5, SuitEnum.Hearts), flop[1]);
-            Assert.Equal(new Card(5, SuitEnum.Spades), flop[2]);
             Assert.Equal(3, flop.Count);
-            Assert.Equal(3, game.CommunityCards.Count);
+            Assert.Equal(3, game.CommunityCards.Count);            
+            Assert.Equal(TexasHoldemStage.Flop, game.Stage);
+            Assert.Equal(flop1, flop[0]);
+            Assert.Equal(flop2, flop[1]);
+            Assert.Equal(flop3, flop[2]);
 
             var turn = game.Continue();
-            Assert.Equal(new Card(6, SuitEnum.Clubs), turn[3]);
             Assert.Equal(4, turn.Count);
+            Assert.Equal(TexasHoldemStage.Turn, game.Stage);
+            Assert.Equal(turnExpected, turn[3]);
 
             var river = game.Continue();
-            Assert.Equal(new Card(6, SuitEnum.Spades), river[4]);
             Assert.Equal(5, river.Count);
             Assert.Equal(TexasHoldemStage.River, game.Stage);
+            Assert.Equal(riverExpected, river[4]);
         }
 
         [Fact]
