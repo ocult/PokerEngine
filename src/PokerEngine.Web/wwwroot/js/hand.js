@@ -5,65 +5,8 @@ const resultRanking = document.querySelector('#result-ranking');
 const resultDescription = document.querySelector('#result-description');
 const resultRaw = document.querySelector('#result-raw');
 
-const suitGlyphs = {
-  C: '♣',
-  H: '♥',
-  S: '♠',
-  D: '♦'
-};
-
-const suitClasses = {
-  C: 'suit-clubs',
-  H: 'suit-hearts',
-  S: 'suit-spades',
-  D: 'suit-diamonds'
-};
-
-function createCardToken(cardToken) {
-  const trimmed = cardToken.trim();
-  if (!trimmed) {
-    return document.createTextNode('');
-  }
-
-  const suit = trimmed[trimmed.length - 1].toUpperCase();
-  const rank = trimmed.slice(0, -1).toUpperCase();
-
-  const card = document.createElement('span');
-  card.className = `card-token ${suitClasses[suit] ?? ''}`;
-  card.title = `${rank}${suit}`;
-
-  const rankNode = document.createElement('span');
-  rankNode.className = 'card-rank';
-  rankNode.textContent = rank;
-
-  const suitNode = document.createElement('span');
-  suitNode.className = 'card-suit';
-  suitNode.textContent = suitGlyphs[suit] ?? suit;
-
-  card.append(rankNode, suitNode);
-  return card;
-}
-
-function renderCards(cardsText) {
-  const container = resultCards;
-  container.innerHTML = '';
-
-  if (!cardsText) {
-    container.textContent = '-';
-    return;
-  }
-
-  const cards = cardsText.split(',');
-  cards.forEach((card) => {
-    const token = createCardToken(card);
-    if (token && token.nodeType !== 3) {
-      container.appendChild(token);
-    }
-  });
-}
-
 function renderError(message) {
-  renderCards('');
+  renderCardRow(resultCards, '');
   resultRanking.textContent = '-';
   resultDescription.textContent = message;
   resultRaw.textContent = message;
@@ -71,7 +14,7 @@ function renderError(message) {
 }
 
 function renderSuccess(payload) {
-  renderCards(payload.cards ?? '');
+  renderCardRow(resultCards, payload.cards ?? '');
   resultRanking.textContent = payload.ranking ?? '-';
   resultDescription.textContent = payload.description ?? '-';
   resultRaw.textContent = JSON.stringify(payload, null, 2);

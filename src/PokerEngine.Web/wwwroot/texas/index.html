@@ -22,10 +22,39 @@
           <input id="players" name="players" type="number" min="1" max="9" value="2" />
           <button type="submit">Executar</button>
         </form>
-        <pre id="texas-result">Resultado aparecerá aqui.</pre>
+
+        <div id="texas-result" aria-live="polite">
+          <div class="result-grid">
+            <div class="result-block">
+              <span class="label">Cartas comunitárias</span>
+              <div id="community-cards" class="card-row">-</div>
+            </div>
+
+            <div class="result-block">
+              <span class="label">Vencedor</span>
+              <strong id="winner-summary">-</strong>
+            </div>
+
+            <div class="result-block result-block-wide">
+              <span class="label">Jogadores</span>
+              <div id="player-cards" class="player-list"></div>
+            </div>
+
+            <div class="result-block result-block-wide">
+              <span class="label">Melhores mãos</span>
+              <div id="best-hands" class="player-list"></div>
+            </div>
+
+            <div class="result-block result-block-wide">
+              <span class="label">Resposta da API</span>
+              <pre id="result-raw">Resultado aparecerá aqui.</pre>
+            </div>
+          </div>
+        </div>
       </section>
     </main>
 
+    <script src="/js/ui.js"></script>
     <script src="/js/texas.js"></script>
   </body>
 </html>

@@ -158,6 +158,52 @@ button:hover {
   color: var(--heart-diamond-red);
 }
 
+.player-list {
+  display: grid;
+  gap: 12px;
+}
+
+.player-card-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.player-card-title {
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.winner-box {
+  border-color: #fbbf24;
+  background: linear-gradient(135deg, #fff7d6 0%, #fff 100%);
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.25);
+}
+
+.podium-gold {
+  background: linear-gradient(135deg, #fff7d6 0%, #fff 100%);
+  border-color: #fbbf24;
+}
+
+.podium-silver {
+  background: linear-gradient(135deg, #f3f4f6 0%, #fff 100%);
+  border-color: #cbd5e1;
+}
+
+.podium-bronze {
+  background: linear-gradient(135deg, #fef3c7 0%, #fff 100%);
+  border-color: #d97706;
+}
+
+.list-item {
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+
 pre {
   background: #f3f3f3;
   border-radius: 8px;
