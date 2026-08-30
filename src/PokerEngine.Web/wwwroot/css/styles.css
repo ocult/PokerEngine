@@ -178,25 +178,22 @@ button:hover {
   color: var(--ink-soft);
 }
 
-.winner-box {
-  border-color: #fbbf24;
-  background: linear-gradient(135deg, #fff7d6 0%, #fff 100%);
-  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.25);
-}
-
 .podium-gold {
-  background: linear-gradient(135deg, #fff7d6 0%, #fff 100%);
-  border-color: #fbbf24;
+  background: linear-gradient(135deg, #fef3c7 0%, #fff9db 35%, #fff 100%);
+  border-color: #d4a017;
+  box-shadow: inset 0 0 0 1px rgba(212, 160, 23, 0.35), 0 0 0 2px rgba(212, 160, 23, 0.12);
 }
 
 .podium-silver {
-  background: linear-gradient(135deg, #f3f4f6 0%, #fff 100%);
-  border-color: #cbd5e1;
+  background: linear-gradient(135deg, #f3f4f6 0%, #ffffff 35%, #f8fafc 100%);
+  border-color: #94a3b8;
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.28), 0 0 0 2px rgba(148, 163, 184, 0.08);
 }
 
 .podium-bronze {
-  background: linear-gradient(135deg, #fef3c7 0%, #fff 100%);
-  border-color: #d97706;
+  background: linear-gradient(135deg, #fef3d8 0%, #fff7ed 35%, #fff 100%);
+  border-color: #b45309;
+  box-shadow: inset 0 0 0 1px rgba(180, 83, 9, 0.28), 0 0 0 2px rgba(180, 83, 9, 0.08);
 }
 
 .list-item {

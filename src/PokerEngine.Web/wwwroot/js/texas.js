@@ -4,6 +4,84 @@ const winnerSummary = document.querySelector('#winner-summary');
 const playerCards = document.querySelector('#player-cards');
 const bestHands = document.querySelector('#best-hands');
 const resultRaw = document.querySelector('#result-raw');
+const playerCardTemplate = document.querySelector('#player-card-template');
+const bestHandTemplate = document.querySelector('#best-hand-template');
+
+function applyPodiumClasses(playerId, medalClass) {
+  if (!playerId && playerId !== 0) {
+    return;
+  }
+
+  const playerBlocks = document.querySelectorAll(`.player-card-box[data-player="${playerId}"]`);
+  playerBlocks.forEach((block) => {
+    if (medalClass === 'podium-gold') {
+      block.classList.remove('podium-gold', 'podium-silver', 'podium-bronze');
+      if (medalClass) {
+        block.classList.add(medalClass);
+      }
+    }
+  });
+}
+
+function createPlayerCard(player, cards, isWinner) {
+  const fragment = playerCardTemplate.content.cloneNode(true);
+  const card = fragment.querySelector('.player-card-box');
+  const title = fragment.querySelector('.player-card-title');
+  const cardsContainer = fragment.querySelector('.card-row');
+
+  card.dataset.player = String(player);
+  title.textContent = `Jogador ${player}${isWinner ? ' • Campeão' : ''}`;
+
+  cards.forEach((item) => {
+    cardsContainer.appendChild(createCardToken(item));
+  });
+
+  return fragment;
+}
+
+function createBestHandCard(entry, index, winnerPlayer) {
+  const fragment = bestHandTemplate.content.cloneNode(true);
+  const card = fragment.querySelector('.player-card-box');
+  const title = fragment.querySelector('.player-card-title');
+  const ranking = fragment.querySelector('.best-hand-ranking');
+  const description = fragment.querySelector('.best-hand-description');
+  const cardsContainer = fragment.querySelector('.card-row');
+
+  const displayName = entry.player === 0 ? 'Mesa' : `Jogador ${entry.player}`;
+  const isWinner = entry.player === winnerPlayer;
+  const medalClass = index === 0 ? 'podium-gold' : index === 1 ? 'podium-silver' : index === 2 ? 'podium-bronze' : '';
+  const className = medalClass ? `player-card-box ${medalClass}` : 'player-card-box';
+
+  card.dataset.player = String(entry.player);
+  card.className = className;
+  title.textContent = `${displayName}${isWinner ? ' • Campeão' : ''}`;
+  ranking.textContent = entry.ranking || '-';
+
+  const descriptionText = (entry.description || '-').includes('[') && (entry.description || '-').includes(']')
+    ? (entry.description || '-').slice(0, (entry.description || '-').lastIndexOf('[')).trim()
+    : (entry.description || '-');
+
+  description.textContent = descriptionText;
+
+  const handCards = (entry.description || '').includes('[') && (entry.description || '').includes(']')
+    ? (entry.description || '').slice((entry.description || '').indexOf('[') + 1, (entry.description || '').lastIndexOf(']'))
+    : '';
+
+  if (entry.player !== 0 && medalClass) {
+    applyPodiumClasses(entry.player, medalClass);
+  }
+
+  if (handCards) {
+    handCards.split(',').forEach((card) => {
+      const token = createCardToken(card.trim());
+      if (token && token.nodeType !== 3) {
+        cardsContainer.appendChild(token);
+      }
+    });
+  }
+
+  return fragment;
+}
 
 function renderTexasError(message) {
   renderCardRow(communityCards, '');
@@ -19,17 +97,13 @@ function renderPlayerList(holeCards) {
     return;
   }
 
-  const players = Object.entries(holeCards).map(([player, cards]) => {
-    const isWinner = Number(player) === Number(document.querySelector('#winner-summary')?.dataset?.winnerPlayer ?? -1);
-    const playerClass = isWinner ? 'player-card-box winner-box' : 'player-card-box';
+  const winnerPlayer = Number(document.querySelector('#winner-summary')?.dataset?.winnerPlayer ?? -1);
+  playerCards.innerHTML = '';
 
-    return `<div class="${playerClass}">
-      <div class="player-card-title">Jogador ${player}${isWinner ? ' • Campeão' : ''}</div>
-      <div class="card-row">${cards.map((card) => createCardToken(card).outerHTML).join('')}</div>
-    </div>`;
+  Object.entries(holeCards).forEach(([player, cards]) => {
+    const isWinner = Number(player) === winnerPlayer;
+    playerCards.appendChild(createPlayerCard(player, cards, isWinner));
   });
-
-  playerCards.innerHTML = players.join('');
 }
 
 function renderBestHands(entries) {
@@ -39,34 +113,11 @@ function renderBestHands(entries) {
   }
 
   const winnerPlayer = Number(document.querySelector('#winner-summary')?.dataset?.winnerPlayer ?? -1);
+  bestHands.innerHTML = '';
 
-  const markup = entries.map((entry, index) => {
-    const title = entry.player === 0 ? 'Mesa' : `Jogador ${entry.player}`;
-    const ranking = entry.ranking || '-';
-    const description = entry.description || '-';
-    const handText = description.includes('[') && description.includes(']')
-      ? description.slice(0, description.lastIndexOf('[')).trim()
-      : description;
-    const handCards = description.includes('[') && description.includes(']')
-      ? description.slice(description.indexOf('[') + 1, description.lastIndexOf(']'))
-      : '';
-    const medalClass = index === 0 ? 'podium-gold' : index === 1 ? 'podium-silver' : index === 2 ? 'podium-bronze' : '';
-    const playerClass = index < 3 ? `player-card-box ${medalClass}`.trim() : 'player-card-box';
-    const winnerBadge = entry.player === winnerPlayer ? ' • Campeão' : '';
-
-    return `
-      <div class="${playerClass}">
-        <div class="player-card-title">${title}${winnerBadge}</div>
-        <div class="list-item"><strong>Ranking:</strong> ${ranking}</div>
-        <div class="list-item"><strong>Mão:</strong> ${handText}</div>
-        ${handCards
-          ? `<div class="card-row">${handCards.split(',').map((card) => createCardToken(card.trim()).outerHTML).join('')}</div>`
-          : ''}
-      </div>
-    `;
-  }).join('');
-
-  bestHands.innerHTML = markup;
+  entries.forEach((entry, index) => {
+    bestHands.appendChild(createBestHandCard(entry, index, winnerPlayer));
+  });
 }
 
 function renderTexasSuccess(payload) {
