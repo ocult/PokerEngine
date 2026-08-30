@@ -58,17 +58,6 @@ public static class HandEndpoints
             throw new ArgumentException("É necessário informar exatamente 5 cartas.");
         }
 
-        return string.Join(", ", values.Select(NormalizeCardToken));
-    }
-
-    private static string NormalizeCardToken(string value)
-    {
-        string normalized = value.Trim();
-        if (normalized.Length == 3 && normalized.StartsWith("10", StringComparison.OrdinalIgnoreCase))
-        {
-            return $"T{normalized[2]}".ToUpperInvariant();
-        }
-
-        return normalized.ToUpperInvariant();
+        return string.Join(", ", values.Select(card => card.ToUpperInvariant()));
     }
 }
