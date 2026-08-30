@@ -78,9 +78,9 @@ internal class Program
         {
             TexasHoldemGame game = new(players);
 
-            foreach (KeyValuePair<ushort, IReadOnlyList<Card>> player in game.PlayersCards)
+            foreach (KeyValuePair<ushort, TexasHoldemPlayerCards> player in game.PlayersCards)
             {
-                MSC.WriteLine($"Player #{player.Key} have [{player.Value[0]}, {player.Value[1]}] in hand");
+                MSC.WriteLine($"Player #{player.Key} have [{player.Value.FirstCard}, {player.Value.SecondCard}] in hand");
             }
 
             MSC.WriteLine("Press any key to continue to the table cards...");

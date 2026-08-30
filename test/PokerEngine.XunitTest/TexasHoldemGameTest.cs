@@ -56,16 +56,16 @@ namespace PokerEngine.XunitTest
         {
             var game = new TexasHoldemGame(5, PokerHandTestHelper.CreateOrderedDeck());
 
-            Assert.Equal(new Card(2, SuitEnum.Clubs), game.PlayersCards[1][0]);
-            Assert.Equal(new Card(3, SuitEnum.Hearts), game.PlayersCards[1][1]);
-            Assert.Equal(new Card(2, SuitEnum.Hearts), game.PlayersCards[2][0]);
-            Assert.Equal(new Card(3, SuitEnum.Spades), game.PlayersCards[2][1]);
-            Assert.Equal(new Card(2, SuitEnum.Spades), game.PlayersCards[3][0]);
-            Assert.Equal(new Card(3, SuitEnum.Diamonds), game.PlayersCards[3][1]);
-            Assert.Equal(new Card(2, SuitEnum.Diamonds), game.PlayersCards[4][0]);
-            Assert.Equal(new Card(4, SuitEnum.Clubs), game.PlayersCards[4][1]);
-            Assert.Equal(new Card(3, SuitEnum.Clubs), game.PlayersCards[5][0]);
-            Assert.Equal(new Card(4, SuitEnum.Hearts), game.PlayersCards[5][1]);
+            Assert.Equal(new Card(2, SuitEnum.Clubs), game.PlayersCards[1].FirstCard);
+            Assert.Equal(new Card(3, SuitEnum.Hearts), game.PlayersCards[1].SecondCard);
+            Assert.Equal(new Card(2, SuitEnum.Hearts), game.PlayersCards[2].FirstCard);
+            Assert.Equal(new Card(3, SuitEnum.Spades), game.PlayersCards[2].SecondCard);
+            Assert.Equal(new Card(2, SuitEnum.Spades), game.PlayersCards[3].FirstCard);
+            Assert.Equal(new Card(3, SuitEnum.Diamonds), game.PlayersCards[3].SecondCard);
+            Assert.Equal(new Card(2, SuitEnum.Diamonds), game.PlayersCards[4].FirstCard);
+            Assert.Equal(new Card(4, SuitEnum.Clubs), game.PlayersCards[4].SecondCard);
+            Assert.Equal(new Card(3, SuitEnum.Clubs), game.PlayersCards[5].FirstCard);
+            Assert.Equal(new Card(4, SuitEnum.Hearts), game.PlayersCards[5].SecondCard);
 
             var flop = game.Continue();
             Assert.Equal(new Card(5, SuitEnum.Clubs), flop[0]);

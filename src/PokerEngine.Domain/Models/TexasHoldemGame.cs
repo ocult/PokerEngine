@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace PokerEngine.Domain.Models
 {
     public enum TexasHoldemStage
@@ -13,10 +9,32 @@ namespace PokerEngine.Domain.Models
         Complete
     }
 
+    public sealed class TexasHoldemPlayerCards
+    {
+        public TexasHoldemPlayerCards(Card firstCard, Card secondCard)
+        {
+            FirstCard = firstCard;
+            SecondCard = secondCard;
+        }
+
+        public Card FirstCard { get; }
+
+        public Card SecondCard { get; }
+
+        public IReadOnlyList<Card> Cards => new[] { FirstCard, SecondCard };
+
+        public Card this[int index] => index switch
+        {
+            0 => FirstCard,
+            1 => SecondCard,
+            _ => throw new ArgumentOutOfRangeException(nameof(index))
+        };
+    }
+
     public sealed class TexasHoldemGame : PokerGame
     {
         private readonly CardDeck _deck;
-        private readonly Dictionary<ushort, List<Card>> _playersCards;
+        private readonly Dictionary<ushort, TexasHoldemPlayerCards> _playersCards;
         private readonly List<Card> _communityCards;
 
         public TexasHoldemGame(ushort players, CardDeck? deck = null)
@@ -28,16 +46,26 @@ namespace PokerEngine.Domain.Models
 
             Players = players;
             _deck = deck ?? new CardDeck();
-            _playersCards = new Dictionary<ushort, List<Card>>();
+            Dictionary<ushort, List<Card>> playerCards = new Dictionary<ushort, List<Card>>();
+            _playersCards = new Dictionary<ushort, TexasHoldemPlayerCards>();
             _communityCards = new List<Card>();
 
-            for (ushort c = 0; c < 2; c++)
+            for (ushort i = 1; i <= players; i++)
+            {
+                playerCards[i] = new List<Card>();
+            }
+
+            for (ushort round = 0; round < 2; round++)
             {
                 for (ushort i = 1; i <= players; i++)
                 {
-                    if (c == 0) _playersCards[i] = new List<Card>();
-                    _playersCards[i].Add(_deck.Pick());
+                    playerCards[i].Add(_deck.Pick());
                 }
+            }
+
+            foreach (KeyValuePair<ushort, List<Card>> player in playerCards)
+            {
+                _playersCards[player.Key] = new TexasHoldemPlayerCards(player.Value[0], player.Value[1]);
             }
 
             Stage = TexasHoldemStage.PreFlop;
@@ -47,8 +75,7 @@ namespace PokerEngine.Domain.Models
 
         public TexasHoldemStage Stage { get; private set; }
 
-        public IReadOnlyDictionary<ushort, IReadOnlyList<Card>> PlayersCards =>
-            _playersCards.ToDictionary(pair => pair.Key, pair => (IReadOnlyList<Card>)pair.Value.AsReadOnly());
+        public IReadOnlyDictionary<ushort, TexasHoldemPlayerCards> PlayersCards => _playersCards;
 
         public IReadOnlyList<Card> CommunityCards => _communityCards.AsReadOnly();
 
@@ -107,7 +134,7 @@ namespace PokerEngine.Domain.Models
 
         private PokerHand GetBestHandForPlayer(ushort player)
         {
-            IReadOnlyList<Card> playerCards = _playersCards[player];
+            TexasHoldemPlayerCards playerCards = _playersCards[player];
             IReadOnlyList<Card> tableCards = _communityCards;
             List<PokerHand> possibleHands = new();
 
