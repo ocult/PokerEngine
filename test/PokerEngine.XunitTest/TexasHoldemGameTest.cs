@@ -109,6 +109,24 @@ namespace PokerEngine.XunitTest
         }
 
         [Fact]
+        public void TexasHoldemGame_DeckLimit_AllowsHighestPlayerCountBeforeExhaustion()
+        {
+            var deck = new CardDeck();
+            var game = new TexasHoldemGame(21, deck);
+
+            Assert.Equal(21, game.PlayersCards.Count);
+            Assert.Equal(10, deck.Count);
+
+            _ = game.Continue();
+            _ = game.Continue();
+            _ = game.Continue();
+            _ = game.Continue();
+
+            Assert.Equal(1, deck.Count);
+            Assert.Throws<InvalidOperationException>(() => new TexasHoldemGame(22));
+        }
+
+        [Fact]
         public void TexasHoldemGame_GetWinnerPlayer_UsesRankingFromBaseGame()
         {
             var game = new TexasHoldemGame(5, PokerHandTestHelper.CreateOrderedDeck());
