@@ -108,57 +108,29 @@ namespace PokerEngine.XunitTest
 
         public static IEnumerable<object[]> NotFlushSuits()
         {
-            uint s1 = 1;
-            uint s2 = 1;
-            uint s3 = 1;
-            uint s4 = 1;
-            uint s5 = 0;
+            List<object[]> list = [];
 
-            List<object[]> list = new List<object[]>();
-
-            while (true)
+            for (var s1 = 1; s1 <= 4; s1++)
+            for (var s2 = 1; s2 <= 4; s2++)
+            for (var s3 = 1; s3 <= 4; s3++)
+            for (var s4 = 1; s4 <= 4; s4++)
+            for (var s5 = 1; s5 <= 4; s5++)
             {
-                ++s5;
-                if (s5 == 5)
+                if (s1 == s2 && s1 == s3 && s1 == s4 && s1 == s5)
                 {
-                    s5 = 1;
-                    ++s4;
-                }
-                else if (s4 == 5)
-                {
-                    s4 = 1;
-                    ++s3;
-                }
-                else if (s3 == 5)
-                {
-                    s3 = 1;
-                    ++s2;
-                }
-                else if (s2 == 5)
-                {
-                    s2 = 1;
-                    ++s1;
-                }
-                else if (s1 == 5)
-                {
-                    break;
+                    continue;
                 }
 
-                if (s1 != s2 ||
-                    s1 != s3 ||
-                    s1 != s4 ||
-                    s1 != s5)
+                list.Add(new object[]
                 {
-                    list.Add(
-                    [
-                        (SuitEnum)s1,
-                        (SuitEnum)s2,
-                        (SuitEnum)s3,
-                        (SuitEnum)s4,
-                        (SuitEnum)s5
-                    ]);
-                }
+                    (SuitEnum)s1,
+                    (SuitEnum)s2,
+                    (SuitEnum)s3,
+                    (SuitEnum)s4,
+                    (SuitEnum)s5
+                });
             }
+
             return list;
         }
 
@@ -182,40 +154,54 @@ namespace PokerEngine.XunitTest
 
         public static IEnumerable<object[]> StraightPars(bool flush)
         {
-            SuitEnum? suit = flush ? SuitEnum.Clubs : null;
-            foreach (var item in NotFlushSuits())
+            var list = new List<object[]>();
+
+            if (flush)
             {
-                do
+                foreach (var suit in new[] { SuitEnum.Clubs, SuitEnum.Hearts, SuitEnum.Spades, SuitEnum.Diamonds })
                 {
-                    var s1 = flush ? suit!.Value : (SuitEnum)item[0]!;
-                    var s2 = flush ? suit!.Value : (SuitEnum)item[1]!;
-                    var s3 = flush ? suit!.Value : (SuitEnum)item[2]!;
-                    var s4 = flush ? suit!.Value : (SuitEnum)item[3]!;
-                    var s5 = flush ? suit!.Value : (SuitEnum)item[4]!;
-                    for (ushort i = 5; i < (flush ? 14 : 15); ++i)
+                    for (ushort i = 5; i < 14; ++i)
                     {
                         var cards = new Card[5]
                         {
-                            new Card((ushort)(i - V1), s1),
-                            new Card((ushort)(i - V2), s2),
-                            new Card((ushort)(i - V3), s3),
-                            new Card(i, s4),
-                            new Card((ushort)(i - V4), s5)
+                            new Card((ushort)(i - V1), suit),
+                            new Card((ushort)(i - V2), suit),
+                            new Card((ushort)(i - V3), suit),
+                            new Card(i, suit),
+                            new Card((ushort)(i - V4), suit)
                         };
-                        yield return new object[] { new PokerHand(cards) };
-                    }
-                    if (flush)
-                    {
-                        suit = (SuitEnum?)((int)suit!.Value + 1);
+
+                        list.Add(new object[] { new PokerHand(cards) });
                     }
                 }
-                while (flush && (uint)suit! <= 4u);
 
-                if (flush)
+                return list;
+            }
+
+            foreach (var item in NotFlushSuits())
+            {
+                var s1 = (SuitEnum)item[0]!;
+                var s2 = (SuitEnum)item[1]!;
+                var s3 = (SuitEnum)item[2]!;
+                var s4 = (SuitEnum)item[3]!;
+                var s5 = (SuitEnum)item[4]!;
+
+                for (ushort i = 5; i < 15; ++i)
                 {
-                    break;
+                    var cards = new Card[5]
+                    {
+                        new Card((ushort)(i - V1), s1),
+                        new Card((ushort)(i - V2), s2),
+                        new Card((ushort)(i - V3), s3),
+                        new Card(i, s4),
+                        new Card((ushort)(i - V4), s5)
+                    };
+
+                    list.Add(new object[] { new PokerHand(cards) });
                 }
             }
+
+            return list;
         }
 
         private static SuitEnum GetRandomSuitOrDefault(SuitEnum? defaultSuit = null)
