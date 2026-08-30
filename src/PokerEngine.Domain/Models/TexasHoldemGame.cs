@@ -91,15 +91,15 @@ namespace PokerEngine.Domain.Models
                 throw new InvalidOperationException("The community cards must be complete before evaluating best hands.");
             }
 
-            var hands = new Dictionary<ushort, PokerHand>();
+            Dictionary<ushort, PokerHand> hands = new Dictionary<ushort, PokerHand>();
 
             for (ushort i = 1; i <= Players; i++)
             {
-                var bestHand = GetBestHandForPlayer(i);
+                PokerHand bestHand = GetBestHandForPlayer(i);
                 hands.Add(i, bestHand);
             }
 
-            var tableHand = new PokerHand(_communityCards.ToArray());
+            PokerHand tableHand = new PokerHand(_communityCards.ToArray());
             hands.Add(0, tableHand);
 
             return hands;
@@ -107,17 +107,17 @@ namespace PokerEngine.Domain.Models
 
         private PokerHand GetBestHandForPlayer(ushort player)
         {
-            var playerCards = _playersCards[player];
-            var tableCards = _communityCards;
-            var possibleHands = new List<PokerHand>();
+            IReadOnlyList<Card> playerCards = _playersCards[player];
+            IReadOnlyList<Card> tableCards = _communityCards;
+            List<PokerHand> possibleHands = new List<PokerHand>();
 
             for (ushort c = 0; c < 5; c++)
             {
-                var card1 = c != 0 ? tableCards[0] : playerCards[0];
-                var card2 = c != 1 ? tableCards[1] : playerCards[0];
-                var card3 = c != 2 ? tableCards[2] : playerCards[0];
-                var card4 = c != 3 ? tableCards[3] : playerCards[0];
-                var card5 = c != 4 ? tableCards[4] : playerCards[0];
+                Card card1 = c != 0 ? tableCards[0] : playerCards[0];
+                Card card2 = c != 1 ? tableCards[1] : playerCards[0];
+                Card card3 = c != 2 ? tableCards[2] : playerCards[0];
+                Card card4 = c != 3 ? tableCards[3] : playerCards[0];
+                Card card5 = c != 4 ? tableCards[4] : playerCards[0];
                 possibleHands.Add(new PokerHand(card1, card2, card3, card4, card5));
 
                 card1 = c != 0 ? tableCards[0] : playerCards[1];
@@ -130,11 +130,11 @@ namespace PokerEngine.Domain.Models
 
             for (ushort c = 0; c < 3; c++)
             {
-                var card1 = playerCards[0];
-                var card2 = playerCards[1];
-                var card3 = tableCards[c];
-                var card4 = tableCards[c + 1];
-                var card5 = tableCards[c + 2];
+                Card card1 = playerCards[0];
+                Card card2 = playerCards[1];
+                Card card3 = tableCards[c];
+                Card card4 = tableCards[c + 1];
+                Card card5 = tableCards[c + 2];
                 possibleHands.Add(new PokerHand(card1, card2, card3, card4, card5));
             }
 
@@ -154,7 +154,7 @@ namespace PokerEngine.Domain.Models
 
         private void DealCommunityCards(int quantity)
         {
-            for (var i = 0; i < quantity; i++)
+            for (int i = 0; i < quantity; i++)
             {
                 _communityCards.Add(_deck.Pick());
             }

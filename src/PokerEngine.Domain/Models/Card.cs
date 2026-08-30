@@ -91,7 +91,7 @@ namespace PokerEngine.Domain.Models
         
         public static string GetValueName(ushort value, bool pluralize = false)
         {
-            var name = value switch
+            string name = value switch
             {
                 1 => "Ace",
                 2 => "Two",
@@ -127,8 +127,8 @@ namespace PokerEngine.Domain.Models
 
         public bool Equals(Card other)
         {
-            var value = Value == 1 ? 14 : Value;
-            var otherValue = other.Value == 1 ? 14 : other.Value;
+            ushort value = Value == 1 ? (ushort)14 : Value;
+            ushort otherValue = other.Value == 1 ? (ushort)14 : other.Value;
             return value == otherValue && Suit == other.Suit;
         }
 

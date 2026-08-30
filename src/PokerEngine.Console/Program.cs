@@ -34,8 +34,8 @@ internal class Program
             {
                 if (cards.StartsWith("TEXAS"))
                 {
-                    var strPlayers = string.Join("", cards.Skip(6)).Trim();
-                    if (!ushort.TryParse(strPlayers, out var players))
+                    string strPlayers = string.Join("", cards.Skip(6)).Trim();
+                    if (!ushort.TryParse(strPlayers, out ushort players))
                     {
                         throw new ArgumentException(nameof(players));
                     }
@@ -45,10 +45,10 @@ internal class Program
                 }
                 else if (cards.StartsWith("RANDOM"))
                 {
-                    var strPlayers = string.Join("", cards.Skip(7)).Trim();
-                    if (!ushort.TryParse(strPlayers, out var players))
+                    string strPlayers = string.Join("", cards.Skip(7)).Trim();
+                    if (!ushort.TryParse(strPlayers, out ushort players))
                     {
-                        var pickedCards = _deck.Pick(5);
+                        IList<Card> pickedCards = _deck.Pick(5);
                         cards = PokerHand.GetCardsString(pickedCards);
                     }
                     else
@@ -58,7 +58,7 @@ internal class Program
                         return;
                     }
                 }
-                var hand = new PokerHand(cards);
+                PokerHand hand = new PokerHand(cards);
                 MSC.WriteLine($"You have {hand}");
                 ReadCards();
             }
@@ -76,9 +76,9 @@ internal class Program
 
         void TexasHoldem(ushort players)
         {
-            var game = new TexasHoldemGame(players);
+            TexasHoldemGame game = new TexasHoldemGame(players);
 
-            foreach (var player in game.PlayersCards)
+            foreach (KeyValuePair<ushort, IReadOnlyList<Card>> player in game.PlayersCards)
             {
                 MSC.WriteLine($"Player #{player.Key} have [{player.Value[0]}, {player.Value[1]}] in hand");
             }
@@ -86,25 +86,25 @@ internal class Program
             MSC.WriteLine("Press any key to continue to the table cards...");
             MSC.ReadLine();
 
-            var flop = game.Continue();
+            IReadOnlyList<Card> flop = game.Continue();
             MSC.WriteLine($"Table flop is [{flop[0]}, {flop[1]}, {flop[2]}]");
             MSC.WriteLine("Press any key to continue to the turn card...");
             MSC.ReadLine();
 
-            var turn = game.Continue();
+            IReadOnlyList<Card> turn = game.Continue();
             MSC.WriteLine($"Table turn is {turn[3]}");
             MSC.WriteLine("Press any key to continue to the river card...");
             MSC.ReadLine();
 
-            var river = game.Continue();
+            IReadOnlyList<Card> river = game.Continue();
             MSC.WriteLine($"Table river is {river[4]}");
             MSC.WriteLine("Press any key to continue to the showdown...");
             MSC.ReadLine();
 
-            var hands = game.GetBestHands();
-            foreach (var hand in hands)
+            IReadOnlyList<KeyValuePair<ushort, PokerHand>> hands = game.GetBestHands();
+            foreach (KeyValuePair<ushort, PokerHand> hand in hands)
             {
-                var status = hand.Key == 0 ? "Table" : $"Player #{hand.Key}";
+                string status = hand.Key == 0 ? "Table" : $"Player #{hand.Key}";
                 MSC.WriteLine($"{status} best possible hand is {hand.Value}");
             }
 
@@ -117,22 +117,22 @@ internal class Program
 
         void RandomCards(ushort players)
         {
-            var hands = new Dictionary<ushort, PokerHand>();
+            Dictionary<ushort, PokerHand> hands = new Dictionary<ushort, PokerHand>();
             for (ushort i = 1; i <= players; i++)
             {
-                var playerHand = new PokerHand(_deck.Pick(5).ToArray());
+                PokerHand playerHand = new PokerHand(_deck.Pick(5).ToArray());
                 hands.Add(i, playerHand);
             }
-            var playersHands = hands.OrderBy((a) => a.Value).ToList();
+            List<KeyValuePair<ushort, PokerHand>> playersHands = hands.OrderBy((a) => a.Value).ToList();
             PrintWinner(playersHands);
         }
 
         void PrintWinner(List<KeyValuePair<ushort, PokerHand>> playersHands)
         {
-            var win = playersHands.FirstOrDefault().Key;
+            ushort win = playersHands.FirstOrDefault().Key;
             MSC.WriteLine(win == 0 ? "The table winner" : $"The winner is player #{win}".ToUpperInvariant());
             MSC.WriteLine($"Ranked players hands:");
-            foreach (var item in playersHands)
+            foreach (KeyValuePair<ushort, PokerHand> item in playersHands)
             {
                 MSC.WriteLine(item.Key == 0 ? $"Table has {item.Value}" : $"Player #{item.Key} has {item.Value}");
             }

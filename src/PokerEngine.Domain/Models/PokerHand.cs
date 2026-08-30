@@ -12,7 +12,7 @@ namespace PokerEngine.Domain.Models
                 throw new ArgumentException(nameof(pokerHand));
             }
 
-            var cards = pokerHand.Split(",").Select(s => new Card(s.Trim()));
+            IEnumerable<Card> cards = pokerHand.Split(",").Select(s => new Card(s.Trim()));
             this = new PokerHand(cards.ToArray());
         }
 
@@ -57,7 +57,7 @@ namespace PokerEngine.Domain.Models
 
         public override bool Equals(object? obj)
         {
-            if (!TryGetPokerHand(obj, out var pokerHand))
+            if (!TryGetPokerHand(obj, out PokerHand pokerHand))
             {
                 return false;
             }
@@ -160,7 +160,7 @@ namespace PokerEngine.Domain.Models
         {
             return (my) =>
             {
-                var refKind = my[1].Value;
+                ushort refKind = my[1].Value;
                 my._qualified = my[2].Value == refKind
                              && my[3].Value == refKind;
 
@@ -329,7 +329,7 @@ namespace PokerEngine.Domain.Models
 
         private bool CheckFlush()
         {
-            var suit = this[0].Suit;
+            SuitEnum suit = this[0].Suit;
             return this[1].Suit == suit &&
                    this[2].Suit == suit &&
                    this[3].Suit == suit &&
@@ -347,7 +347,7 @@ namespace PokerEngine.Domain.Models
                 Cards[0] = new Card(1, this[0].Suit);
                 Cards = Reorder(Cards);
             }
-            var init = this[0].Value;
+            ushort init = this[0].Value;
             return this[1].Value == init - 1
                          && this[2].Value == init - 2
                          && this[3].Value == init - 3
