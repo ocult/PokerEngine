@@ -13,6 +13,7 @@ O projeto já inclui um `global.json` para fixar a versão do SDK e garantir com
 
 - `src/PokerEngine.Domain` — lógica do domínio, cartas, baralho e avaliação de mãos.
 - `src/PokerEngine.Console` — aplicação de console para testar a engine.
+- `src/PokerEngine.Web` — projeto web minimalista para consumir o domínio com inputs simples.
 - `test/PokerEngine.XunitTest` — suíte de testes unitários com xUnit.
 
 ## Getting Started
@@ -48,6 +49,14 @@ dotnet test PokerEngine.sln --nologo
 ```bash
 dotnet run --project src/PokerEngine.Console/PokerEngine.Console.csproj
 ```
+
+### 6. Executar a aplicação web
+
+```bash
+dotnet run --project src/PokerEngine.Web/PokerEngine.Web.csproj
+```
+
+A interface web expõe uma página simples com dois campos: uma mão de 5 cartas e uma simulação de Texas Hold'em.
 
 ## Executar localmente
 
