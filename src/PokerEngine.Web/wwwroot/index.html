@@ -23,29 +23,18 @@
           <button type="submit">Avaliar</button>
         </form>
 
-        <div id="hand-result" class="result-grid" aria-live="polite">
-          <div class="result-block">
-            <span class="label">Cartas</span>
-            <div id="result-cards" class="card-row">-</div>
-          </div>
-
-          <div class="result-block">
-            <span class="label">Ranking</span>
-            <strong id="result-ranking">-</strong>
-          </div>
-
-          <div class="result-block result-block-wide">
-            <span class="label">Descrição</span>
-            <strong id="result-description">-</strong>
-          </div>
-
-          <div class="result-block result-block-wide">
-            <span class="label">Resposta da API</span>
-            <pre id="result-raw">Resultado aparecerá aqui.</pre>
-          </div>
-        </div>
+        <div id="hand-result" class="result-grid" aria-live="polite"></div>
       </section>
     </main>
+
+    <template id="hand-summary-template">
+      <div class="player-card-box">
+        <div class="player-card-title"></div>
+        <div class="list-item"><strong>Ranking:</strong> <span class="best-hand-ranking"></span></div>
+        <div class="list-item"><strong>Mão:</strong> <span class="best-hand-description"></span></div>
+        <div class="card-row"></div>
+      </div>
+    </template>
 
     <template id="result-card-template">
       <div class="result-block">

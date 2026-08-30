@@ -79,3 +79,106 @@ function renderTextList(container, items, formatter = (item) => item) {
     target.appendChild(node);
   });
 }
+
+function cloneTemplate(templateSelector) {
+  const template = document.querySelector(templateSelector);
+  if (!template || !template.content) {
+    return document.createDocumentFragment();
+  }
+
+  return template.content.cloneNode(true);
+}
+
+function createResultCardBlock(labelText, cardsText, isWide = false, templateSelector = '#result-card-template') {
+  const fragment = cloneTemplate(templateSelector);
+  const block = fragment.querySelector('.result-block');
+  const label = fragment.querySelector('.label');
+  const row = fragment.querySelector('.card-row');
+
+  if (block) {
+    block.classList.toggle('result-block-wide', isWide);
+  }
+
+  if (label) {
+    label.textContent = labelText;
+  }
+
+  if (row) {
+    renderCardRow(row, cardsText, '-');
+  }
+
+  return fragment;
+}
+
+function createResultTextBlock(labelText, value, isWide = false, templateSelector = '#result-text-template') {
+  const fragment = cloneTemplate(templateSelector);
+  const block = fragment.querySelector('.result-block');
+  const label = fragment.querySelector('.label');
+  const content = fragment.querySelector('strong');
+
+  if (block) {
+    block.classList.toggle('result-block-wide', isWide);
+  }
+
+  if (label) {
+    label.textContent = labelText;
+  }
+
+  if (content) {
+    content.textContent = value ?? '-';
+  }
+
+  return fragment;
+}
+
+function createResultRawBlock(labelText, value, templateSelector = '#result-raw-template') {
+  const fragment = cloneTemplate(templateSelector);
+  const block = fragment.querySelector('.result-block');
+  const label = fragment.querySelector('.label');
+  const pre = fragment.querySelector('pre');
+
+  if (label) {
+    label.textContent = labelText;
+  }
+
+  if (pre) {
+    pre.textContent = value ?? 'Resultado aparecerá aqui.';
+  }
+
+  if (block) {
+    block.classList.add('result-block-wide');
+  }
+
+  return fragment;
+}
+
+function createHandSummaryBlock(titleText, rankingText, descriptionText, cardsText) {
+  const fragment = cloneTemplate('#hand-summary-template');
+  const card = fragment.querySelector('.player-card-box');
+  const title = fragment.querySelector('.player-card-title');
+  const ranking = fragment.querySelector('.best-hand-ranking');
+  const description = fragment.querySelector('.best-hand-description');
+  const row = fragment.querySelector('.card-row');
+
+  if (card) {
+    card.classList.add('player-card-box');
+  }
+
+  if (title) {
+    title.textContent = titleText || 'Minha Mão';
+  }
+
+  if (ranking) {
+    ranking.textContent = rankingText || '-';
+  }
+
+  if (description) {
+    description.textContent = descriptionText || '-';
+  }
+
+  if (row) {
+    renderCardRow(row, cardsText ?? '', '-');
+  }
+
+  return fragment;
+}
