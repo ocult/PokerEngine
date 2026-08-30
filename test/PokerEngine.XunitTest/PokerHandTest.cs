@@ -17,14 +17,14 @@ namespace PokerEngine.XunitTest
         [InlineData(SuitEnum.Diamonds)]
         public void PokerHand_RoyalStraightFlush(SuitEnum se)
         {
-            var suit = GetCharSuit(se);
+            var suit = PokerHandTestHelper.GetCharSuit(se);
             var hand = new PokerHand($"T{suit},Q{suit},J{suit},K{suit},A{suit}");
             Assert.Equal(HandRankingEnum.RoyalStraightFlush, hand.HandRanking);
             Assert.Equal($"A royal straight flush of {se} [A{suit}, K{suit}, Q{suit}, J{suit}, T{suit}]", hand.ToString());
         }
 
         [Theory(DisplayName = "Check all straight flush possibilities")]
-        [MemberData(nameof(StraightPars), true)]
+        [MemberData(nameof(PokerHandTestHelper.StraightPars), true, MemberType = typeof(PokerHandTestHelper))]
         public void PokerHand_StraightFlush(PokerHand hand)
         {
             Assert.Equal(HandRankingEnum.StraightFlush, hand.HandRanking);
@@ -44,14 +44,14 @@ namespace PokerEngine.XunitTest
         }
 
         [Theory(DisplayName = "Check straight A to 5")]
-        [MemberData(nameof(NotFlushSuits))]
+        [MemberData(nameof(PokerHandTestHelper.NotFlushSuits), MemberType = typeof(PokerHandTestHelper))]
         public void PokerHand_StraightAto5(SuitEnum se1, SuitEnum se2, SuitEnum se3, SuitEnum se4, SuitEnum se5)
         {
-            var s1 = GetCharSuit(se1);
-            var s2 = GetCharSuit(se2);
-            var s3 = GetCharSuit(se3);
-            var s4 = GetCharSuit(se4);
-            var s5 = GetCharSuit(se5);            
+            var s1 = PokerHandTestHelper.GetCharSuit(se1);
+            var s2 = PokerHandTestHelper.GetCharSuit(se2);
+            var s3 = PokerHandTestHelper.GetCharSuit(se3);
+            var s4 = PokerHandTestHelper.GetCharSuit(se4);
+            var s5 = PokerHandTestHelper.GetCharSuit(se5);            
             if (s1 == 'X' || s2 == 'X' ||s3 == 'X' ||s4 == 'X' ||s5 == 'X' )
             {
                 Console.Error.WriteLine($"Theory args are invalid [{se1},{se2},{se3},{se4},{se5}]");
@@ -69,7 +69,7 @@ namespace PokerEngine.XunitTest
         }
 
         [Theory(DisplayName = "Check all straight possibilities")]
-        [MemberData(nameof(StraightPars), false)]
+        [MemberData(nameof(PokerHandTestHelper.StraightPars), false, MemberType = typeof(PokerHandTestHelper))]
         public void PokerHand_Straight(PokerHand hand)
         {
             Assert.Equal(HandRankingEnum.Straight, hand.HandRanking);
@@ -106,215 +106,11 @@ namespace PokerEngine.XunitTest
             Assert.Equal(compare, handA.CompareTo(handB));
         }
 
-        public static IEnumerable<object[]> NotFlushSuits()
-        {
-            List<object[]> list = [];
-
-            for (var s1 = 1; s1 <= 4; s1++)
-            for (var s2 = 1; s2 <= 4; s2++)
-            for (var s3 = 1; s3 <= 4; s3++)
-            for (var s4 = 1; s4 <= 4; s4++)
-            for (var s5 = 1; s5 <= 4; s5++)
-            {
-                if (s1 == s2 && s1 == s3 && s1 == s4 && s1 == s5)
-                {
-                    continue;
-                }
-
-                list.Add(new object[]
-                {
-                    (SuitEnum)s1,
-                    (SuitEnum)s2,
-                    (SuitEnum)s3,
-                    (SuitEnum)s4,
-                    (SuitEnum)s5
-                });
-            }
-
-            return list;
-        }
-
-        #region Helpers
-        private static char GetCharSuit(SuitEnum s1)
-        {
-            return GetCharSuit((uint)s1);
-        }
-
-        private static char GetCharSuit(uint s1)
-        {
-            return s1 switch
-            {
-                1u => 'C',
-                2u => 'H',
-                3u => 'S',
-                4u => 'D',
-                _ => 'X'
-            };
-        }
-
-        public static IEnumerable<object[]> StraightPars(bool flush)
-        {
-            var list = new List<object[]>();
-
-            if (flush)
-            {
-                foreach (var suit in new[] { SuitEnum.Clubs, SuitEnum.Hearts, SuitEnum.Spades, SuitEnum.Diamonds })
-                {
-                    for (ushort i = 5; i < 14; ++i)
-                    {
-                        var cards = new Card[5]
-                        {
-                            new Card((ushort)(i - V1), suit),
-                            new Card((ushort)(i - V2), suit),
-                            new Card((ushort)(i - V3), suit),
-                            new Card(i, suit),
-                            new Card((ushort)(i - V4), suit)
-                        };
-
-                        list.Add(new object[] { new PokerHand(cards) });
-                    }
-                }
-
-                return list;
-            }
-
-            foreach (var item in NotFlushSuits())
-            {
-                var s1 = (SuitEnum)item[0]!;
-                var s2 = (SuitEnum)item[1]!;
-                var s3 = (SuitEnum)item[2]!;
-                var s4 = (SuitEnum)item[3]!;
-                var s5 = (SuitEnum)item[4]!;
-
-                for (ushort i = 5; i < 15; ++i)
-                {
-                    var cards = new Card[5]
-                    {
-                        new Card((ushort)(i - V1), s1),
-                        new Card((ushort)(i - V2), s2),
-                        new Card((ushort)(i - V3), s3),
-                        new Card(i, s4),
-                        new Card((ushort)(i - V4), s5)
-                    };
-
-                    list.Add(new object[] { new PokerHand(cards) });
-                }
-            }
-
-            return list;
-        }
-
-        private static CardDeck CreateOrderedDeck()
-        {
-            var cards = Enumerable.Range(2, 13)
-                .SelectMany(value => new[]
-                {
-                    new Card((ushort)value, SuitEnum.Clubs),
-                    new Card((ushort)value, SuitEnum.Hearts),
-                    new Card((ushort)value, SuitEnum.Spades),
-                    new Card((ushort)value, SuitEnum.Diamonds)
-                });
-
-            return new CardDeck(cards);
-        }
-
-        [Fact]
-        public void TexasHoldemGame_Continue_AdvancesStagesAndDealsCommunityCards()
-        {
-            var game = new TexasHoldemGame(2);
-
-            Assert.Equal(TexasHoldemStage.PreFlop, game.Stage);
-            Assert.Equal(2, game.PlayersCards.Count);
-            Assert.Empty(game.CommunityCards);
-
-            var flop = game.Continue();
-            Assert.Equal(TexasHoldemStage.Flop, game.Stage);
-            Assert.Equal(3, flop.Count);
-            Assert.Equal(3, game.CommunityCards.Count);
-
-            var turn = game.Continue();
-            Assert.Equal(TexasHoldemStage.Turn, game.Stage);
-            Assert.Equal(4, turn.Count);
-            Assert.Equal(4, game.CommunityCards.Count);
-
-            var river = game.Continue();
-            Assert.Equal(TexasHoldemStage.River, game.Stage);
-            Assert.Equal(5, river.Count);
-            Assert.Equal(5, game.CommunityCards.Count);
-
-            var complete = game.Continue();
-            Assert.Equal(TexasHoldemStage.Complete, game.Stage);
-            Assert.Equal(5, complete.Count);
-        }
-
-        [Fact]
-        public void TexasHoldemGame_GetBestHands_ReturnsRankedResultsAfterRiver()
-        {
-            var game = new TexasHoldemGame(2);
-            _ = game.Continue();
-            _ = game.Continue();
-            _ = game.Continue();
-            _ = game.Continue();
-
-            var hands = game.GetBestHands();
-
-            Assert.Equal(3, hands.Count);
-            Assert.Contains(hands, hand => hand.Key == 0);
-            Assert.Contains(hands, hand => hand.Key == 1);
-            Assert.Contains(hands, hand => hand.Key == 2);
-        }
-
-        [Fact]
-        public void TexasHoldemGame_WithKnownDeck_BurnsAndDealsCommunityCardsInOrder()
-        {
-            var game = new TexasHoldemGame(5, CreateOrderedDeck());
-
-            Assert.Equal(new Card(2, SuitEnum.Clubs), game.PlayersCards[1][0]);
-            Assert.Equal(new Card(3, SuitEnum.Hearts), game.PlayersCards[1][1]);
-            Assert.Equal(new Card(2, SuitEnum.Hearts), game.PlayersCards[2][0]);
-            Assert.Equal(new Card(3, SuitEnum.Spades), game.PlayersCards[2][1]);
-            Assert.Equal(new Card(2, SuitEnum.Spades), game.PlayersCards[3][0]);
-            Assert.Equal(new Card(3, SuitEnum.Diamonds), game.PlayersCards[3][1]);
-            Assert.Equal(new Card(2, SuitEnum.Diamonds), game.PlayersCards[4][0]);
-            Assert.Equal(new Card(4, SuitEnum.Clubs), game.PlayersCards[4][1]);
-            Assert.Equal(new Card(3, SuitEnum.Clubs), game.PlayersCards[5][0]);
-            Assert.Equal(new Card(4, SuitEnum.Hearts), game.PlayersCards[5][1]);
-
-            var flop = game.Continue();
-            Assert.Equal(new Card(5, SuitEnum.Clubs), flop[0]);
-            Assert.Equal(new Card(5, SuitEnum.Hearts), flop[1]);
-            Assert.Equal(new Card(5, SuitEnum.Spades), flop[2]);
-            Assert.Equal(3, flop.Count);
-            Assert.Equal(3, game.CommunityCards.Count);
-
-            var turn = game.Continue();
-            Assert.Equal(new Card(6, SuitEnum.Clubs), turn[3]);
-            Assert.Equal(4, turn.Count);
-
-            var river = game.Continue();
-            Assert.Equal(new Card(6, SuitEnum.Spades), river[4]);
-            Assert.Equal(5, river.Count);
-            Assert.Equal(TexasHoldemStage.River, game.Stage);
-        }
-
-        [Fact]
-        public void TexasHoldemGame_GetWinnerPlayer_UsesRankingFromBaseGame()
-        {
-            var game = new TexasHoldemGame(5, CreateOrderedDeck());
-            _ = game.Continue();
-            _ = game.Continue();
-            _ = game.Continue();
-            _ = game.Continue();
-
-            var winner = game.GetWinnerPlayer();
-            Assert.Equal(0, winner);
-        }
 
         private static SuitEnum GetRandomSuitOrDefault(SuitEnum? defaultSuit = null)
         {
             var shuffle = new Random();
             return defaultSuit ?? (SuitEnum)shuffle.Next(1, 4);
         }
-        #endregion
     }
 }
