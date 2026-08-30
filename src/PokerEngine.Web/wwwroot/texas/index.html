@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>PokerEngine - Avaliar mão</title>
+    <title>PokerEngine - Texas Hold'em</title>
     <link rel="stylesheet" href="/css/styles.css" />
   </head>
   <body>
@@ -13,19 +13,19 @@
     </nav>
 
     <main class="container">
-      <h1>PokerEngine</h1>
+      <h1>Texas Hold'em</h1>
 
       <section class="card">
-        <h2>Avaliar mão</h2>
-        <form id="hand-form">
-          <label for="cards">Cartas</label>
-          <input id="cards" name="cards" value="AC, KC, QH, JD, TS" />
-          <button type="submit">Avaliar</button>
+        <h2>Executar partida</h2>
+        <form id="texas-form">
+          <label for="players">Jogadores</label>
+          <input id="players" name="players" type="number" min="1" max="9" value="2" />
+          <button type="submit">Executar</button>
         </form>
-        <pre id="hand-result">Resultado aparecerá aqui.</pre>
+        <pre id="texas-result">Resultado aparecerá aqui.</pre>
       </section>
     </main>
 
-    <script src="/js/hand.js"></script>
+    <script src="/js/texas.js"></script>
   </body>
 </html>

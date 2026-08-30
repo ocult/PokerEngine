@@ -5,6 +5,23 @@ body {
   color: #1d1d1d;
 }
 
+.topbar {
+  display: flex;
+  gap: 18px;
+  padding: 16px 24px;
+  background: #111827;
+}
+
+.topbar a {
+  color: #f9fafb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.topbar a:hover {
+  text-decoration: underline;
+}
+
 .container {
   max-width: 860px;
   margin: 40px auto;

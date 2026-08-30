@@ -6,6 +6,5 @@ var app = builder.Build();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 app.MapPokerEndpoints();
-app.MapFallbackToFile("index.html");
 
 app.Run();
