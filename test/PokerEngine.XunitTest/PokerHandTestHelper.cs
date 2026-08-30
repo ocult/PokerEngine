@@ -35,14 +35,14 @@ namespace PokerEngine.XunitTest
                     continue;
                 }
 
-                list.Add(new object[]
-                {
+                list.Add(
+                [
                     (SuitEnum)s1,
                     (SuitEnum)s2,
                     (SuitEnum)s3,
                     (SuitEnum)s4,
                     (SuitEnum)s5
-                });
+                ]);
             }
 
             return list;
@@ -84,7 +84,7 @@ namespace PokerEngine.XunitTest
                             new((ushort)(i - 4), suit)
                         };
 
-                        list.Add(new object[] { new PokerHand(cards) });
+                        list.Add([new PokerHand(cards)]);
                     }
                 }
 
@@ -110,7 +110,7 @@ namespace PokerEngine.XunitTest
                         new((ushort)(i - 4), s5)
                     };
 
-                    list.Add(new object[] { new PokerHand(cards) });
+                    list.Add([new PokerHand(cards)]);
                 }
             }
 
