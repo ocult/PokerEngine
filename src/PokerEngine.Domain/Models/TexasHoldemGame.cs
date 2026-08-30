@@ -33,6 +33,8 @@ namespace PokerEngine.Domain.Models
 
     public sealed class TexasHoldemGame : PokerGame
     {
+        private const int MaxPlayersPerDeck = 21;
+
         private readonly CardDeck _deck;
         private readonly Dictionary<ushort, TexasHoldemPlayerCards> _playersCards;
         private readonly List<Card> _communityCards;
@@ -42,6 +44,12 @@ namespace PokerEngine.Domain.Models
             if (players == 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(players));
+            }
+
+            if (players > MaxPlayersPerDeck)
+            {
+                throw new InvalidOperationException(
+                    $"A standard deck cannot support {players} players in Texas Hold'em. The maximum supported is {MaxPlayersPerDeck}.");
             }
 
             Players = players;
@@ -170,20 +178,32 @@ namespace PokerEngine.Domain.Models
 
         private void BurnTwoCards()
         {
+            EnsureDeckHasCards(2);
             _deck.Pick();
             _deck.Pick();
         }
 
         private void BurnOneCard()
         {
+            EnsureDeckHasCards(1);
             _deck.Pick();
         }
 
         private void DealCommunityCards(int quantity)
         {
+            EnsureDeckHasCards(quantity);
             for (int i = 0; i < quantity; i++)
             {
                 _communityCards.Add(_deck.Pick());
+            }
+        }
+
+        private void EnsureDeckHasCards(int requiredCards)
+        {
+            if (_deck.Count < requiredCards)
+            {
+                throw new InvalidOperationException(
+                    $"The deck does not have enough cards to continue the hand. Required: {requiredCards}, available: {_deck.Count}.");
             }
         }
     }
