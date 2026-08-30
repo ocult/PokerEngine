@@ -1,23 +1,28 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: #f4f4f4;
-  color: #1d1d1d;
+  background: #0f172a;
+  color: #e5e7eb;
 }
 
 :root {
-  --ink-soft: #4b5563;
-  --ink-strong: #111827;
-  --spade-club-dark: #111827;
-  --heart-diamond-red: #dc2626;
-  --card-bg: #f9fafb;
-  --card-border: #e5e7eb;
+  --ink-soft: #cbd5e1;
+  --ink-strong: #f8fafc;
+  --spade-club-dark: #070503;
+  --heart-diamond-red: #f87171;
+  --card-bg: #111827;
+  --card-border: #334155;
+  --panel-bg: #111827;
+  --panel-alt: #0b1220;
+  --topbar-bg: #020817;
+  --button-bg: #fbbf24;
+  --button-bg-hover: #f59e0b;
 }
 
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: #f4f4f4;
+  background: linear-gradient(180deg, #020817 0%, #0f172a 100%);
   color: var(--ink-strong);
 }
 
@@ -25,7 +30,8 @@ body {
   display: flex;
   gap: 18px;
   padding: 16px 24px;
-  background: #111827;
+  background: var(--topbar-bg);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
 }
 
 .topbar a {
@@ -45,9 +51,10 @@ body {
 }
 
 .card {
-  background: #fff;
+  background: var(--panel-bg);
+  border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.45);
   padding: 20px;
   margin-bottom: 20px;
 }
@@ -68,23 +75,27 @@ input, button {
   padding: 10px 12px;
   font-size: 1rem;
   border-radius: 6px;
-  border: 1px solid #ccc;
+  border: 1px solid #475569;
 }
 
 input {
   flex: 1;
   min-width: 220px;
+  background: #0f172a;
+  color: var(--ink-strong);
+  border-color: #475569;
 }
 
 button {
-  background: #1d4ed8;
-  color: #fff;
+  background: var(--button-bg);
+  color: #1f2937;
   border: none;
   cursor: pointer;
+  font-weight: 700;
 }
 
 button:hover {
-  background: #163db5;
+  background: var(--button-bg-hover);
 }
 
 .result-grid {
@@ -98,7 +109,7 @@ button:hover {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  background: var(--card-bg);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 1) 100%);
   border: 1px solid var(--card-border);
   border-radius: 8px;
   padding: 12px 14px;
@@ -135,8 +146,9 @@ button:hover {
   padding: 6px 8px;
   border-radius: 8px;
   border: 1px solid var(--card-border);
-  background: #fff;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.02);
+  background: #f8fafc;
+  color: #0f172a;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.05);
   font-weight: 700;
 }
 
@@ -167,7 +179,7 @@ button:hover {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  background: #fff;
+  background: rgba(15, 23, 42, 0.9);
   border: 1px solid var(--card-border);
   border-radius: 8px;
   padding: 12px;
@@ -179,21 +191,47 @@ button:hover {
 }
 
 .podium-gold {
-  background: linear-gradient(135deg, #fef3c7 0%, #fff9db 35%, #fff 100%);
-  border-color: #d4a017;
-  box-shadow: inset 0 0 0 1px rgba(212, 160, 23, 0.35), 0 0 0 2px rgba(212, 160, 23, 0.12);
+  background: linear-gradient(135deg, #fef3c7 0%, #facc15 35%, #f59e0b 100%);
+  border-color: #facc15;
+  box-shadow: inset 0 0 0 1px rgba(255, 233, 129, 0.5), 0 0 0 2px rgba(250, 204, 21, 0.18);
+  color: #111827;
 }
 
 .podium-silver {
-  background: linear-gradient(135deg, #f3f4f6 0%, #ffffff 35%, #f8fafc 100%);
+  background: linear-gradient(135deg, #e2e8f0 0%, #f8fafc 35%, #cbd5e1 100%);
   border-color: #94a3b8;
-  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.28), 0 0 0 2px rgba(148, 163, 184, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.3), 0 0 0 2px rgba(148, 163, 184, 0.08);
+  color: #111827;
 }
 
 .podium-bronze {
-  background: linear-gradient(135deg, #fef3d8 0%, #fff7ed 35%, #fff 100%);
-  border-color: #b45309;
-  box-shadow: inset 0 0 0 1px rgba(180, 83, 9, 0.28), 0 0 0 2px rgba(180, 83, 9, 0.08);
+  background: linear-gradient(135deg, #fed7aa 0%, #fb923c 35%, #c2410c 100%);
+  border-color: #f97316;
+  box-shadow: inset 0 0 0 1px rgba(251, 146, 60, 0.45), 0 0 0 2px rgba(249, 115, 22, 0.12);
+  color: #111827;
+}
+
+.podium-gold .player-card-title,
+.podium-gold .list-item,
+.podium-gold .best-hand-ranking,
+.podium-gold .best-hand-description,
+.podium-gold strong,
+.podium-silver .player-card-title,
+.podium-silver .list-item,
+.podium-silver .best-hand-ranking,
+.podium-silver .best-hand-description,
+.podium-silver strong,
+.podium-bronze .player-card-title,
+.podium-bronze .list-item,
+.podium-bronze .best-hand-ranking,
+.podium-bronze .best-hand-description,
+.podium-bronze strong,
+.winner-box .player-card-title,
+.winner-box .list-item,
+.winner-box .best-hand-ranking,
+.winner-box .best-hand-description,
+.winner-box strong {
+  color: #111827;
 }
 
 .list-item {
@@ -202,13 +240,15 @@ button:hover {
 }
 
 pre {
-  background: #f3f3f3;
+  background: #020817;
+  border: 1px solid rgba(34, 197, 94, 0.4);
   border-radius: 8px;
   padding: 16px;
   white-space: pre-wrap;
   margin: 0;
   overflow: auto;
-  color: var(--ink-soft);
+  color: #86efac;
+  font-family: Consolas, "Courier New", monospace;
 }
 
 .is-error .result-block {

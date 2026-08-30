@@ -14,11 +14,9 @@ function applyPodiumClasses(playerId, medalClass) {
 
   const playerBlocks = document.querySelectorAll(`.player-card-box[data-player="${playerId}"]`);
   playerBlocks.forEach((block) => {
-    if (medalClass === 'podium-gold') {
-      block.classList.remove('podium-gold', 'podium-silver', 'podium-bronze');
-      if (medalClass) {
-        block.classList.add(medalClass);
-      }
+    block.classList.remove('podium-gold', 'podium-silver', 'podium-bronze');
+    if (medalClass) {
+      block.classList.add(medalClass);
     }
   });
 }
