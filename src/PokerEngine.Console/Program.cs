@@ -110,7 +110,7 @@ internal class Program
 
             MSC.WriteLine("Press any key to goes to winner announcement...");
             MSC.ReadLine();
-            PrintWinner(hands.ToList());
+            PrintWinner(hands);
             _deck = new CardDeck();
             _deck.PowerShuffle();
         }

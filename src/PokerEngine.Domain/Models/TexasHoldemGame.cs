@@ -13,7 +13,7 @@ namespace PokerEngine.Domain.Models
         Complete
     }
 
-    public sealed class TexasHoldemGame
+    public sealed class TexasHoldemGame : PokerGame
     {
         private readonly CardDeck _deck;
         private readonly Dictionary<ushort, List<Card>> _playersCards;
@@ -43,7 +43,7 @@ namespace PokerEngine.Domain.Models
             Stage = TexasHoldemStage.PreFlop;
         }
 
-        public ushort Players { get; }
+        public override ushort Players { get; }
 
         public TexasHoldemStage Stage { get; private set; }
 
@@ -81,6 +81,11 @@ namespace PokerEngine.Domain.Models
 
         public IReadOnlyList<KeyValuePair<ushort, PokerHand>> GetBestHands()
         {
+            return GetRankedHands();
+        }
+
+        protected override IDictionary<ushort, PokerHand> EvaluateBestHands()
+        {
             if (_communityCards.Count != 5)
             {
                 throw new InvalidOperationException("The community cards must be complete before evaluating best hands.");
@@ -97,7 +102,7 @@ namespace PokerEngine.Domain.Models
             var tableHand = new PokerHand(_communityCards.ToArray());
             hands.Add(0, tableHand);
 
-            return hands.OrderBy(pair => pair.Value).ToList().AsReadOnly();
+            return hands;
         }
 
         private PokerHand GetBestHandForPlayer(ushort player)

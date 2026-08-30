@@ -204,6 +204,20 @@ namespace PokerEngine.XunitTest
             return list;
         }
 
+        private static CardDeck CreateOrderedDeck()
+        {
+            var cards = Enumerable.Range(2, 13)
+                .SelectMany(value => new[]
+                {
+                    new Card((ushort)value, SuitEnum.Clubs),
+                    new Card((ushort)value, SuitEnum.Hearts),
+                    new Card((ushort)value, SuitEnum.Spades),
+                    new Card((ushort)value, SuitEnum.Diamonds)
+                });
+
+            return new CardDeck(cards);
+        }
+
         [Fact]
         public void TexasHoldemGame_Continue_AdvancesStagesAndDealsCommunityCards()
         {
@@ -253,63 +267,7 @@ namespace PokerEngine.XunitTest
         [Fact]
         public void TexasHoldemGame_WithKnownDeck_BurnsAndDealsCommunityCardsInOrder()
         {
-            var orderedCards = new[]
-            {
-                new Card(2, SuitEnum.Clubs),
-                new Card(2, SuitEnum.Hearts),
-                new Card(2, SuitEnum.Spades),
-                new Card(2, SuitEnum.Diamonds),
-                new Card(3, SuitEnum.Clubs),
-                new Card(3, SuitEnum.Hearts),
-                new Card(3, SuitEnum.Spades),
-                new Card(3, SuitEnum.Diamonds),
-                new Card(4, SuitEnum.Clubs),
-                new Card(4, SuitEnum.Hearts),
-                new Card(4, SuitEnum.Spades),
-                new Card(4, SuitEnum.Diamonds),
-                new Card(5, SuitEnum.Clubs),
-                new Card(5, SuitEnum.Hearts),
-                new Card(5, SuitEnum.Spades),
-                new Card(5, SuitEnum.Diamonds),
-                new Card(6, SuitEnum.Clubs),
-                new Card(6, SuitEnum.Hearts),
-                new Card(6, SuitEnum.Spades),
-                new Card(6, SuitEnum.Diamonds),
-                new Card(7, SuitEnum.Clubs),
-                new Card(7, SuitEnum.Hearts),
-                new Card(7, SuitEnum.Spades),
-                new Card(7, SuitEnum.Diamonds),
-                new Card(8, SuitEnum.Clubs),
-                new Card(8, SuitEnum.Hearts),
-                new Card(8, SuitEnum.Spades),
-                new Card(8, SuitEnum.Diamonds),
-                new Card(9, SuitEnum.Clubs),
-                new Card(9, SuitEnum.Hearts),
-                new Card(9, SuitEnum.Spades),
-                new Card(9, SuitEnum.Diamonds),
-                new Card(10, SuitEnum.Clubs),
-                new Card(10, SuitEnum.Hearts),
-                new Card(10, SuitEnum.Spades),
-                new Card(10, SuitEnum.Diamonds),
-                new Card(11, SuitEnum.Clubs),
-                new Card(11, SuitEnum.Hearts),
-                new Card(11, SuitEnum.Spades),
-                new Card(11, SuitEnum.Diamonds),
-                new Card(12, SuitEnum.Clubs),
-                new Card(12, SuitEnum.Hearts),
-                new Card(12, SuitEnum.Spades),
-                new Card(12, SuitEnum.Diamonds),
-                new Card(13, SuitEnum.Clubs),
-                new Card(13, SuitEnum.Hearts),
-                new Card(13, SuitEnum.Spades),
-                new Card(13, SuitEnum.Diamonds),
-                new Card(14, SuitEnum.Clubs),
-                new Card(14, SuitEnum.Hearts),
-                new Card(14, SuitEnum.Spades),
-                new Card(14, SuitEnum.Diamonds)
-            };
-
-            var game = new TexasHoldemGame(5, new CardDeck(orderedCards));
+            var game = new TexasHoldemGame(5, CreateOrderedDeck());
 
             Assert.Equal(new Card(2, SuitEnum.Clubs), game.PlayersCards[1][0]);
             Assert.Equal(new Card(3, SuitEnum.Hearts), game.PlayersCards[1][1]);
@@ -337,6 +295,19 @@ namespace PokerEngine.XunitTest
             Assert.Equal(new Card(6, SuitEnum.Spades), river[4]);
             Assert.Equal(5, river.Count);
             Assert.Equal(TexasHoldemStage.River, game.Stage);
+        }
+
+        [Fact]
+        public void TexasHoldemGame_GetWinnerPlayer_UsesRankingFromBaseGame()
+        {
+            var game = new TexasHoldemGame(5, CreateOrderedDeck());
+            _ = game.Continue();
+            _ = game.Continue();
+            _ = game.Continue();
+            _ = game.Continue();
+
+            var winner = game.GetWinnerPlayer();
+            Assert.Equal(0, winner);
         }
 
         private static SuitEnum GetRandomSuitOrDefault(SuitEnum? defaultSuit = null)
