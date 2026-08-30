@@ -27,7 +27,7 @@ function createCardToken(cardToken) {
 
   const rankNode = document.createElement('span');
   rankNode.className = 'card-rank';
-  rankNode.textContent = rank;
+  rankNode.textContent = rank === 'T' ? 10 : rank;
 
   const suitNode = document.createElement('span');
   suitNode.className = 'card-suit';

@@ -8,8 +8,6 @@ body {
 :root {
   --ink-soft: #cbd5e1;
   --ink-strong: #f8fafc;
-  --spade-club-dark: #070503;
-  --heart-diamond-red: #f87171;
   --card-bg: #111827;
   --card-border: #334155;
   --panel-bg: #111827;
@@ -160,14 +158,20 @@ button:hover {
   font-size: 0.9em;
 }
 
-.suit-clubs,
-.suit-spades {
-  color: var(--spade-club-dark);
+.suit-clubs {
+  color: #070503;
 }
 
-.suit-hearts,
+.suit-spades {
+  color: #0705F3;
+}
+
+.suit-hearts {
+  color: #f87171;
+}
+
 .suit-diamonds {
-  color: var(--heart-diamond-red);
+  color: #71a871;
 }
 
 .player-list {
