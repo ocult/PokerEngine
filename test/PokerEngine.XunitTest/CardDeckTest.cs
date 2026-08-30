@@ -8,7 +8,7 @@ namespace PokerEngine.XunitTest
         [Fact]
         public void CardDeckTest_New()
         {
-            var deck = new CardDeck();
+            var deck = new CardDeck(false);
             Assert.Equal(52, deck.Count);
             for (ushort c = 2; c < 15; ++c)
             {

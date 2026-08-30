@@ -76,84 +76,41 @@ internal class Program
 
         void TexasHoldem(ushort players)
         {
-            var playersCards = new Dictionary<ushort, IEnumerable<Card>>();
+            var game = new TexasHoldemGame(players);
 
-            for (ushort i = 1; i <= players; i++)
+            foreach (var player in game.PlayersCards)
             {
-                playersCards.Add(i, new List<Card> { _deck.Pick() });
+                MSC.WriteLine($"Player #{player.Key} have [{player.Value[0]}, {player.Value[1]}] in hand");
             }
-            for (ushort i = 1; i <= players; i++)
-            {
-                playersCards[i] = playersCards[i].Append(_deck.Pick());
-                MSC.WriteLine($"Player #{i} have [{playersCards[i].ElementAt(0)}, {playersCards[i].ElementAt(1)}] in hand");
-            }
+
             MSC.WriteLine("Press any key to continue to the table cards...");
-            MSC.Read();
-            _deck.Pick();
-            _deck.Pick();
-            var tableCards = new List<Card>
-            {
-                _deck.Pick(),
-                _deck.Pick(),
-                _deck.Pick()
-            };
-            MSC.WriteLine($"Table flop is [{tableCards[0]}, {tableCards[1]}, {tableCards[2]}]");
+            MSC.ReadLine();
+
+            var flop = game.Continue();
+            MSC.WriteLine($"Table flop is [{flop[0]}, {flop[1]}, {flop[2]}]");
             MSC.WriteLine("Press any key to continue to the turn card...");
             MSC.ReadLine();
-            _deck.Pick();
-            tableCards.Add(_deck.Pick());
-            MSC.WriteLine($"Table turn is {tableCards[3]}");
+
+            var turn = game.Continue();
+            MSC.WriteLine($"Table turn is {turn[3]}");
             MSC.WriteLine("Press any key to continue to the river card...");
             MSC.ReadLine();
-            _deck.Pick();
-            tableCards.Add(_deck.Pick());
-            MSC.WriteLine($"Table river is {tableCards[4]}");
+
+            var river = game.Continue();
+            MSC.WriteLine($"Table river is {river[4]}");
             MSC.WriteLine("Press any key to continue to the showdown...");
             MSC.ReadLine();
 
-            var hands = new Dictionary<ushort, PokerHand>();
-            for (ushort i = 1; i <= players; i++)
+            var hands = game.GetBestHands();
+            foreach (var hand in hands)
             {
-                var possibleHands = new List<PokerHand>();
-                for (ushort c = 0; c < 5; c++)
-                {
-                    var card1 = c != 0 ? tableCards[0] : playersCards[i].ElementAt(0);
-                    var card2 = c != 1 ? tableCards[1] : playersCards[i].ElementAt(0);
-                    var card3 = c != 2 ? tableCards[2] : playersCards[i].ElementAt(0);
-                    var card4 = c != 3 ? tableCards[3] : playersCards[i].ElementAt(0);
-                    var card5 = c != 4 ? tableCards[4] : playersCards[i].ElementAt(0);
-                    possibleHands.Add(new PokerHand(card1, card2, card3, card4, card5));
-
-                    card1 = c != 0 ? tableCards[0] : playersCards[i].ElementAt(1);
-                    card2 = c != 1 ? tableCards[1] : playersCards[i].ElementAt(1);
-                    card3 = c != 2 ? tableCards[2] : playersCards[i].ElementAt(1);
-                    card4 = c != 3 ? tableCards[3] : playersCards[i].ElementAt(1);
-                    card5 = c != 4 ? tableCards[4] : playersCards[i].ElementAt(1);
-                    possibleHands.Add(new PokerHand(card1, card2, card3, card4, card5));
-                }
-
-                for (ushort c = 0; c < 3; c++)
-                {
-                    var card1 = playersCards[i].ElementAt(0);
-                    var card2 = playersCards[i].ElementAt(1);
-
-                    var card3 = tableCards[c];
-                    var card4 = tableCards[c + 1];
-                    var card5 = tableCards[c + 2];
-
-                    possibleHands.Add(new PokerHand(card1, card2, card3, card4, card5));
-                }
-
-                var bestHand = possibleHands.OrderBy(h => h).First();
-                MSC.WriteLine($"A player #{i} best possible hand is {bestHand}");
-                hands.Add(i, bestHand);
+                var status = hand.Key == 0 ? "Table" : $"Player #{hand.Key}";
+                MSC.WriteLine($"{status} best possible hand is {hand.Value}");
             }
-            hands.Add(0, new PokerHand(tableCards.ToArray()));
-            var playersHands = hands.OrderBy((a) => a.Value).ToList();
 
             MSC.WriteLine("Press any key to goes to winner announcement...");
             MSC.ReadLine();
-            PrintWinner(playersHands);
+            PrintWinner(hands.ToList());
             _deck = new CardDeck();
             _deck.PowerShuffle();
         }

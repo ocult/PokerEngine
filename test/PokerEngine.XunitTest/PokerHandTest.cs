@@ -204,6 +204,141 @@ namespace PokerEngine.XunitTest
             return list;
         }
 
+        [Fact]
+        public void TexasHoldemGame_Continue_AdvancesStagesAndDealsCommunityCards()
+        {
+            var game = new TexasHoldemGame(2);
+
+            Assert.Equal(TexasHoldemStage.PreFlop, game.Stage);
+            Assert.Equal(2, game.PlayersCards.Count);
+            Assert.Empty(game.CommunityCards);
+
+            var flop = game.Continue();
+            Assert.Equal(TexasHoldemStage.Flop, game.Stage);
+            Assert.Equal(3, flop.Count);
+            Assert.Equal(3, game.CommunityCards.Count);
+
+            var turn = game.Continue();
+            Assert.Equal(TexasHoldemStage.Turn, game.Stage);
+            Assert.Equal(4, turn.Count);
+            Assert.Equal(4, game.CommunityCards.Count);
+
+            var river = game.Continue();
+            Assert.Equal(TexasHoldemStage.River, game.Stage);
+            Assert.Equal(5, river.Count);
+            Assert.Equal(5, game.CommunityCards.Count);
+
+            var complete = game.Continue();
+            Assert.Equal(TexasHoldemStage.Complete, game.Stage);
+            Assert.Equal(5, complete.Count);
+        }
+
+        [Fact]
+        public void TexasHoldemGame_GetBestHands_ReturnsRankedResultsAfterRiver()
+        {
+            var game = new TexasHoldemGame(2);
+            _ = game.Continue();
+            _ = game.Continue();
+            _ = game.Continue();
+            _ = game.Continue();
+
+            var hands = game.GetBestHands();
+
+            Assert.Equal(3, hands.Count);
+            Assert.Contains(hands, hand => hand.Key == 0);
+            Assert.Contains(hands, hand => hand.Key == 1);
+            Assert.Contains(hands, hand => hand.Key == 2);
+        }
+
+        [Fact]
+        public void TexasHoldemGame_WithKnownDeck_BurnsAndDealsCommunityCardsInOrder()
+        {
+            var orderedCards = new[]
+            {
+                new Card(2, SuitEnum.Clubs),
+                new Card(2, SuitEnum.Hearts),
+                new Card(2, SuitEnum.Spades),
+                new Card(2, SuitEnum.Diamonds),
+                new Card(3, SuitEnum.Clubs),
+                new Card(3, SuitEnum.Hearts),
+                new Card(3, SuitEnum.Spades),
+                new Card(3, SuitEnum.Diamonds),
+                new Card(4, SuitEnum.Clubs),
+                new Card(4, SuitEnum.Hearts),
+                new Card(4, SuitEnum.Spades),
+                new Card(4, SuitEnum.Diamonds),
+                new Card(5, SuitEnum.Clubs),
+                new Card(5, SuitEnum.Hearts),
+                new Card(5, SuitEnum.Spades),
+                new Card(5, SuitEnum.Diamonds),
+                new Card(6, SuitEnum.Clubs),
+                new Card(6, SuitEnum.Hearts),
+                new Card(6, SuitEnum.Spades),
+                new Card(6, SuitEnum.Diamonds),
+                new Card(7, SuitEnum.Clubs),
+                new Card(7, SuitEnum.Hearts),
+                new Card(7, SuitEnum.Spades),
+                new Card(7, SuitEnum.Diamonds),
+                new Card(8, SuitEnum.Clubs),
+                new Card(8, SuitEnum.Hearts),
+                new Card(8, SuitEnum.Spades),
+                new Card(8, SuitEnum.Diamonds),
+                new Card(9, SuitEnum.Clubs),
+                new Card(9, SuitEnum.Hearts),
+                new Card(9, SuitEnum.Spades),
+                new Card(9, SuitEnum.Diamonds),
+                new Card(10, SuitEnum.Clubs),
+                new Card(10, SuitEnum.Hearts),
+                new Card(10, SuitEnum.Spades),
+                new Card(10, SuitEnum.Diamonds),
+                new Card(11, SuitEnum.Clubs),
+                new Card(11, SuitEnum.Hearts),
+                new Card(11, SuitEnum.Spades),
+                new Card(11, SuitEnum.Diamonds),
+                new Card(12, SuitEnum.Clubs),
+                new Card(12, SuitEnum.Hearts),
+                new Card(12, SuitEnum.Spades),
+                new Card(12, SuitEnum.Diamonds),
+                new Card(13, SuitEnum.Clubs),
+                new Card(13, SuitEnum.Hearts),
+                new Card(13, SuitEnum.Spades),
+                new Card(13, SuitEnum.Diamonds),
+                new Card(14, SuitEnum.Clubs),
+                new Card(14, SuitEnum.Hearts),
+                new Card(14, SuitEnum.Spades),
+                new Card(14, SuitEnum.Diamonds)
+            };
+
+            var game = new TexasHoldemGame(5, new CardDeck(orderedCards));
+
+            Assert.Equal(new Card(2, SuitEnum.Clubs), game.PlayersCards[1][0]);
+            Assert.Equal(new Card(3, SuitEnum.Hearts), game.PlayersCards[1][1]);
+            Assert.Equal(new Card(2, SuitEnum.Hearts), game.PlayersCards[2][0]);
+            Assert.Equal(new Card(3, SuitEnum.Spades), game.PlayersCards[2][1]);
+            Assert.Equal(new Card(2, SuitEnum.Spades), game.PlayersCards[3][0]);
+            Assert.Equal(new Card(3, SuitEnum.Diamonds), game.PlayersCards[3][1]);
+            Assert.Equal(new Card(2, SuitEnum.Diamonds), game.PlayersCards[4][0]);
+            Assert.Equal(new Card(4, SuitEnum.Clubs), game.PlayersCards[4][1]);
+            Assert.Equal(new Card(3, SuitEnum.Clubs), game.PlayersCards[5][0]);
+            Assert.Equal(new Card(4, SuitEnum.Hearts), game.PlayersCards[5][1]);
+
+            var flop = game.Continue();
+            Assert.Equal(new Card(5, SuitEnum.Clubs), flop[0]);
+            Assert.Equal(new Card(5, SuitEnum.Hearts), flop[1]);
+            Assert.Equal(new Card(5, SuitEnum.Spades), flop[2]);
+            Assert.Equal(3, flop.Count);
+            Assert.Equal(3, game.CommunityCards.Count);
+
+            var turn = game.Continue();
+            Assert.Equal(new Card(6, SuitEnum.Clubs), turn[3]);
+            Assert.Equal(4, turn.Count);
+
+            var river = game.Continue();
+            Assert.Equal(new Card(6, SuitEnum.Spades), river[4]);
+            Assert.Equal(5, river.Count);
+            Assert.Equal(TexasHoldemStage.River, game.Stage);
+        }
+
         private static SuitEnum GetRandomSuitOrDefault(SuitEnum? defaultSuit = null)
         {
             var shuffle = new Random();

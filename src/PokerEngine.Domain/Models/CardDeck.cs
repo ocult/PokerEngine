@@ -2,7 +2,18 @@ namespace PokerEngine.Domain.Models
 {
     public class CardDeck
     {
-        public CardDeck()
+        public CardDeck(bool shuffle = true)
+            : this(CreateFreshDeck())
+        {
+            if (shuffle) PowerShuffle();
+        }
+
+        public CardDeck(IEnumerable<Card> cards)
+        {
+            Cards = new Queue<Card>(cards ?? throw new ArgumentNullException(nameof(cards)));
+        }
+
+        private static IEnumerable<Card> CreateFreshDeck()
         {
             var cards = new List<Card>();
             for (ushort i = 2; i < 15; i++)
@@ -12,7 +23,7 @@ namespace PokerEngine.Domain.Models
                 cards.Add(new Card(i, SuitEnum.Spades));
                 cards.Add(new Card(i, SuitEnum.Diamonds));
             }
-            Cards = new Queue<Card>(cards);
+            return cards;
         }
 
         public Queue<Card> Cards { get; private set; }
