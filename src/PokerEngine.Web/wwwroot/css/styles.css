@@ -5,6 +5,22 @@ body {
   color: #1d1d1d;
 }
 
+:root {
+  --ink-soft: #4b5563;
+  --ink-strong: #111827;
+  --spade-club-dark: #111827;
+  --heart-diamond-red: #dc2626;
+  --card-bg: #f9fafb;
+  --card-border: #e5e7eb;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+  color: var(--ink-strong);
+}
+
 .topbar {
   display: flex;
   gap: 18px;
@@ -45,6 +61,7 @@ form {
 
 label {
   font-weight: 600;
+  color: var(--ink-soft);
 }
 
 input, button {
@@ -70,10 +87,88 @@ button:hover {
   background: #163db5;
 }
 
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.result-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.result-block-wide {
+  grid-column: 1 / -1;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.result-block strong {
+  font-size: 1rem;
+  color: var(--ink-strong);
+}
+
+.card-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  min-height: 24px;
+}
+
+.card-token {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.02);
+  font-weight: 700;
+}
+
+.card-rank {
+  color: inherit;
+}
+
+.card-suit {
+  font-size: 0.9em;
+}
+
+.suit-clubs,
+.suit-spades {
+  color: var(--spade-club-dark);
+}
+
+.suit-hearts,
+.suit-diamonds {
+  color: var(--heart-diamond-red);
+}
+
 pre {
   background: #f3f3f3;
   border-radius: 8px;
   padding: 16px;
   white-space: pre-wrap;
-  margin-top: 16px;
+  margin: 0;
+  overflow: auto;
+  color: var(--ink-soft);
+}
+
+.is-error .result-block {
+  border-color: #fca5a5;
+  background: #fef2f2;
 }
