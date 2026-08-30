@@ -91,7 +91,7 @@ namespace PokerEngine.Domain.Models
                 throw new InvalidOperationException("The community cards must be complete before evaluating best hands.");
             }
 
-            Dictionary<ushort, PokerHand> hands = new Dictionary<ushort, PokerHand>();
+            Dictionary<ushort, PokerHand> hands = new();
 
             for (ushort i = 1; i <= Players; i++)
             {
@@ -99,7 +99,7 @@ namespace PokerEngine.Domain.Models
                 hands.Add(i, bestHand);
             }
 
-            PokerHand tableHand = new PokerHand(_communityCards.ToArray());
+            PokerHand tableHand = new(_communityCards.ToArray());
             hands.Add(0, tableHand);
 
             return hands;
@@ -109,7 +109,7 @@ namespace PokerEngine.Domain.Models
         {
             IReadOnlyList<Card> playerCards = _playersCards[player];
             IReadOnlyList<Card> tableCards = _communityCards;
-            List<PokerHand> possibleHands = new List<PokerHand>();
+            List<PokerHand> possibleHands = new();
 
             for (ushort c = 0; c < 5; c++)
             {

@@ -58,7 +58,7 @@ internal class Program
                         return;
                     }
                 }
-                PokerHand hand = new PokerHand(cards);
+                PokerHand hand = new(cards);
                 MSC.WriteLine($"You have {hand}");
                 ReadCards();
             }
@@ -76,7 +76,7 @@ internal class Program
 
         void TexasHoldem(ushort players)
         {
-            TexasHoldemGame game = new TexasHoldemGame(players);
+            TexasHoldemGame game = new(players);
 
             foreach (KeyValuePair<ushort, IReadOnlyList<Card>> player in game.PlayersCards)
             {
@@ -117,10 +117,10 @@ internal class Program
 
         void RandomCards(ushort players)
         {
-            Dictionary<ushort, PokerHand> hands = new Dictionary<ushort, PokerHand>();
+            Dictionary<ushort, PokerHand> hands = new();
             for (ushort i = 1; i <= players; i++)
             {
-                PokerHand playerHand = new PokerHand(_deck.Pick(5).ToArray());
+                PokerHand playerHand = new(_deck.Pick(5).ToArray());
                 hands.Add(i, playerHand);
             }
             List<KeyValuePair<ushort, PokerHand>> playersHands = hands.OrderBy((a) => a.Value).ToList();

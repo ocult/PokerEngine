@@ -77,11 +77,11 @@ namespace PokerEngine.XunitTest
                     {
                         var cards = new Card[5]
                         {
-                            new Card((ushort)(i - 1), suit),
-                            new Card((ushort)(i - 2), suit),
-                            new Card((ushort)(i - 3), suit),
-                            new Card(i, suit),
-                            new Card((ushort)(i - 4), suit)
+                            new((ushort)(i - 1), suit),
+                            new((ushort)(i - 2), suit),
+                            new((ushort)(i - 3), suit),
+                            new(i, suit),
+                            new((ushort)(i - 4), suit)
                         };
 
                         list.Add(new object[] { new PokerHand(cards) });
@@ -103,11 +103,11 @@ namespace PokerEngine.XunitTest
                 {
                     var cards = new Card[5]
                     {
-                        new Card((ushort)(i - 1), s1),
-                        new Card((ushort)(i - 2), s2),
-                        new Card((ushort)(i - 3), s3),
-                        new Card(i, s4),
-                        new Card((ushort)(i - 4), s5)
+                        new((ushort)(i - 1), s1),
+                        new((ushort)(i - 2), s2),
+                        new((ushort)(i - 3), s3),
+                        new(i, s4),
+                        new((ushort)(i - 4), s5)
                     };
 
                     list.Add(new object[] { new PokerHand(cards) });

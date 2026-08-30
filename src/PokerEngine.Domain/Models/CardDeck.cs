@@ -15,7 +15,7 @@ namespace PokerEngine.Domain.Models
 
         private static IEnumerable<Card> CreateFreshDeck()
         {
-            List<Card> cards = new List<Card>();
+            List<Card> cards = new();
             for (ushort i = 2; i < 15; i++)
             {
                 cards.Add(new Card(i, SuitEnum.Clubs));
@@ -35,7 +35,7 @@ namespace PokerEngine.Domain.Models
 
         public IList<Card> Pick(ushort quantity = 2) 
         {
-            List<Card> cards = new List<Card>();
+            List<Card> cards = new();
             for (int i = 0; i < quantity; i++)
             {
                 cards.Add(Cards.Dequeue());
@@ -52,7 +52,7 @@ namespace PokerEngine.Domain.Models
 
         public void Shuffle()
         {
-            Random rng = new Random();
+            Random rng = new();
             int n = Cards.Count;
             List<Card> cards = Cards.ToList();
             while (n > 1)
@@ -68,7 +68,7 @@ namespace PokerEngine.Domain.Models
 
         public void PowerShuffle()
         {
-            Random rng = new Random();
+            Random rng = new();
             int limit = rng.Next(Count);
             for (int i = 0; i < limit; ++i)
             {
