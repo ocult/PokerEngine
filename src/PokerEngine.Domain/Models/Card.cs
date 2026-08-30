@@ -4,7 +4,7 @@ namespace PokerEngine.Domain.Models
     {
         public string Name { get; private set; }
         public string ValueName => GetValueName(Value);
-        public string LowerValueName => ValueName.ToLowerInvariant();
+        public string LowerValueName => GetLowerValueName(Value);
         public SuitEnum Suit { get; }
         public ushort Value { get; }
 
@@ -128,8 +128,8 @@ namespace PokerEngine.Domain.Models
         public bool Equals(Card other)
         {
             var value = Value == 1 ? 14 : Value;
-            var cardValue = other.Value == 1 ? 14 : other.Value;
-            return value == cardValue && Suit == other.Suit;
+            var otherValue = other.Value == 1 ? 14 : other.Value;
+            return value == otherValue && Suit == other.Suit;
         }
 
         public override bool Equals(object? obj)

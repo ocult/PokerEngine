@@ -17,7 +17,7 @@ namespace PokerEngine.Domain.Models
         }
 
         public PokerHand(Card card1, Card card2, Card card3, Card card4, Card card5)
-            : this(new Card[] { card1, card2, card3, card4, card5 }) { }
+            : this([card1, card2, card3, card4, card5]) { }
 
         public PokerHand(Card[] cards)
         {
@@ -169,7 +169,7 @@ namespace PokerEngine.Domain.Models
                 {
                     my._fourOfKind = refKind;
                     my._kicker = my[my[0].Value == refKind ? 4 : 0];
-                    my.Cards = Reorder(my[my[0].Value == refKind ? 0 : 4], my[1], my[2], my[3], my._kicker.Value);
+                    my.Cards = [my[my[0].Value == refKind ? 0 : 4], my[1], my[2], my[3], my._kicker.Value];
                 }
                 return my;
             };
@@ -237,7 +237,7 @@ namespace PokerEngine.Domain.Models
                     my._threeOfKind = my[4].Value;
                     my._kicker = my[0];
                     my._secondKicker = my[1];
-                    my.Cards = Reorder(my[2], my[3], my[4], my._kicker.Value, my._secondKicker.Value);
+                    my.Cards = [my[2], my[3], my[4], my._kicker.Value, my._secondKicker.Value];
                 }
                 else if (my[2].Value == my[1].Value && my[2].Value == my[3].Value)
                 {
@@ -245,7 +245,7 @@ namespace PokerEngine.Domain.Models
                     my._threeOfKind = my[2].Value;
                     my._kicker = my[0];
                     my._secondKicker = my[4];
-                    my.Cards = Reorder(my[1], my[2], my[3], my._kicker.Value, my._secondKicker.Value);
+                    my.Cards = [my[1], my[2], my[3], my._kicker.Value, my._secondKicker.Value];
                 }
                 return my;
             };
@@ -262,7 +262,7 @@ namespace PokerEngine.Domain.Models
                     my._kicker = my[0];
                     my._highPair = my[1].Value;
                     my._lowPair = my[3].Value;
-                    my.Cards = Reorder(my[1], my[2], my[3], my[4], my._kicker.Value);
+                    my.Cards = [my[1], my[2], my[3], my[4], my._kicker.Value];
                 }
                 else if (my[0].Value == my[1].Value && my[3].Value == my[4].Value)
                 {
@@ -270,7 +270,7 @@ namespace PokerEngine.Domain.Models
                     my._kicker = my[2];
                     my._highPair = my[0].Value;
                     my._lowPair = my[3].Value;
-                    my.Cards = Reorder(my[0], my[1], my[3], my[4], my._kicker.Value);
+                    my.Cards = [my[0], my[1], my[3], my[4], my._kicker.Value];
                 }
                 else if (my[0].Value == my[1].Value && my[2].Value == my[3].Value)
                 {
@@ -303,7 +303,7 @@ namespace PokerEngine.Domain.Models
                     my._kicker = my[0];
                     my._secondKicker = my[3];
                     my._lastKicker = my[4];
-                    my.Cards = Reorder(my[1], my[2], my._kicker.Value, my._secondKicker.Value, my._lastKicker.Value);
+                    my.Cards = [my[1], my[2], my._kicker.Value, my._secondKicker.Value, my._lastKicker.Value];
                 }
                 else if (my[2].Value == my[3].Value)
                 {
@@ -312,7 +312,7 @@ namespace PokerEngine.Domain.Models
                     my._kicker = my[0];
                     my._secondKicker = my[1];
                     my._lastKicker = my[4];
-                    my.Cards = Reorder(my[2], my[3], my._kicker.Value, my._secondKicker.Value, my._lastKicker.Value);
+                    my.Cards = [my[2], my[3], my._kicker.Value, my._secondKicker.Value, my._lastKicker.Value];
                 }
                 else if (my[3].Value == my[4].Value)
                 {
@@ -321,14 +321,10 @@ namespace PokerEngine.Domain.Models
                     my._kicker = my[0];
                     my._secondKicker = my[1];
                     my._lastKicker = my[2];
-                    my.Cards = Reorder(my[3], my[4], my._kicker.Value, my._secondKicker.Value, my._lastKicker.Value);
+                    my.Cards = [my[3], my[4], my._kicker.Value, my._secondKicker.Value, my._lastKicker.Value];
                 }
                 return my;
             };
-        }
-        private static Card[] Reorder(Card card1, Card card2, Card card3, Card card4, Card card5)
-        {
-            return new Card[] { card1, card2, card3, card4, card5 };
         }
 
         private bool CheckFlush()

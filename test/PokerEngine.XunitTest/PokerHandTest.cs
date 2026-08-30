@@ -149,14 +149,14 @@ namespace PokerEngine.XunitTest
                     s1 != s4 ||
                     s1 != s5)
                 {
-                    list.Add(new object[]
-                    {
+                    list.Add(
+                    [
                         (SuitEnum)s1,
                         (SuitEnum)s2,
                         (SuitEnum)s3,
                         (SuitEnum)s4,
                         (SuitEnum)s5
-                    });
+                    ]);
                 }
             }
             return list;

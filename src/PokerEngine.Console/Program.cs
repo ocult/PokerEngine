@@ -19,9 +19,9 @@ internal class Program
 
         void ReadCards(string? cards = null)
         {
-            if (cards is null)
+            while (string.IsNullOrWhiteSpace(cards))
             {
-                MSC.WriteLine("What's yours cards?");
+                MSC.WriteLine("What's yours cards? Or quit/exit/q to exit, or random [players] to get random hands, or texas [players] to play texas holdem");
                 cards = MSC.ReadLine();
             }
             cards = cards.ToUpperInvariant();
@@ -87,6 +87,7 @@ internal class Program
                 playersCards[i] = playersCards[i].Append(_deck.Pick());
                 MSC.WriteLine($"Player #{i} have [{playersCards[i].ElementAt(0)}, {playersCards[i].ElementAt(1)}] in hand");
             }
+            MSC.WriteLine("Press any key to continue to the table cards...");
             MSC.Read();
             _deck.Pick();
             _deck.Pick();
@@ -97,14 +98,17 @@ internal class Program
                 _deck.Pick()
             };
             MSC.WriteLine($"Table flop is [{tableCards[0]}, {tableCards[1]}, {tableCards[2]}]");
+            MSC.WriteLine("Press any key to continue to the turn card...");
             MSC.ReadLine();
             _deck.Pick();
             tableCards.Add(_deck.Pick());
             MSC.WriteLine($"Table turn is {tableCards[3]}");
+            MSC.WriteLine("Press any key to continue to the river card...");
             MSC.ReadLine();
             _deck.Pick();
             tableCards.Add(_deck.Pick());
             MSC.WriteLine($"Table river is {tableCards[4]}");
+            MSC.WriteLine("Press any key to continue to the showdown...");
             MSC.ReadLine();
 
             var hands = new Dictionary<ushort, PokerHand>();
@@ -147,6 +151,7 @@ internal class Program
             hands.Add(0, new PokerHand(tableCards.ToArray()));
             var playersHands = hands.OrderBy((a) => a.Value).ToList();
 
+            MSC.WriteLine("Press any key to goes to winner announcement...");
             MSC.ReadLine();
             PrintWinner(playersHands);
             _deck = new CardDeck();
