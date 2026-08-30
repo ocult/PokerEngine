@@ -13,6 +13,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{56873C1A-D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokerEngine.XunitTest", "test\PokerEngine.XunitTest\PokerEngine.XunitTest.csproj", "{43544E48-40E4-4C06-B56E-A39E397A3ECD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokerEngine.Web", "src\PokerEngine.Web\PokerEngine.Web.csproj", "{18AD513F-581A-4DBD-9FEC-0B1E908D5181}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,9 +23,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{10B17079-05B3-444A-8B8C-844C0609A3BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -62,10 +61,26 @@ Global
 		{43544E48-40E4-4C06-B56E-A39E397A3ECD}.Release|x64.Build.0 = Release|Any CPU
 		{43544E48-40E4-4C06-B56E-A39E397A3ECD}.Release|x86.ActiveCfg = Release|Any CPU
 		{43544E48-40E4-4C06-B56E-A39E397A3ECD}.Release|x86.Build.0 = Release|Any CPU
+		{18AD513F-581A-4DBD-9FEC-0B1E908D5181}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18AD513F-581A-4DBD-9FEC-0B1E908D5181}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18AD513F-581A-4DBD-9FEC-0B1E908D5181}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{18AD513F-581A-4DBD-9FEC-0B1E908D5181}.Debug|x64.Build.0 = Debug|Any CPU
+		{18AD513F-581A-4DBD-9FEC-0B1E908D5181}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{18AD513F-581A-4DBD-9FEC-0B1E908D5181}.Debug|x86.Build.0 = Debug|Any CPU
+		{18AD513F-581A-4DBD-9FEC-0B1E908D5181}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18AD513F-581A-4DBD-9FEC-0B1E908D5181}.Release|Any CPU.Build.0 = Release|Any CPU
+		{18AD513F-581A-4DBD-9FEC-0B1E908D5181}.Release|x64.ActiveCfg = Release|Any CPU
+		{18AD513F-581A-4DBD-9FEC-0B1E908D5181}.Release|x64.Build.0 = Release|Any CPU
+		{18AD513F-581A-4DBD-9FEC-0B1E908D5181}.Release|x86.ActiveCfg = Release|Any CPU
+		{18AD513F-581A-4DBD-9FEC-0B1E908D5181}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{10B17079-05B3-444A-8B8C-844C0609A3BE} = {9C35ABF3-E7AC-4EC8-A2C6-2DDB067808BB}
 		{E9F2A23C-6156-424B-AF16-7EBE2194CFA1} = {9C35ABF3-E7AC-4EC8-A2C6-2DDB067808BB}
 		{43544E48-40E4-4C06-B56E-A39E397A3ECD} = {56873C1A-DBDE-45D7-A51A-BAC0197AAA48}
+		{18AD513F-581A-4DBD-9FEC-0B1E908D5181} = {9C35ABF3-E7AC-4EC8-A2C6-2DDB067808BB}
 	EndGlobalSection
 EndGlobal

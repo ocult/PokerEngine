@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PokerEngine - Evaluate hand</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <nav class="topbar">
+      <a href="/">Evaluate hand</a>
+      <a href="/texas/">Texas Hold'em</a>
+    </nav>
+
+    <main class="container">
+      <h1>PokerEngine</h1>
+
+      <section class="card">
+        <h2>Evaluate hand</h2>
+        <form id="hand-form">
+          <label for="cards">Cards</label>
+          <input id="cards" name="cards" value="AC, KC, QH, JD, TS" />
+          <button type="submit">Evaluate</button>
+        </form>
+
+        <div id="hand-result" class="result-grid" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <template id="hand-summary-template">
+      <div class="player-card-box">
+        <div class="player-card-title"></div>
+        <div class="list-item"><strong>Ranking:</strong> <span class="best-hand-ranking"></span></div>
+        <div class="list-item"><strong>Hand:</strong> <span class="best-hand-description"></span></div>
+        <div class="card-row"></div>
+      </div>
+    </template>
+
+    <template id="result-card-template">
+      <div class="result-block">
+        <span class="label"></span>
+        <div class="card-row"></div>
+      </div>
+    </template>
+
+    <template id="result-text-template">
+      <div class="result-block result-block-wide">
+        <span class="label"></span>
+        <strong></strong>
+      </div>
+    </template>
+
+    <template id="result-raw-template">
+      <div class="result-block result-block-wide">
+        <span class="label"></span>
+        <pre></pre>
+      </div>
+    </template>
+
+    <script src="/js/ui.js"></script>
+    <script src="/js/hand.js"></script>
+  </body>
+</html>

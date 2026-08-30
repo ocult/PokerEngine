@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PokerEngine - Texas Hold'em</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <nav class="topbar">
+      <a href="/">Evaluate hand</a>
+      <a href="/texas/">Texas Hold'em</a>
+    </nav>
+
+    <main class="container">
+      <h1>Texas Hold'em</h1>
+
+      <section class="card">
+        <h2>Create a sample round</h2>
+        <form id="texas-form">
+          <label for="players">Players</label>
+          <input id="players" name="players" type="number" min="1" max="21" value="6" />
+          <button type="submit">Execute</button>
+        </form>
+
+        <div id="texas-result" aria-live="polite">
+          <div class="result-grid">
+            <div class="result-block">
+              <span class="label">Community cards</span>
+              <div id="community-cards" class="card-row">-</div>
+            </div>
+
+            <div class="result-block">
+              <span class="label">Winner</span>
+              <strong id="winner-summary">-</strong>
+            </div>
+
+            <div class="result-block result-block-wide">
+              <span class="label">Players</span>
+              <div id="player-cards" class="player-list"></div>
+            </div>
+
+            <div class="result-block result-block-wide">
+              <span class="label">Best hands</span>
+              <div id="best-hands" class="player-list"></div>
+            </div>
+
+            <div class="result-block result-block-wide">
+              <span class="label">API Response</span>
+              <pre id="result-raw">API Response appears here.</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <template id="player-card-template">
+      <div class="player-card-box">
+        <div class="player-card-title"></div>
+        <div class="card-row"></div>
+      </div>
+    </template>
+
+    <template id="best-hand-template">
+      <div class="player-card-box">
+        <div class="player-card-title"></div>
+        <div class="list-item"><strong>Ranking:</strong> <span class="best-hand-ranking"></span></div>
+        <div class="list-item"><strong>Mão:</strong> <span class="best-hand-description"></span></div>
+        <div class="card-row"></div>
+      </div>
+    </template>
+
+    <script src="/js/ui.js"></script>
+    <script src="/js/texas.js"></script>
+  </body>
+</html>
