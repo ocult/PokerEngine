@@ -1,3 +1,3 @@
 namespace PokerEngine.Web.Endpoints;
 
-public record TexasHoldemRequest(ushort Players);
+public record TexasHoldemRequest(ushort Players, Guid GameId);

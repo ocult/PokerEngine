@@ -1,4 +1,6 @@
 const texasForm = document.querySelector('#texas-form');
+const gameId = texasForm.querySelector('#gameid');
+const phase = texasForm.querySelector('#phase');
 const communityCards = document.querySelector('#community-cards');
 const winnerSummary = document.querySelector('#winner-summary');
 const playerCards = document.querySelector('#player-cards');
@@ -46,8 +48,8 @@ function createBestHandCard(entry, index, winnerPlayer) {
   const cardsContainer = fragment.querySelector('.card-row');
 
   const displayName = entry.player === 0 ? 'Table' : `Player #${entry.player}`;
-  const isWinner = entry.player === winnerPlayer;
-  const medalClass = index === 0 ? 'podium-gold' : index === 1 ? 'podium-silver' : index === 2 ? 'podium-bronze' : '';
+  const isWinner = phase.dataset.phase === 'Complete' && entry.player === winnerPlayer;
+  const medalClass = phase.dataset.phase !== 'Complete' ? '' : index === 0 ? 'podium-gold' : index === 1 ? 'podium-silver' : index === 2 ? 'podium-bronze' : '';
   const className = medalClass ? `player-card-box ${medalClass}` : 'player-card-box';
 
   card.dataset.player = String(entry.player);
@@ -95,7 +97,7 @@ function renderPlayerList(holeCards) {
     return;
   }
 
-  const winnerPlayer = Number(document.querySelector('#winner-summary')?.dataset?.winnerPlayer ?? -1);
+  const winnerPlayer = Number(winnerSummary.dataset?.winnerPlayer ?? -1);
   playerCards.innerHTML = '';
 
   Object.entries(holeCards).forEach(([player, cards]) => {
@@ -110,7 +112,7 @@ function renderBestHands(entries) {
     return;
   }
 
-  const winnerPlayer = Number(document.querySelector('#winner-summary')?.dataset?.winnerPlayer ?? -1);
+  const winnerPlayer = Number(winnerSummary.dataset?.winnerPlayer ?? -1);
   bestHands.innerHTML = '';
 
   entries.forEach((entry, index) => {
@@ -119,6 +121,14 @@ function renderBestHands(entries) {
 }
 
 function renderTexasSuccess(payload) {
+  gameId.value = payload.gameId ?? '';
+  if (payload.phase === 'Complete') {
+    gameId.value = '';
+  }
+  texasForm.querySelector('button[type="submit"]').textContent = gameId.value ? 'Continue' : 'Next Hand';
+  phase.textContent = `Stage: ${payload.phase ? payload.phase : ' - '}`;
+  phase.dataset.phase = payload.phase;
+
   renderCardRow(communityCards, payload.communityCards?.join(', ') ?? '');
 
   const winnerPlayer = payload.winner ? payload.winner.player : null;
@@ -135,10 +145,11 @@ if (texasForm) {
     event.preventDefault();
 
     const players = document.querySelector('#players').value;
+    const gameid = gameId.value;
     const response = await fetch('/api/texas-holdem', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ players })
+      body: new URLSearchParams({ players, gameid })
     });
 
     const payload = await response.json();

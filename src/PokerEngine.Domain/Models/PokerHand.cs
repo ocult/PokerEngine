@@ -61,6 +61,7 @@ namespace PokerEngine.Domain.Models
             {
                 return false;
             }
+            if (Cards.Length == 0 || pokerHand.Cards.Length == 0) return pokerHand.Cards.Length == Cards.Length;
             return Cards[0] == pokerHand.Cards[0]
                    && Cards[1] == pokerHand.Cards[1]
                    && Cards[2] == pokerHand.Cards[2]
@@ -70,6 +71,7 @@ namespace PokerEngine.Domain.Models
 
         public override int GetHashCode()
         {
+            if (Cards.Count() == 0) return 0;
             return Cards[0].GetHashCode()
                    + Cards[1].GetHashCode()
                    + Cards[2].GetHashCode()
@@ -77,12 +79,15 @@ namespace PokerEngine.Domain.Models
                    + Cards[4].GetHashCode();
         }
 
-        public static string GetCardsString(IList<Card> cards) => $"{cards[0]}, {cards[1]}, {cards[2]}, {cards[3]}, {cards[4]}";
+        public static string GetCardsString(IList<Card> cards) {            
+            return cards is null || cards.Count == 0 ? string.Empty : string.Join(", ", cards);
+        }
 
         public string CardsString => $"[{GetCardsString(Cards)}]";
 
         public override string ToString()
         {
+            if (Cards is null || Cards.Length != 5) return "Don't cards enough";
             string name = HandRanking switch
             {
                 HandRankingEnum.RoyalStraightFlush => $"A royal straight flush of {this[0].Suit}",
