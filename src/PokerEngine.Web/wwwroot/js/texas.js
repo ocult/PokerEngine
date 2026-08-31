@@ -159,6 +159,7 @@ if (texasForm) {
       return;
     }
 
+    document.querySelector('#players').setAttribute('disabled', 'disabled');
     renderTexasSuccess(payload);
   });
 }
