@@ -1,36 +1,7 @@
-namespace PokerEngine.Domain.Models
+using PokerEngine.Domain.Models;
+
+namespace PokerEngine.Domain.TexasHoldem
 {
-    public enum TexasHoldemStage
-    {
-        PreFlop,
-        Flop,
-        Turn,
-        River,
-        Complete
-    }
-
-    public sealed class TexasHoldemPlayerCards
-    {
-        public TexasHoldemPlayerCards(Card firstCard, Card secondCard)
-        {
-            FirstCard = firstCard;
-            SecondCard = secondCard;
-        }
-
-        public Card FirstCard { get; }
-
-        public Card SecondCard { get; }
-
-        public IReadOnlyList<Card> Cards => new[] { FirstCard, SecondCard };
-
-        public Card this[int index] => index switch
-        {
-            0 => FirstCard,
-            1 => SecondCard,
-            _ => throw new ArgumentOutOfRangeException(nameof(index))
-        };
-    }
-
     public sealed class TexasHoldemGame : PokerGame
     {
         private const int MaxPlayersPerDeck = 21;
@@ -135,11 +106,11 @@ namespace PokerEngine.Domain.Models
             }
 
             if (_communityCards.Count == 5)
-            {                
+            {
                 PokerHand tableHand = new(_communityCards.ToArray());
                 hands.Add(0, tableHand);
             }
-            
+
             return hands;
         }
 
@@ -161,7 +132,7 @@ namespace PokerEngine.Domain.Models
                     card5 = c != 4 ? tableCards[4] : playerCards[0];
                     possibleHands.Add(new PokerHand(card1, card2, card3, card4, card5));
                 }
-                
+
                 card1 = c != 0 ? tableCards[0] : playerCards[1];
                 card2 = c != 1 ? tableCards[1] : playerCards[1];
                 card3 = c != 2 ? tableCards[2] : playerCards[1];

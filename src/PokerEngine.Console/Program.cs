@@ -1,4 +1,5 @@
 ﻿using PokerEngine.Domain.Models;
+using PokerEngine.Domain.TexasHoldem;
 using MSC = System.Console;
 
 internal class Program
