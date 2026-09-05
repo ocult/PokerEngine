@@ -11,7 +11,8 @@ O projeto já inclui um `global.json` para fixar a versão do SDK e garantir com
 
 ## Estrutura do projeto
 
-- `src/PokerEngine.Domain` — lógica do domínio, cartas, baralho e avaliação de mãos.
+- `src/PokerEngine.Domain/Models` — regras de cartas, baralho e avaliação de mãos.
+- `src/PokerEngine.Domain/Betting` — regras desacopladas de uma rodada de apostas e divisão dos potes.
 - `src/PokerEngine.Console` — aplicação de console para testar a engine.
 - `src/PokerEngine.Web` — projeto web minimalista para consumir o domínio com inputs simples.
 - `test/PokerEngine.XunitTest` — suíte de testes unitários com xUnit.
