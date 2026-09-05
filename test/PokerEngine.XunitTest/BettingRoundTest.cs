@@ -28,6 +28,13 @@ namespace PokerEngine.XunitTest
             Assert.Throws<ArgumentNullException>(() => new BettingRound(null!));
             Assert.Throws<ArgumentOutOfRangeException>(() => new BettingPlayer(0, 100));
             Assert.Throws<ArgumentOutOfRangeException>(() => new BettingPlayer(1, 0));
+
+            BettingPlayer? nullPlayer = null;
+            Assert.Throws<ArgumentException>(() => new BettingRound(new BettingPlayer?[]
+            {
+                new BettingPlayer(1, 100),
+                nullPlayer
+            }!));
         }
 
         [Fact]
@@ -41,6 +48,21 @@ namespace PokerEngine.XunitTest
             Assert.Equal(0, player.RemainingStack);
             Assert.Equal(100, player.Contribution);
             Assert.Equal(BettingPlayerStatus.AllIn, player.Status);
+        }
+
+        [Fact]
+        public void BettingRound_CopiesExistingPlayerContributionAndFoldState()
+        {
+            var sourceRound = CreateRound((1, 100), (2, 100));
+            sourceRound.Contribute(1, 25);
+            sourceRound.Fold(1);
+
+            var round = new BettingRound(sourceRound.Players);
+
+            var player = round.Players.Single(player => player.Id == 1);
+            Assert.Equal(25, player.Contribution);
+            Assert.Equal(75, player.RemainingStack);
+            Assert.Equal(BettingPlayerStatus.Folded, player.Status);
         }
 
         [Fact]
@@ -196,6 +218,7 @@ namespace PokerEngine.XunitTest
                 [0] = new ushort[] { 3 }
             }));
             Assert.Throws<ArgumentException>(() => round.Settle(new Dictionary<int, IReadOnlyCollection<ushort>>()));
+            Assert.Throws<ArgumentNullException>(() => round.Settle(null!));
         }
 
         [Fact]
