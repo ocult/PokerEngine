@@ -90,6 +90,39 @@ namespace PokerEngine.XunitTest
         }
 
         [Fact]
+        public void TexasHoldemGame_GetBestHands_ReturnsValidHandsAfterFlop()
+        {
+            var game = new TexasHoldemGame(2, PokerHandTestHelper.CreateOrderedDeck());
+
+            _ = game.Continue();
+
+            var hands = game.GetBestHands();
+
+            Assert.Equal(TexasHoldemStage.Flop, game.Stage);
+            Assert.Equal(2, hands.Count);
+            Assert.All(hands, hand => Assert.Equal(5, hand.Value.Cards.Length));
+            Assert.Contains(hands, hand => hand.Key == 1);
+            Assert.Contains(hands, hand => hand.Key == 2);
+        }
+
+        [Fact]
+        public void TexasHoldemGame_GetBestHands_ReturnsValidHandsAfterTurn()
+        {
+            var game = new TexasHoldemGame(2, PokerHandTestHelper.CreateOrderedDeck());
+
+            _ = game.Continue();
+            _ = game.Continue();
+
+            var hands = game.GetBestHands();
+
+            Assert.Equal(TexasHoldemStage.Turn, game.Stage);
+            Assert.Equal(2, hands.Count);
+            Assert.All(hands, hand => Assert.Equal(5, hand.Value.Cards.Length));
+            Assert.Contains(hands, hand => hand.Key == 1);
+            Assert.Contains(hands, hand => hand.Key == 2);
+        }
+
+        [Fact]
         public void TexasHoldemGame_WithKnownDeck_BurnsAndDealsCommunityCardsInOrder()
         {
             var deck = new CardDeck();

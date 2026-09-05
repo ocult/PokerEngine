@@ -12,47 +12,80 @@ public static class TexasHoldemEndpoints
 
     public static IResult GetTexasHoldemByQueryString(ushort players)
     {
-        return EvaluateTexasHoldem(players);
+        return CreateTexasHoldemGame(players);
     }
 
     public static async Task<IResult> PostTexasHoldemFromRequest(HttpRequest request)
     {
         string? players = request.HasFormContentType ? request.Form["players"].ToString() : null;
-        if (string.IsNullOrWhiteSpace(players))
+        string? gameId = request.HasFormContentType ? request.Form["gameid"].ToString() : null;
+        
+        if (string.IsNullOrWhiteSpace(players) && string.IsNullOrWhiteSpace(gameId))
         {
             var payload = await request.ReadFromJsonAsync<TexasHoldemRequest>();
             players = payload?.Players.ToString();
+            gameId = payload?.GameId.ToString();
         }
 
-        return ushort.TryParse(players, out ushort parsedPlayers)
-            ? EvaluateTexasHoldem(parsedPlayers)
-            : Results.BadRequest(new { error = "You need to input a valid player number." });
+        if (string.IsNullOrWhiteSpace(gameId))
+        {
+            return ushort.TryParse(players, out ushort parsedPlayers)
+                ? CreateTexasHoldemGame(parsedPlayers)
+                : Results.BadRequest(new { error = "You need to input a valid player number." });
+        }
+
+        return Guid.TryParse(gameId, out Guid parsedGameId)
+            ? ContinueTexasHoldemGame(parsedGameId)
+            : Results.BadRequest(new { error = "You need to input a valid game ID, or informe a player number to new game." });
     }
 
-    private static IResult EvaluateTexasHoldem(ushort players)
+    private static IResult CreateTexasHoldemGame(ushort players)
     {
         if (players is 0 or > 21)
         {
             return Results.BadRequest(new { error = "You need to input a valid number of players between 1 and 21." });
         }
 
-        TexasHoldemGame game = new(players);
-        IReadOnlyList<Card> flop = game.Continue();
-        IReadOnlyList<Card> turn = game.Continue();
-        IReadOnlyList<Card> river = game.Continue();
-
-        IReadOnlyList<KeyValuePair<ushort, PokerHand>> bestHands = game.GetBestHands();
-        KeyValuePair<ushort, PokerHand> winner = bestHands.First();
+        TexasHoldemGame game = TexasHoldemFactory.CreateTexasHoldemGame(players, out Guid id);
 
         return Results.Ok(new
         {
             players,
+            gameId = id,
             phase = game.Stage.ToString(),
             holeCards = game.PlayersCards.ToDictionary(
                 item => item.Key,
                 item => new[] { item.Value.FirstCard.ToString(), item.Value.SecondCard.ToString() }),
             communityCards = game.CommunityCards.Select(card => card.ToString()).ToArray(),
-            bestHands = bestHands.Select(item => new
+            bestHands = default(IEnumerable<KeyValuePair<ushort, PokerHand>>),
+            winner = default(KeyValuePair<ushort, PokerHand>)
+        });
+    }
+
+    private static IResult ContinueTexasHoldemGame(Guid gameId)
+    {
+        TexasHoldemGame? game = TexasHoldemFactory.GetGameById(gameId);
+
+        if (game is null)
+        {
+            return Results.NotFound(new { error = "Game not found." });
+        }
+
+        if (game.Stage != TexasHoldemStage.Complete) game.Continue();
+
+        IReadOnlyList<KeyValuePair<ushort, PokerHand>>? bestHands = game.Stage != TexasHoldemStage.PreFlop ? game.GetBestHands() : default;
+        KeyValuePair<ushort, PokerHand> winner = game.Stage == TexasHoldemStage.Complete ? bestHands.First() : default;
+
+        return Results.Ok(new
+        {
+            players = game.Players,
+            gameId,
+            phase = game.Stage.ToString(),
+            holeCards = game.PlayersCards.ToDictionary(
+                item => item.Key,
+                item => new[] { item.Value.FirstCard.ToString(), item.Value.SecondCard.ToString() }),
+            communityCards = game.CommunityCards.Select(card => card.ToString()).ToArray(),
+            bestHands = bestHands is null ? null : bestHands.Select(item => new
             {
                 player = item.Key,
                 ranking = item.Value.HandRanking.ToString(),

@@ -20,7 +20,9 @@
         <form id="texas-form">
           <label for="players">Players</label>
           <input id="players" name="players" type="number" min="1" max="21" value="6" />
-          <button type="submit">Execute</button>
+          <input id="gameid" name="gameid" type="hidden" value="" />
+          <button type="submit">Create</button>
+          <span id="phase"></span>          
         </form>
 
         <div id="texas-result" aria-live="polite">
