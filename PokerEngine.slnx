@@ -1,0 +1,15 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/src/">
+    <Project Path="src/PokerEngine.Console/PokerEngine.Console.csproj" />
+    <Project Path="src/PokerEngine.Domain/PokerEngine.Domain.csproj" />
+    <Project Path="src/PokerEngine.Web/PokerEngine.Web.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/PokerEngine.XunitTest/PokerEngine.XunitTest.csproj" />
+  </Folder>
+</Solution>

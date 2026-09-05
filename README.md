@@ -35,13 +35,13 @@ dotnet restore
 ### 3. Compilar a solução
 
 ```bash
-dotnet build PokerEngine.sln --nologo
+dotnet build PokerEngine.slnx --nologo
 ```
 
 ### 4. Executar os testes
 
 ```bash
-dotnet test PokerEngine.sln --nologo
+dotnet test PokerEngine.slnx --nologo
 ```
 
 ### 5. Executar a aplicação de console
@@ -100,4 +100,4 @@ RANDOM 3
 
 ## Observação
 
-A solução foi atualizada para usar o .NET 10 (`net10.0`) e os pacotes do xUnit foram atualizados para versões compatíveis com o SDK atual.
+A solução usa o formato `.slnx` do .NET 10, os projetos compilam para `net10.0` e os pacotes do xUnit são compatíveis com o SDK atual.

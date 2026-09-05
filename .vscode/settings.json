@@ -1,4 +1,4 @@
 {
-  "dotnet.defaultSolution": "PokerEngine.sln",
+  "dotnet.defaultSolution": "PokerEngine.slnx",
   "dotnet.preferCSharpExtension": true
 }
