@@ -7,7 +7,7 @@
       "command": "dotnet",
       "args": [
         "build",
-        "${workspaceFolder}/PokerEngine.sln",
+        "${workspaceFolder}/PokerEngine.slnx",
         "--nologo"
       ],
       "options": {
@@ -39,7 +39,7 @@
       "command": "dotnet",
       "args": [
         "test",
-        "${workspaceFolder}/PokerEngine.sln",
+        "${workspaceFolder}/PokerEngine.slnx",
         "--nologo"
       ],
       "options": {
@@ -57,7 +57,7 @@
         "type": "process",
         "args": [
             "build",
-            "${workspaceFolder}/PokerEngine.sln",
+            "${workspaceFolder}/PokerEngine.slnx",
             "/property:GenerateFullPaths=true",
             "/consoleloggerparameters:NoSummary;ForceNoAlign"
         ],
@@ -69,7 +69,7 @@
         "type": "process",
         "args": [
             "publish",
-            "${workspaceFolder}/PokerEngine.sln",
+            "${workspaceFolder}/PokerEngine.slnx",
             "/property:GenerateFullPaths=true",
             "/consoleloggerparameters:NoSummary;ForceNoAlign"
         ],
@@ -83,7 +83,7 @@
             "watch",
             "run",
             "--project",
-            "${workspaceFolder}/PokerEngine.sln"
+            "${workspaceFolder}/PokerEngine.slnx"
         ],
         "problemMatcher": "$msCompile"
     }

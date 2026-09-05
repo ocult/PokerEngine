@@ -52,6 +52,44 @@ namespace PokerEngine.XunitTest
         }
 
         [Fact]
+        public void TexasHoldemGame_GetBestHands_EqualPairHandsTieAfterComplete()
+        {
+            var deck = new CardDeck(
+            [
+                new Card(9, SuitEnum.Clubs),
+                new Card(9, SuitEnum.Diamonds),
+                new Card(9, SuitEnum.Hearts),
+                new Card(9, SuitEnum.Spades),
+                new Card(2, SuitEnum.Clubs),
+                new Card(2, SuitEnum.Diamonds),
+                new Card(13, SuitEnum.Clubs),
+                new Card(12, SuitEnum.Diamonds),
+                new Card(11, SuitEnum.Spades),
+                new Card(7, SuitEnum.Clubs),
+                new Card(2, SuitEnum.Hearts),
+                new Card(4, SuitEnum.Clubs),
+                new Card(6, SuitEnum.Spades),
+            ]);
+            var game = new TexasHoldemGame(2, deck);
+
+            _ = game.Continue();
+            _ = game.Continue();
+            _ = game.Continue();
+            _ = game.Continue();
+
+            var hands = game.GetBestHands();
+            var playerOneHand = hands.Single(hand => hand.Key == 1).Value;
+            var playerTwoHand = hands.Single(hand => hand.Key == 2).Value;
+
+            Assert.Equal(HandRankingEnum.Pair, playerOneHand.HandRanking);
+            Assert.Equal(playerOneHand.HandRanking, playerTwoHand.HandRanking);
+            Assert.False(playerOneHand > playerTwoHand);
+            Assert.False(playerTwoHand > playerOneHand);
+            Assert.False(playerOneHand < playerTwoHand);
+            Assert.False(playerTwoHand < playerOneHand);
+        }
+
+        [Fact]
         public void TexasHoldemGame_GetBestHands_ReturnsValidHandsAfterFlop()
         {
             var game = new TexasHoldemGame(2, PokerHandTestHelper.CreateOrderedDeck());
