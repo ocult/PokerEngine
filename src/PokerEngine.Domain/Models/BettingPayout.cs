@@ -1,4 +1,4 @@
-namespace PokerEngine.Domain.Models
+namespace PokerEngine.Domain.Betting
 {
     public sealed class BettingPayout
     {

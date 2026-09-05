@@ -1,4 +1,4 @@
-using PokerEngine.Domain.Models;
+using PokerEngine.Domain.Betting;
 using Xunit;
 
 namespace PokerEngine.XunitTest
