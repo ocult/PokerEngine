@@ -174,7 +174,12 @@ namespace PokerEngine.Domain.Models
         {
             EnsureOpen();
             BettingPlayer player = GetPlayer(playerId);
-            EnsurePending(player);
+            if (player.Status != BettingPlayerStatus.Pending
+                && player.Status != BettingPlayerStatus.Active)
+            {
+                throw new InvalidOperationException("Only a pending or active player may fold.");
+            }
+
             player.Fold();
         }
 
