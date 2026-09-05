@@ -80,8 +80,18 @@ Você pode abrir a pasta no VS Code e usar o painel de "Run and Debug".
 ### Tasks disponíveis
 
 - `build solution`
+- `build web`
+- `build console`
+- `build tests`
 - `run console app`
 - `run tests`
+- `build`
+- `publish`
+- `watch`
+
+As configurações de depuração `.NET Core Launch (web)`, `.NET Core Launch (console)` e `.NET Core Launch (xUnit tests)` compilam o projeto correspondente antes de iniciar. A aplicação web usa `http://localhost:5044`.
+
+O projeto `PokerEngine.XunitTest` está incluído em `PokerEngine.slnx` e é descoberto automaticamente pelo Test Explorer do VS Code quando a pasta do repositório é aberta.
 
 ## Exemplos de uso
 

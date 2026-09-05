@@ -5,7 +5,7 @@
       "type": "chrome",
       "request": "launch",
       "name": "Debug Front-End (.NET)",
-      "url": "http://localhost:5000",
+      "url": "http://localhost:5044",
       "webRoot": "${workspaceFolder}/src/PokerEngine.Web/wwwroot",
       "sourceMaps": true,
       "trace": true
@@ -14,10 +14,10 @@
       "name": ".NET Core Launch (web)",
       "type": "coreclr",
       "request": "launch",
-      "preLaunchTask": "build",
+      "preLaunchTask": "build web",
       "program": "${workspaceFolder}/src/PokerEngine.Web/bin/Debug/net10.0/PokerEngine.Web.dll",
       "args": [],
-      "cwd": "${workspaceFolder}",
+      "cwd": "${workspaceFolder}/src/PokerEngine.Web",
       "stopAtEntry": false,
       "serverReadyAction": {
         "action": "openExternally",
@@ -26,15 +26,13 @@
       "env": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "sourceFileMap": {
-        "/Views": "${workspaceFolder}/src/PokerEngine.Web/wwwroot"
-      }
+      "sourceFileMap": {}
     },
     {
         "name": ".NET Core Launch (console)",
         "type": "coreclr",
         "request": "launch",
-        "preLaunchTask": "build",
+        "preLaunchTask": "build console",
         "program": "${workspaceFolder}/src/PokerEngine.Console/bin/Debug/net10.0/PokerEngine.Console.dll",
         "args": [],
         "cwd": "${workspaceFolder}/src/PokerEngine.Console",

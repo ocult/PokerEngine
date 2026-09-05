@@ -34,6 +34,48 @@
       "problemMatcher": []
     },
     {
+      "label": "build web",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/PokerEngine.Web/PokerEngine.Web.csproj",
+        "--nologo"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "build console",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/PokerEngine.Console/PokerEngine.Console.csproj",
+        "--nologo"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "build tests",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/test/PokerEngine.XunitTest/PokerEngine.XunitTest.csproj",
+        "--nologo"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
       "label": "run tests",
       "type": "process",
       "command": "dotnet",
@@ -83,7 +125,7 @@
             "watch",
             "run",
             "--project",
-            "${workspaceFolder}/PokerEngine.slnx"
+            "${workspaceFolder}/src/PokerEngine.Web/PokerEngine.Web.csproj"
         ],
         "problemMatcher": "$msCompile"
     }
