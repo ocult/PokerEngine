@@ -209,5 +209,61 @@ namespace PokerEngine.XunitTest
             var winner = game.GetWinnerPlayer();
             Assert.Equal(0, winner);
         }
+
+        [Fact]
+        public void TexasHoldemGame_RejectsInvalidPlayerCounts()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new TexasHoldemGame(0));
+            Assert.Throws<InvalidOperationException>(() => new TexasHoldemGame(22));
+        }
+
+        [Fact]
+        public void TexasHoldemPlayerCards_ExposesCardsAndValidatesIndex()
+        {
+            var firstCard = new Card("AC");
+            var secondCard = new Card("KH");
+            var cards = new TexasHoldemPlayerCards(firstCard, secondCard);
+
+            Assert.Equal(new[] { firstCard, secondCard }, cards.Cards);
+            Assert.Equal(firstCard, cards[0]);
+            Assert.Equal(secondCard, cards[1]);
+            Assert.Throws<ArgumentOutOfRangeException>(() => cards[2]);
+        }
+
+        [Fact]
+        public void TexasHoldemGame_GetBestHands_RequiresAtLeastAFlop()
+        {
+            var game = new TexasHoldemGame(1, new CardDeck(false));
+
+            Assert.Throws<InvalidOperationException>(() => game.GetBestHands());
+        }
+
+        [Fact]
+        public void TexasHoldemGame_ContinueAfterCompleteKeepsFinalCommunityCards()
+        {
+            var game = new TexasHoldemGame(1, new CardDeck(false));
+
+            _ = game.Continue();
+            _ = game.Continue();
+            _ = game.Continue();
+            var complete = game.Continue();
+            var afterComplete = game.Continue();
+
+            Assert.Equal(TexasHoldemStage.Complete, game.Stage);
+            Assert.Equal(complete, afterComplete);
+            Assert.Equal(5, afterComplete.Count);
+        }
+
+        [Fact]
+        public void TexasHoldemGame_ContinueRejectsAnExhaustedDeck()
+        {
+            var game = new TexasHoldemGame(1, new CardDeck(new[]
+            {
+                new Card("AC"),
+                new Card("KH")
+            }));
+
+            Assert.Throws<InvalidOperationException>(() => game.Continue());
+        }
     }
 }

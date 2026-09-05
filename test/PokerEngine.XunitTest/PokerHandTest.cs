@@ -106,6 +106,82 @@ namespace PokerEngine.XunitTest
             Assert.Equal(compare, handA.CompareTo(handB));
         }
 
+        [Theory]
+        [InlineData("8C,8H,8S,3D,3C", HandRankingEnum.FullHouse, "A full house, eights over threes")]
+        [InlineData("KC,9C,7C,4C,2C", HandRankingEnum.Flush, "A king-high flush of Clubs")]
+        [InlineData("8C,8H,8S,KC,2D", HandRankingEnum.ThreeOfKind, "A three of eights with a king kicker")]
+        [InlineData("KC,8H,8S,3D,3C", HandRankingEnum.TwoPairs, "A two pairs, eights and threes with king kicker")]
+        [InlineData("KC,8H,8S,3D,2C", HandRankingEnum.Pair, "A pair of eights with a king kicker")]
+        [InlineData("KC,9H,7S,4D,2C", HandRankingEnum.HighCard, "A king high card")]
+        public void PokerHand_MissingRankingsHaveExpectedNames(
+            string cards,
+            HandRankingEnum ranking,
+            string name)
+        {
+            var hand = new PokerHand(cards);
+
+            Assert.Equal(ranking, hand.HandRanking);
+            Assert.StartsWith(name, hand.ToString());
+            Assert.Equal(5, hand.Cards.Length);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("AC,KC,QC,JC")]
+        [InlineData("AC,KC,QC,JC,10C,9C")]
+        public void PokerHand_FromString_RejectsInvalidCardLists(string? cards)
+        {
+            Assert.Throws<ArgumentException>(() => new PokerHand(cards!));
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(4)]
+        [InlineData(6)]
+        public void PokerHand_FromCards_RequiresExactlyFiveCards(int count)
+        {
+            var cards = Enumerable.Range(2, count)
+                .Select(value => new Card((ushort)value, SuitEnum.Clubs))
+                .ToArray();
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => new PokerHand(cards));
+        }
+
+        [Fact]
+        public void PokerHand_EqualityAndCardFormattingAreValueBased()
+        {
+            var hand = new PokerHand("KC,9H,7S,4D,2C");
+            var sameHand = new PokerHand("2C,4D,7S,9H,KC");
+
+            Assert.True(hand.Equals(sameHand));
+            Assert.True(hand.Equals((object)sameHand));
+            Assert.False(hand.Equals("KC,9H,7S,4D,2C"));
+            Assert.Equal(hand.GetHashCode(), sameHand.GetHashCode());
+            Assert.Equal("KC, 9H, 7S, 4D, 2C", PokerHand.GetCardsString(hand.Cards));
+            Assert.Equal(string.Empty, PokerHand.GetCardsString(Array.Empty<Card>()));
+            Assert.Equal(string.Empty, PokerHand.GetCardsString(null!));
+        }
+
+        [Fact]
+        public void PokerHand_ComparisonOperatorsHandleEqualAndDifferentHands()
+        {
+            var lower = new PokerHand("KC,9H,7S,4D,2C");
+            var higher = new PokerHand("AC,9H,7S,4D,2C");
+            bool? result;
+
+            Assert.True(higher > lower);
+            Assert.True(lower < higher);
+            Assert.True(higher >= lower);
+            Assert.True(lower <= higher);
+            Assert.False(lower >= higher);
+            Assert.False(higher <= lower);
+            Assert.False(PokerHand.Check(higher, lower, 0, out result));
+            Assert.True(result);
+            Assert.False(PokerHand.Check(lower, higher, 0, out result));
+            Assert.False(result);
+        }
+
 
         private static SuitEnum GetRandomSuitOrDefault(SuitEnum? defaultSuit = null)
         {
