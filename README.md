@@ -13,6 +13,7 @@ O projeto já inclui um `global.json` para fixar a versão do SDK e garantir com
 
 - `src/PokerEngine.Domain/Models` — regras de cartas, baralho e avaliação de mãos.
 - `src/PokerEngine.Domain/TexasHoldem` — regras específicas do jogo Texas Hold'em.
+- `src/PokerEngine.Domain/SimpleGame` — jogo simples de distribuição de cinco cartas.
 - `src/PokerEngine.Console` — aplicação de console para testar a engine.
 - `src/PokerEngine.Web` — projeto web minimalista para consumir o domínio com inputs simples.
 - `test/PokerEngine.XunitTest` — suíte de testes unitários com xUnit.
@@ -58,6 +59,8 @@ dotnet run --project src/PokerEngine.Web/PokerEngine.Web.csproj
 ```
 
 A interface web expõe uma página simples com dois campos: uma mão de 5 cartas e uma simulação de Texas Hold'em.
+
+No Console, use `simple [players]` para distribuir cinco cartas, uma rodada por vez, a cada jogador.
 
 ## Executar localmente
 
