@@ -1,4 +1,5 @@
 ﻿using PokerEngine.Domain.Models;
+using PokerEngine.Domain.SimpleGame;
 using PokerEngine.Domain.TexasHoldem;
 using MSC = System.Console;
 
@@ -22,7 +23,7 @@ internal class Program
         {
             while (string.IsNullOrWhiteSpace(cards))
             {
-                MSC.WriteLine("What's yours cards? Or quit/exit/q to exit, or random [players] to get random hands, or texas [players] to play texas holdem");
+                MSC.WriteLine("What's yours cards? Or quit/exit/q to exit, or random [players] to get random hands, simple [players] to deal five cards, or texas [players] to play texas holdem");
                 cards = MSC.ReadLine();
             }
             cards = cards.ToUpperInvariant();
@@ -41,6 +42,17 @@ internal class Program
                         throw new ArgumentException(nameof(players));
                     }
                     TexasHoldem(players);
+                    ReadCards();
+                    return;
+                }
+                else if (cards.StartsWith("SIMPLE"))
+                {
+                    string strPlayers = string.Join("", cards.Skip(6)).Trim();
+                    if (!ushort.TryParse(strPlayers, out ushort players))
+                    {
+                        throw new ArgumentException(nameof(players));
+                    }
+                    SimpleGame(players);
                     ReadCards();
                     return;
                 }
@@ -114,6 +126,29 @@ internal class Program
             PrintWinner(hands);
             _deck = new CardDeck();
             _deck.PowerShuffle();
+        }
+
+        void SimpleGame(ushort players)
+        {
+            SimpleCardGame game = new(players);
+
+            game.DealCards();
+
+            foreach (KeyValuePair<ushort, IReadOnlyList<Card>> player in game.PlayersCards)
+            {
+                string cardsString = $"Player #{player.Key} have [";
+                cardsString += string.Join(", ", player.Value.Select(card => card.ToString()));
+                cardsString += "]";
+                MSC.WriteLine(cardsString);
+            }
+
+            MSC.WriteLine("Final hands:");
+            foreach (KeyValuePair<ushort, PokerHand> player in game.GetRankedHands())
+            {
+                MSC.WriteLine($"Player #{player.Key} has {player.Value.ToString()}");
+            }
+
+            MSC.WriteLine($"Winner is Player #{game.GetWinnerPlayer()}");
         }
 
         void RandomCards(ushort players)
