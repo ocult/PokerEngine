@@ -23,7 +23,7 @@ internal class Program
         {
             while (string.IsNullOrWhiteSpace(cards))
             {
-                MSC.WriteLine("What's yours cards? Or quit/exit/q to exit, or random [players] to get random hands, simple [players] to deal five cards, or texas [players] to play texas holdem");
+                MSC.WriteLine("What's yours cards? Or quit/exit/q to exit, or simple [players' number] to deal five cards, or texas [players' number] to play texas holdem");
                 cards = MSC.ReadLine();
             }
             cards = cards.ToUpperInvariant();
@@ -55,21 +55,6 @@ internal class Program
                     SimpleGame(players);
                     ReadCards();
                     return;
-                }
-                else if (cards.StartsWith("RANDOM"))
-                {
-                    string strPlayers = string.Join("", cards.Skip(7)).Trim();
-                    if (!ushort.TryParse(strPlayers, out ushort players))
-                    {
-                        IList<Card> pickedCards = _deck.Pick(5);
-                        cards = PokerHand.GetCardsString(pickedCards);
-                    }
-                    else
-                    {
-                        RandomCards(players);
-                        ReadCards();
-                        return;
-                    }
                 }
                 PokerHand hand = new(cards);
                 MSC.WriteLine($"You have {hand}");
