@@ -4,15 +4,19 @@ namespace PokerEngine.Domain.Betting
     {
         internal BettingSettlement(
             IReadOnlyList<BettingPot> pots,
-            IReadOnlyList<BettingPayout> payouts)
+            IReadOnlyList<BettingPayout> payouts,
+            IReadOnlyList<BettingPlayer> nextPlayers)
         {
             Pots = pots;
             Payouts = payouts;
+            NextPlayers = nextPlayers;
         }
 
         public IReadOnlyList<BettingPot> Pots { get; }
 
         public IReadOnlyList<BettingPayout> Payouts { get; }
+
+        public IReadOnlyList<BettingPlayer> NextPlayers { get; }
 
         public long TotalPot => Pots.Sum(pot => pot.Amount);
 

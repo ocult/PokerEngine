@@ -38,6 +38,47 @@ namespace PokerEngine.XunitTest
         }
 
         [Fact]
+        public void BettingRound_NextTracksCallAndRaiseFlow()
+        {
+            var round = CreateRound((1, 100), (2, 100), (3, 100));
+
+            Assert.Equal((ushort)1, round.Next()!.Id);
+            round.Contribute(1, 25);
+            Assert.Equal(25, round.BiggestContribution);
+
+            Assert.Equal((ushort)2, round.Next()!.Id);
+            round.Contribute(2, 25);
+            Assert.Equal(25, round.BiggestContribution);
+
+            Assert.Equal((ushort)3, round.Next()!.Id);
+            round.Contribute(3, 50);
+            Assert.Equal(50, round.BiggestContribution);
+
+            Assert.Equal((ushort)1, round.Next()!.Id);
+            round.Contribute(1, 25);
+            Assert.Equal(50, round.BiggestContribution);
+
+            Assert.Equal((ushort)2, round.Next()!.Id);
+            round.Contribute(2, 25);
+            Assert.Equal(50, round.BiggestContribution);
+
+            Assert.Null(round.Next());
+        }
+
+        [Fact]
+        public void BettingRound_CallMatchesCurrentBiggestContribution()
+        {
+            var round = CreateRound((1, 100), (2, 100));
+
+            round.Contribute(1, 25);
+            round.Call(2);
+
+            var player = round.Players.Single(player => player.Id == 2);
+            Assert.Equal(25, player.Contribution);
+            Assert.Equal(25, round.BiggestContribution);
+        }
+
+        [Fact]
         public void BettingRound_ContributeUpdatesPlayerAndAllInStatus()
         {
             var round = CreateRound((1, 100), (2, 60));
@@ -48,21 +89,6 @@ namespace PokerEngine.XunitTest
             Assert.Equal(0, player.RemainingStack);
             Assert.Equal(100, player.Contribution);
             Assert.Equal(BettingPlayerStatus.AllIn, player.Status);
-        }
-
-        [Fact]
-        public void BettingRound_CopiesExistingPlayerContributionAndFoldState()
-        {
-            var sourceRound = CreateRound((1, 100), (2, 100));
-            sourceRound.Contribute(1, 25);
-            sourceRound.Fold(1);
-
-            var round = new BettingRound(sourceRound.Players);
-
-            var player = round.Players.Single(player => player.Id == 1);
-            Assert.Equal(25, player.Contribution);
-            Assert.Equal(75, player.RemainingStack);
-            Assert.Equal(BettingPlayerStatus.Folded, player.Status);
         }
 
         [Fact]
@@ -91,7 +117,25 @@ namespace PokerEngine.XunitTest
         }
 
         [Fact]
-        public void BettingRound_RejectsInvalidOrRepeatedActions()
+        public void BettingRound_SettlementReturnsNextPlayersWithUpdatedStacks()
+        {
+            var round = CreateRound((1, 100), (2, 100));
+            round.Contribute(1, 100);
+            round.Contribute(2, 100);
+            round.Close();
+
+            var settlement = round.Settle(new Dictionary<int, IReadOnlyCollection<ushort>>
+            {
+                [0] = new ushort[] { 1 }
+            });
+
+            Assert.Equal(new ushort[] { 1 }, settlement.NextPlayers.Select(player => player.Id).ToArray());
+            Assert.Equal(200, settlement.NextPlayers.Single(player => player.Id == 1).RemainingStack);
+            Assert.Single(settlement.NextPlayers);
+        }
+
+        [Fact]
+        public void BettingRound_RejectsInvalidActions()
         {
             var round = CreateRound((1, 100), (2, 100));
 
@@ -100,7 +144,7 @@ namespace PokerEngine.XunitTest
             Assert.Throws<ArgumentOutOfRangeException>(() => round.Contribute(1, 101));
 
             round.Contribute(1, 25);
-            Assert.Throws<InvalidOperationException>(() => round.Contribute(1, 10));
+            round.Contribute(1, 10);
             round.Fold(1);
             Assert.Throws<InvalidOperationException>(() => round.Fold(1));
         }

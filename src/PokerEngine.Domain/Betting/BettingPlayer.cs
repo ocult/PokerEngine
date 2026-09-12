@@ -15,14 +15,11 @@ namespace PokerEngine.Domain.Betting
             }
 
             Id = id;
-            InitialStack = stack;
             RemainingStack = stack;
             Status = BettingPlayerStatus.Pending;
         }
 
         public ushort Id { get; }
-
-        public long InitialStack { get; }
 
         public long RemainingStack { get; private set; }
 
@@ -32,11 +29,6 @@ namespace PokerEngine.Domain.Betting
 
         internal void Contribute(long amount)
         {
-            if (amount <= 0 || amount > RemainingStack)
-            {
-                throw new ArgumentOutOfRangeException(nameof(amount));
-            }
-
             RemainingStack -= amount;
             Contribution += amount;
             Status = RemainingStack == 0
@@ -47,6 +39,11 @@ namespace PokerEngine.Domain.Betting
         internal void Fold()
         {
             Status = BettingPlayerStatus.Folded;
+        }
+
+        internal void Payout(long amount)
+        {
+            RemainingStack += amount;
         }
     }
 }

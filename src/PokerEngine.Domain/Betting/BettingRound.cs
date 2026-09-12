@@ -9,7 +9,7 @@ namespace PokerEngine.Domain.Betting
         {
             ArgumentNullException.ThrowIfNull(players);
 
-            var playerList = players.ToList();
+            IReadOnlyList<BettingPlayer> playerList = players.ToList();
             if (playerList.Count < 2)
             {
                 throw new ArgumentException("At least two players are required.", nameof(players));
@@ -27,6 +27,7 @@ namespace PokerEngine.Domain.Betting
 
             _players = playerList.ToDictionary(player => player.Id, ClonePlayer);
             _playerOrder = playerList.Select(player => player.Id).ToList();
+            BiggestContribution = 0;
             Status = BettingRoundStatus.Open;
         }
 
@@ -37,14 +38,56 @@ namespace PokerEngine.Domain.Betting
             .ToList()
             .AsReadOnly();
 
+        public long BiggestContribution { get; private set; }
+
         public long TotalContribution => _players.Values.Sum(player => player.Contribution);
+
+        public BettingPlayer? Next()
+        {
+            if (Status != BettingRoundStatus.Open)
+            {
+                return null;
+            }
+
+            if (BiggestContribution == 0)
+            {
+                return _playerOrder
+                    .Select(playerId => _players[playerId])
+                    .FirstOrDefault(player => player.Status != BettingPlayerStatus.Folded);
+            }
+
+            return _playerOrder
+                .Select(playerId => _players[playerId])
+                .FirstOrDefault(player => player.Status != BettingPlayerStatus.Folded
+                    && player.Contribution < BiggestContribution);
+        }
 
         public void Contribute(ushort playerId, long amount)
         {
             EnsureOpen();
             BettingPlayer player = GetPlayer(playerId);
-            EnsurePending(player);
+
+            if (player.Status == BettingPlayerStatus.Folded)
+            {
+                throw new InvalidOperationException("Folded players cannot contribute.");
+            }
+
+            if (amount <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(amount), "Contribution must be a positive number.");
+            }
+
+            if (amount > player.RemainingStack)
+            {
+                throw new ArgumentOutOfRangeException(nameof(amount), "The contribution cannot exceed the player's remaining stack.");
+            }
+
             player.Contribute(amount);
+
+            if (player.Contribution > BiggestContribution)
+            {
+                BiggestContribution = player.Contribution;
+            }
         }
 
         public void Fold(ushort playerId)
@@ -58,6 +101,29 @@ namespace PokerEngine.Domain.Betting
             }
 
             player.Fold();
+        }
+
+        public void Call(ushort playerId)
+        {
+            EnsureOpen();
+            BettingPlayer player = GetPlayer(playerId);
+            if (player.Status == BettingPlayerStatus.Folded)
+            {
+                throw new InvalidOperationException("Folded players cannot call.");
+            }
+
+            long amountToCall = BiggestContribution - player.Contribution;
+            if (amountToCall <= 0)
+            {
+                throw new InvalidOperationException("There is no current bet to call.");
+            }
+
+            if (amountToCall > player.RemainingStack)
+            {
+                throw new ArgumentOutOfRangeException(nameof(playerId), "The player cannot cover the call amount.");
+            }
+
+            player.Contribute(amountToCall);
         }
 
         public void Close()
@@ -88,7 +154,7 @@ namespace PokerEngine.Domain.Betting
             EnsureClosed();
 
             IReadOnlyList<BettingPot> pots = BuildPots();
-            var payouts = new List<BettingPayout>();
+            List<BettingPayout> payouts = [];
 
             foreach (BettingPot pot in pots)
             {
@@ -98,7 +164,7 @@ namespace PokerEngine.Domain.Betting
                     throw new ArgumentException($"Winners are required for pot {pot.Index}.", nameof(winnersByPot));
                 }
 
-                var orderedWinners = winners
+                IReadOnlyList<ushort> orderedWinners = winners
                     .Distinct()
                     .OrderBy(playerId => _playerOrder.IndexOf(playerId))
                     .ToList();
@@ -119,32 +185,48 @@ namespace PokerEngine.Domain.Betting
                 }
             }
 
+            foreach (BettingPlayer player in Players)
+            {
+                long payout = payouts
+                    .Where(item => item.PlayerId == player.Id)
+                    .Sum(item => item.Amount);
+
+                if (payout > 0)
+                {
+                    player.Payout(payout);
+                }
+            }
+
+            IReadOnlyList<BettingPlayer> nextPlayers = Players
+                .Where(player => player.RemainingStack > 0)
+                .ToList();
+
             Status = BettingRoundStatus.Settled;
-            return new BettingSettlement(pots, payouts.AsReadOnly());
+            return new BettingSettlement(pots, payouts, nextPlayers);
         }
 
         private IReadOnlyList<BettingPot> BuildPots()
         {
-            var levels = _players.Values
+            List<long> levels = _players.Values
                 .Where(player => player.Contribution > 0)
                 .Select(player => player.Contribution)
                 .Distinct()
                 .OrderBy(level => level)
                 .ToList();
-            var pots = new List<BettingPot>();
+            List<BettingPot> pots = [];
             long previousLevel = 0;
 
             for (int index = 0; index < levels.Count; index++)
             {
                 long level = levels[index];
-                var contributors = _playerOrder
+                IReadOnlyList<ushort> contributors = _playerOrder
                     .Where(playerId => _players[playerId].Contribution >= level)
                     .ToList();
                 long amount = (level - previousLevel) * contributors.Count;
-                var eligiblePlayers = contributors
+                IReadOnlyList<ushort> eligiblePlayers = contributors
                     .Where(playerId => _players[playerId].Status != BettingPlayerStatus.Folded)
                     .ToList();
-                pots.Add(new BettingPot(index, amount, contributors.AsReadOnly(), eligiblePlayers.AsReadOnly()));
+                pots.Add(new BettingPot(index, amount, contributors, eligiblePlayers));
                 previousLevel = level;
             }
 
@@ -163,7 +245,7 @@ namespace PokerEngine.Domain.Betting
 
         private static BettingPlayer ClonePlayer(BettingPlayer player)
         {
-            var clone = new BettingPlayer(player.Id, player.InitialStack);
+            BettingPlayer clone = new (player.Id, player.RemainingStack);
             if (player.Contribution > 0)
             {
                 clone.Contribute(player.Contribution);
