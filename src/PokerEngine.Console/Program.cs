@@ -20,7 +20,7 @@ internal class Program
     {
         while (string.IsNullOrWhiteSpace(cards))
         {
-            MSC.WriteLine("Enter cards or command (type 'help' for options, or 'q' to quit):");
+            MSC.WriteLine("Enter cards or command (type 'h' for options, or 'q' to quit):");
             cards = MSC.ReadLine();
         }
 
@@ -31,7 +31,7 @@ internal class Program
             return;                
         }
 
-        if (cards.Equals("HELP", StringComparison.OrdinalIgnoreCase))
+        if (cards.Equals("HELP", StringComparison.OrdinalIgnoreCase) || cards.Equals("H", StringComparison.OrdinalIgnoreCase))
         {
             MSC.WriteLine("=== POKER ENGINE CONSOLE HELP ===");
             EvaluateRunner.Help();

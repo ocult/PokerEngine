@@ -283,8 +283,6 @@ namespace PokerEngine.Console
             {
                 MSC.WriteLine($"Player #{player.Id} starts with {player.RemainingStack} chips.");
             }
-
-            PrintCurrentPots(round);
             Betting(nextPlayers);
         }
 
