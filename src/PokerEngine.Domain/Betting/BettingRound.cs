@@ -268,25 +268,45 @@ namespace PokerEngine.Domain.Betting
         private IReadOnlyList<BettingPot> BuildPots()
         {
             List<long> levels = _players.Values
-                .Where(player => player.Contribution > 0)
+                .Where(player => player.Status == BettingPlayerStatus.AllIn && player.Contribution > 0)
                 .Select(player => player.Contribution)
                 .Distinct()
                 .OrderBy(level => level)
                 .ToList();
+
+            long maxContribution = _players.Values.Count > 0 ? _players.Values.Max(player => player.Contribution) : 0;
+            if (maxContribution > 0 && !levels.Contains(maxContribution))
+            {
+                levels.Add(maxContribution);
+                levels.Sort();
+            }
+
             List<BettingPot> pots = [];
             long previousLevel = 0;
 
             for (int index = 0; index < levels.Count; index++)
             {
                 long level = levels[index];
-                IReadOnlyList<ushort> contributors = _playerOrder
-                    .Where(playerId => _players[playerId].Contribution >= level)
+                long amount = 0;
+                List<ushort> contributors = [];
+
+                foreach (ushort playerId in _playerOrder)
+                {
+                    BettingPlayer player = _players[playerId];
+                    long slice = Math.Clamp(player.Contribution - previousLevel, 0, level - previousLevel);
+                    if (slice > 0)
+                    {
+                        amount += slice;
+                        contributors.Add(playerId);
+                    }
+                }
+
+                IReadOnlyList<ushort> eligiblePlayers = _playerOrder
+                    .Where(playerId => _players[playerId].Status != BettingPlayerStatus.Folded
+                        && _players[playerId].Contribution >= level)
                     .ToList();
-                long amount = (level - previousLevel) * contributors.Count;
-                IReadOnlyList<ushort> eligiblePlayers = contributors
-                    .Where(playerId => _players[playerId].Status != BettingPlayerStatus.Folded)
-                    .ToList();
-                pots.Add(new BettingPot(index, amount, contributors, eligiblePlayers));
+
+                pots.Add(new BettingPot(index, amount, contributors.AsReadOnly(), eligiblePlayers));
                 previousLevel = level;
             }
 

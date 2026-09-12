@@ -502,6 +502,69 @@ namespace PokerEngine.XunitTest
             Assert.Throws<InvalidOperationException>(() => round2.Check(2));
         }
 
+        [Fact]
+        public void BettingRound_SinglePotWhenNoPlayerGoesAllInEvenWithFolds()
+        {
+            var round = CreateRound((1, 100), (2, 100), (3, 100));
+
+            // Player 1 bets 20, Player 2 calls 20, Player 3 calls 20
+            round.Contribute(1, 20);
+            round.Contribute(2, 20);
+            round.Contribute(3, 20);
+
+            // Player 1 bets 30 more (total 50), Player 2 calls 30 more (total 50), Player 3 folds (total 20)
+            round.Contribute(1, 30);
+            round.Contribute(2, 30);
+            round.Fold(3);
+
+            round.Close();
+
+            // No player is all-in, so there must be exactly ONE pot of 120 (50 + 50 + 20)
+            var pots = round.GetPots();
+            var pot = Assert.Single(pots);
+
+            Assert.Equal(0, pot.Index);
+            Assert.Equal(120, pot.Amount);
+            Assert.Equal(new ushort[] { 1, 2, 3 }, pot.Contributors);
+            Assert.Equal(new ushort[] { 1, 2 }, pot.EligiblePlayers);
+        }
+
+        [Fact]
+        public void BettingRound_AllInCreatesSecondPotAndAllInPlayerIsNotEligibleForSecondPot()
+        {
+            var round = CreateRound((1, 100), (2, 100), (3, 30));
+
+            // Player 3 goes all-in with 30
+            round.Contribute(1, 30);
+            round.Contribute(2, 30);
+            round.AllIn(3);
+
+            // Players 1 and 2 raise and call further up to 80 each
+            round.Contribute(1, 50); // total 80
+            round.Call(2);           // total 80
+
+            round.Close();
+
+            var pots = round.GetPots();
+            Assert.Equal(2, pots.Count);
+
+            // Main Pot: up to Player 3's all-in level (30 chips each = 90 total)
+            // Player 3 is eligible for this pot.
+            var mainPot = pots[0];
+            Assert.Equal(0, mainPot.Index);
+            Assert.Equal(90, mainPot.Amount);
+            Assert.Equal(new ushort[] { 1, 2, 3 }, mainPot.Contributors);
+            Assert.Equal(new ushort[] { 1, 2, 3 }, mainPot.EligiblePlayers);
+
+            // Side Pot: bets above 30 chips (50 from P1 + 50 from P2 = 100 total)
+            // Player 3 is NOT eligible for the side pot!
+            var sidePot = pots[1];
+            Assert.Equal(1, sidePot.Index);
+            Assert.Equal(100, sidePot.Amount);
+            Assert.Equal(new ushort[] { 1, 2 }, sidePot.Contributors);
+            Assert.Equal(new ushort[] { 1, 2 }, sidePot.EligiblePlayers);
+        }
+
         private static BettingRound CreateRound(params (ushort Id, long Stack)[] players)
         {
             return new BettingRound(players.Select(player => new BettingPlayer(player.Id, player.Stack)));
