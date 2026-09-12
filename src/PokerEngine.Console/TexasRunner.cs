@@ -1,0 +1,59 @@
+using PokerEngine.Domain.Models;
+using PokerEngine.Domain.TexasHoldem;
+using MSC = System.Console;
+
+namespace PokerEngine.Console
+{
+    public static class TexasRunner
+    {
+        public static void Run(ushort players)
+        {
+            TexasHoldemGame game = new(players);
+
+            foreach (KeyValuePair<ushort, TexasHoldemPlayerCards> player in game.PlayersCards)
+            {
+                MSC.WriteLine($"Player #{player.Key} have [{player.Value.FirstCard}, {player.Value.SecondCard}] in hand");
+            }
+
+            MSC.WriteLine("Press any key to continue to the table cards...");
+            MSC.ReadLine();
+
+            IReadOnlyList<Card> flop = game.Continue();
+            MSC.WriteLine($"Table flop is [{flop[0]}, {flop[1]}, {flop[2]}]");
+            MSC.WriteLine("Press any key to continue to the turn card...");
+            MSC.ReadLine();
+
+            IReadOnlyList<Card> turn = game.Continue();
+            MSC.WriteLine($"Table turn is {turn[3]}");
+            MSC.WriteLine("Press any key to continue to the river card...");
+            MSC.ReadLine();
+
+            IReadOnlyList<Card> river = game.Continue();
+            MSC.WriteLine($"Table river is {river[4]}");
+            MSC.WriteLine("Press any key to continue to the showdown...");
+            MSC.ReadLine();
+
+            IReadOnlyList<KeyValuePair<ushort, PokerHand>> hands = game.GetBestHands();
+            foreach (KeyValuePair<ushort, PokerHand> hand in hands)
+            {
+                string status = hand.Key == 0 ? "Table" : $"Player #{hand.Key}";
+                MSC.WriteLine($"{status} best possible hand is {hand.Value}");
+            }
+
+            MSC.WriteLine("Press any key to goes to winner announcement...");
+            MSC.ReadLine();
+            PrintWinner(hands);
+        }
+
+        private static void PrintWinner(IReadOnlyList<KeyValuePair<ushort, PokerHand>> playersHands)
+        {
+            ushort win = playersHands.FirstOrDefault().Key;
+            MSC.WriteLine(win == 0 ? "The table winner" : $"The winner is player #{win}".ToUpperInvariant());
+            MSC.WriteLine("Ranked players hands:");
+            foreach (KeyValuePair<ushort, PokerHand> item in playersHands)
+            {
+                MSC.WriteLine(item.Key == 0 ? $"Table has {item.Value}" : $"Player #{item.Key} has {item.Value}");
+            }
+        }
+    }
+}
