@@ -106,11 +106,11 @@ namespace PokerEngine.Domain.TexasHoldem
             }
 
             if (_communityCards.Count == 5)
-            {                
+            {
                 PokerHand tableHand = new(_communityCards.ToArray());
                 hands.Add(0, tableHand);
             }
-            
+
             return hands;
         }
 
@@ -132,7 +132,7 @@ namespace PokerEngine.Domain.TexasHoldem
                     card5 = c != 4 ? tableCards[4] : playerCards[0];
                     possibleHands.Add(new PokerHand(card1, card2, card3, card4, card5));
                 }
-                
+
                 card1 = c != 0 ? tableCards[0] : playerCards[1];
                 card2 = c != 1 ? tableCards[1] : playerCards[1];
                 card3 = c != 2 ? tableCards[2] : playerCards[1];
