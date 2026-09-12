@@ -5,6 +5,23 @@ namespace PokerEngine.Console
 {
     public static class BetRunner
     {
+        public static void Help()
+        {
+            MSC.WriteLine("BET: 'bet [players]' - Starts an interactive betting round for [players] (2+).");
+        }
+
+        private static void ActionHelp()
+        {
+            MSC.WriteLine("  Actions during a betting round:");
+            MSC.WriteLine("    - 'CHECK'/'PASS'/'P'   : Check (pass) when no bet has been placed.");
+            MSC.WriteLine("    - 'CALL'/'C'           : Match the current highest bet.");
+            MSC.WriteLine("    - '[amount]'           : Enter total contribution to open or raise.");
+            MSC.WriteLine("    - 'ALLIN'/'ALL-IN'/'A' : Go all-in with all remaining chips.");
+            MSC.WriteLine("    - 'FOLD'/'F'           : Fold current hand.");
+            MSC.WriteLine("    - 'HELP'/'H'           : Show betting actions help.");
+            MSC.WriteLine("    - 'QUIT'/'EXIT'/'Q'    : Quit the betting round.");
+        }
+
         public static void Run(ushort players)
         {
             if (players < 2)
@@ -38,22 +55,20 @@ namespace PokerEngine.Console
                     long currentBiggestBet = round.BiggestContribution;
                     long amountToCall = Math.Max(0, currentBiggestBet - playerToAct.Contribution);
 
-                    MSC.WriteLine($"Player #{playerToAct.Id} has {playerToAct.RemainingStack} chips remaining.");
-                    if (currentBiggestBet > 0)
-                    {
-                        MSC.WriteLine($"Current biggest bet is {currentBiggestBet}. Enter 'CALL' to match it, or enter a bigger total contribution to raise.");
-                    }
-                    else
-                    {
-                        MSC.WriteLine("No bet has been placed yet. Enter 'CHECK' to check, or enter any positive amount to open the betting.");
-                    }
-
-                    MSC.Write("Enter an amount to contribute, or F to fold: ");
+                    MSC.WriteLine($"Player #{playerToAct.Id} stack: {playerToAct.RemainingStack} | Current highest bet: {currentBiggestBet}");
+                    MSC.Write("Enter action (or 'help'): ");
                     string? action = MSC.ReadLine();
 
                     if (string.IsNullOrWhiteSpace(action))
                     {
-                        MSC.WriteLine("Please enter a valid contribution amount or F to fold.");
+                        MSC.WriteLine("Please enter a valid action (type 'help' for options).");
+                        continue;
+                    }
+
+                    if (action.Equals("HELP", StringComparison.OrdinalIgnoreCase) 
+                        || action.Equals("H", StringComparison.OrdinalIgnoreCase))
+                    {
+                        ActionHelp();
                         continue;
                     }
 
@@ -63,14 +78,17 @@ namespace PokerEngine.Console
                         return;
                     }
 
-                    if (action.Equals("F", StringComparison.OrdinalIgnoreCase))
+                    if (action.Equals("FOLD", StringComparison.OrdinalIgnoreCase) 
+                        || action.Equals("F", StringComparison.OrdinalIgnoreCase))
                     {
                         round.Fold(playerToAct.Id);
                         MSC.WriteLine($"Player #{playerToAct.Id} folded.");
                         break;
                     }
 
-                    if (action.Equals("CHECK", StringComparison.OrdinalIgnoreCase))
+                    if (action.Equals("CHECK", StringComparison.OrdinalIgnoreCase) 
+                        || action.Equals("PASS", StringComparison.OrdinalIgnoreCase)
+                        || action.Equals("P", StringComparison.OrdinalIgnoreCase))
                     {
                         try
                         {
@@ -86,7 +104,8 @@ namespace PokerEngine.Console
                         continue;
                     }
 
-                    if (action.Equals("CALL", StringComparison.OrdinalIgnoreCase))
+                    if (action.Equals("CALL", StringComparison.OrdinalIgnoreCase) 
+                        || action.Equals("C", StringComparison.OrdinalIgnoreCase))
                     {
                         try
                         {
@@ -102,7 +121,9 @@ namespace PokerEngine.Console
                         continue;
                     }
 
-                    if (action.Equals("ALLIN", StringComparison.OrdinalIgnoreCase) || action.Equals("ALL-IN", StringComparison.OrdinalIgnoreCase))
+                    if (action.Equals("ALLIN", StringComparison.OrdinalIgnoreCase) 
+                        || action.Equals("ALL-IN", StringComparison.OrdinalIgnoreCase) 
+                        || action.Equals("A", StringComparison.OrdinalIgnoreCase))
                     {
                         try
                         {

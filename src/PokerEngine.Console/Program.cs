@@ -20,7 +20,7 @@ internal class Program
     {
         while (string.IsNullOrWhiteSpace(cards))
         {
-            MSC.WriteLine("What's yours cards? Or quit/exit/q to exit, or bet [players' number] to run a betting round, or simple [players' number] to deal five cards, or texas [players' number] to play texas holdem");
+            MSC.WriteLine("Enter cards or command (type 'help' for options, or 'q' to quit):");
             cards = MSC.ReadLine();
         }
 
@@ -29,6 +29,18 @@ internal class Program
         if (IsQuitCommand(cards))
         {
             return;                
+        }
+
+        if (cards.Equals("HELP", StringComparison.OrdinalIgnoreCase))
+        {
+            MSC.WriteLine("=== POKER ENGINE CONSOLE HELP ===");
+            EvaluateRunner.Help();
+            SimpleRunner.Help();
+            TexasRunner.Help();
+            BetRunner.Help();
+            MSC.WriteLine("=================================");
+            ReadCards();
+            return;
         }
 
         try
