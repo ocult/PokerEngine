@@ -396,6 +396,112 @@ namespace PokerEngine.XunitTest
             Assert.Throws<InvalidOperationException>(() => round.Contribute(1, 10));
         }
 
+        [Fact]
+        public void BettingRound_AllInSetsPlayerToAllInAndUpdatesContributions()
+        {
+            var round = CreateRound((1, 100), (2, 100));
+
+            round.AllIn(1);
+
+            var player = round.Players.Single(p => p.Id == 1);
+            Assert.Equal(0, player.RemainingStack);
+            Assert.Equal(100, player.Contribution);
+            Assert.Equal(BettingPlayerStatus.AllIn, player.Status);
+            Assert.Equal(100, round.BiggestContribution);
+        }
+
+        [Fact]
+        public void BettingRound_AllInSkipsPlayerInSubsequentTurns()
+        {
+            var round = CreateRound((1, 50), (2, 100), (3, 100));
+
+            Assert.Equal((ushort)1, round.Next()!.Id);
+            round.AllIn(1);
+
+            Assert.Equal((ushort)2, round.Next()!.Id);
+            round.Contribute(2, 80);
+
+            Assert.Equal((ushort)3, round.Next()!.Id);
+            round.Call(3);
+
+            Assert.Null(round.Next());
+            round.Close();
+            Assert.Equal(BettingRoundStatus.Closed, round.Status);
+        }
+
+        [Fact]
+        public void BettingRound_AllInRejectsInvalidScenarios()
+        {
+            var round = CreateRound((1, 100), (2, 100));
+            round.Fold(1);
+
+            Assert.Throws<InvalidOperationException>(() => round.AllIn(1));
+            Assert.Throws<ArgumentException>(() => round.AllIn(99));
+
+            round.AllIn(2);
+            Assert.Throws<InvalidOperationException>(() => round.AllIn(2));
+
+            round.Close();
+            Assert.Throws<InvalidOperationException>(() => round.AllIn(2));
+        }
+
+        [Fact]
+        public void BettingRound_CheckAllowsPlayersToPassWhenNoBet()
+        {
+            var round = CreateRound((1, 100), (2, 100), (3, 100));
+
+            Assert.Equal((ushort)1, round.Next()!.Id);
+            round.Check(1);
+            Assert.Equal(BettingPlayerStatus.Active, round.Players.Single(p => p.Id == 1).Status);
+
+            Assert.Equal((ushort)2, round.Next()!.Id);
+            round.Check(2);
+
+            Assert.Equal((ushort)3, round.Next()!.Id);
+            round.Check(3);
+
+            Assert.Null(round.Next());
+            round.Close();
+            Assert.Equal(BettingRoundStatus.Closed, round.Status);
+        }
+
+        [Fact]
+        public void BettingRound_CheckFollowedByBetAndCall()
+        {
+            var round = CreateRound((1, 100), (2, 100));
+
+            Assert.Equal((ushort)1, round.Next()!.Id);
+            round.Check(1);
+
+            Assert.Equal((ushort)2, round.Next()!.Id);
+            round.Contribute(2, 30);
+
+            Assert.Equal((ushort)1, round.Next()!.Id);
+            round.Call(1);
+
+            Assert.Null(round.Next());
+            round.Close();
+            Assert.Equal(BettingRoundStatus.Closed, round.Status);
+        }
+
+        [Fact]
+        public void BettingRound_CheckRejectsWhenBetExistsOrFolded()
+        {
+            var round = CreateRound((1, 100), (2, 100));
+            round.Contribute(1, 30);
+
+            Assert.Throws<InvalidOperationException>(() => round.Check(2));
+            Assert.Throws<ArgumentException>(() => round.Check(99));
+
+            var round2 = CreateRound((1, 100), (2, 100));
+            round2.Fold(1);
+            Assert.Throws<InvalidOperationException>(() => round2.Check(1));
+
+            round2.Check(2);
+            round2.Close();
+            Assert.Throws<InvalidOperationException>(() => round2.Check(2));
+        }
+
         private static BettingRound CreateRound(params (ushort Id, long Stack)[] players)
         {
             return new BettingRound(players.Select(player => new BettingPlayer(player.Id, player.Stack)));

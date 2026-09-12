@@ -145,6 +145,47 @@ namespace PokerEngine.Domain.Betting
             _lastActionPlayerId = playerId;
         }
 
+        public void AllIn(ushort playerId)
+        {
+            EnsureOpen();
+            BettingPlayer player = GetPlayer(playerId);
+            if (player.Status == BettingPlayerStatus.Folded)
+            {
+                throw new InvalidOperationException("Folded players cannot go all-in.");
+            }
+
+            if (player.RemainingStack <= 0)
+            {
+                throw new InvalidOperationException("The player has no remaining stack to go all-in.");
+            }
+
+            player.Contribute(player.RemainingStack);
+            _lastActionPlayerId = playerId;
+
+            if (player.Contribution > BiggestContribution)
+            {
+                BiggestContribution = player.Contribution;
+            }
+        }
+
+        public void Check(ushort playerId)
+        {
+            EnsureOpen();
+            BettingPlayer player = GetPlayer(playerId);
+            if (player.Status == BettingPlayerStatus.Folded)
+            {
+                throw new InvalidOperationException("Folded players cannot check.");
+            }
+
+            if (BiggestContribution > player.Contribution)
+            {
+                throw new InvalidOperationException("The player cannot check when there is a current bet to call.");
+            }
+
+            player.Check();
+            _lastActionPlayerId = playerId;
+        }
+
         public void Close()
         {
             EnsureOpen();

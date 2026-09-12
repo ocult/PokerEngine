@@ -41,6 +41,14 @@ namespace PokerEngine.Domain.Betting
             Status = BettingPlayerStatus.Folded;
         }
 
+        internal void Check()
+        {
+            if (Status == BettingPlayerStatus.Pending)
+            {
+                Status = BettingPlayerStatus.Active;
+            }
+        }
+
         internal void Payout(long amount)
         {
             RemainingStack += amount;

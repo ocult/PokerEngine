@@ -198,7 +198,7 @@ internal class Program
                     }
                     else
                     {
-                        MSC.WriteLine("No bet has been placed yet. Enter any positive amount to open the betting.");
+                        MSC.WriteLine("No bet has been placed yet. Enter 'CHECK' to check, or enter any positive amount to open the betting.");
                     }
 
                     MSC.Write("Enter an amount to contribute, or F to fold: ");
@@ -223,12 +223,45 @@ internal class Program
                         break;
                     }
 
+                    if (action.Equals("CHECK", StringComparison.OrdinalIgnoreCase))
+                    {
+                        try
+                        {
+                            round.Check(playerToAct.Id);
+                            MSC.WriteLine($"Player #{playerToAct.Id} checked.");
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
+                            MSC.WriteLine(ex.Message);
+                        }
+
+                        continue;
+                    }
+
                     if (action.Equals("CALL", StringComparison.OrdinalIgnoreCase))
                     {
                         try
                         {
                             round.Call(playerToAct.Id);
                             MSC.WriteLine($"Player #{playerToAct.Id} called and contributed {amountToCall} chips.");
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
+                            MSC.WriteLine(ex.Message);
+                        }
+
+                        continue;
+                    }
+
+                    if (action.Equals("ALLIN", StringComparison.OrdinalIgnoreCase) || action.Equals("ALL-IN", StringComparison.OrdinalIgnoreCase))
+                    {
+                        try
+                        {
+                            long allInAmount = playerToAct.RemainingStack;
+                            round.AllIn(playerToAct.Id);
+                            MSC.WriteLine($"Player #{playerToAct.Id} went all-in with {allInAmount} chips.");
                             break;
                         }
                         catch (Exception ex)
@@ -290,6 +323,12 @@ internal class Program
                 while (true)
                 {
                     MSC.WriteLine($"Pot #{pot.Index} is contested by players: {string.Join(", ", pot.EligiblePlayers.Select(playerId => $"#{playerId}"))}.");
+                    if (pot.EligiblePlayers.Count == 1)
+                    {
+                        MSC.WriteLine($"Only one player is eligible for this pot, so Player #{pot.EligiblePlayers[0]} is the winner by default.");
+                        winnersByPot[pot.Index] = new ushort[] { pot.EligiblePlayers[0] };
+                        break;
+                    }
                     MSC.Write("Inform the winning player id(s) for this pot (comma separated, or press Enter to select the first eligible player): ");
                     string? rawWinners = MSC.ReadLine();
 
