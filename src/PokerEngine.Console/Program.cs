@@ -1,161 +1,70 @@
-﻿using PokerEngine.Domain.Models;
-using PokerEngine.Domain.SimpleGame;
-using PokerEngine.Domain.TexasHoldem;
+﻿using PokerEngine.Console;
 using MSC = System.Console;
 
 internal class Program
 {
     private static void Main(string[] args)
     {
-        CardDeck? _deck = null;
         string? cards = null;
-        _deck = new CardDeck();
-        _deck.PowerShuffle();
 
         if (args != null && args.Length > 0)
         {
             cards = args.Length > 1 ? string.Join(',', args) : args[0];
             MSC.WriteLine($"Your cards are {cards}");
         }
+
         ReadCards(cards);
 
-        void ReadCards(string? cards = null)
+        static void ReadCards(string? cards = null)
         {
             while (string.IsNullOrWhiteSpace(cards))
             {
                 MSC.WriteLine("What's yours cards? Or quit/exit/q to exit, or simple [players' number] to deal five cards, or texas [players' number] to play texas holdem");
                 cards = MSC.ReadLine();
             }
-            cards = cards.ToUpperInvariant();
+
+            cards = cards.ToUpperInvariant().Trim();
 
             if (cards.StartsWith("QUIT") || cards.StartsWith("EXIT") || cards == "Q")
             {
                 return;
             }
+
             try
             {
                 if (cards.StartsWith("TEXAS"))
                 {
-                    string strPlayers = string.Join("", cards.Skip(6)).Trim();
+                    string strPlayers = string.Join("", cards.Skip(5)).Trim();
                     if (!ushort.TryParse(strPlayers, out ushort players))
                     {
                         throw new ArgumentException(nameof(players));
                     }
-                    TexasHoldem(players);
+
+                    TexasRunner.Run(players);
                     ReadCards();
                     return;
                 }
-                else if (cards.StartsWith("SIMPLE"))
+
+                if (cards.StartsWith("SIMPLE"))
                 {
                     string strPlayers = string.Join("", cards.Skip(6)).Trim();
                     if (!ushort.TryParse(strPlayers, out ushort players))
                     {
                         throw new ArgumentException(nameof(players));
                     }
-                    SimpleGame(players);
+
+                    SimpleRunner.Run(players);
                     ReadCards();
                     return;
                 }
-                PokerHand hand = new(cards);
-                MSC.WriteLine($"You have {hand}");
+
+                EvaluateRunner.Run(cards);
                 ReadCards();
             }
             catch (Exception e)
             {
-                if (_deck.Count < 5)
-                {
-                    _deck = new CardDeck();
-                    _deck.PowerShuffle();
-                }
                 MSC.WriteLine(e);
                 ReadCards();
-            }
-        }
-
-        void TexasHoldem(ushort players)
-        {
-            TexasHoldemGame game = new(players);
-
-            foreach (KeyValuePair<ushort, TexasHoldemPlayerCards> player in game.PlayersCards)
-            {
-                MSC.WriteLine($"Player #{player.Key} have [{player.Value.FirstCard}, {player.Value.SecondCard}] in hand");
-            }
-
-            MSC.WriteLine("Press any key to continue to the table cards...");
-            MSC.ReadLine();
-
-            IReadOnlyList<Card> flop = game.Continue();
-            MSC.WriteLine($"Table flop is [{flop[0]}, {flop[1]}, {flop[2]}]");
-            MSC.WriteLine("Press any key to continue to the turn card...");
-            MSC.ReadLine();
-
-            IReadOnlyList<Card> turn = game.Continue();
-            MSC.WriteLine($"Table turn is {turn[3]}");
-            MSC.WriteLine("Press any key to continue to the river card...");
-            MSC.ReadLine();
-
-            IReadOnlyList<Card> river = game.Continue();
-            MSC.WriteLine($"Table river is {river[4]}");
-            MSC.WriteLine("Press any key to continue to the showdown...");
-            MSC.ReadLine();
-
-            IReadOnlyList<KeyValuePair<ushort, PokerHand>> hands = game.GetBestHands();
-            foreach (KeyValuePair<ushort, PokerHand> hand in hands)
-            {
-                string status = hand.Key == 0 ? "Table" : $"Player #{hand.Key}";
-                MSC.WriteLine($"{status} best possible hand is {hand.Value}");
-            }
-
-            MSC.WriteLine("Press any key to goes to winner announcement...");
-            MSC.ReadLine();
-            PrintWinner(hands);
-            _deck = new CardDeck();
-            _deck.PowerShuffle();
-        }
-
-        void SimpleGame(ushort players)
-        {
-            SimpleCardGame game = new(players);
-
-            game.DealCards();
-
-            foreach (KeyValuePair<ushort, IReadOnlyList<Card>> player in game.PlayersCards)
-            {
-                string cardsString = $"Player #{player.Key} have [";
-                cardsString += string.Join(", ", player.Value.Select(card => card.ToString()));
-                cardsString += "]";
-                MSC.WriteLine(cardsString);
-            }
-
-            MSC.WriteLine("Final hands:");
-            foreach (KeyValuePair<ushort, PokerHand> player in game.GetRankedHands())
-            {
-                MSC.WriteLine($"Player #{player.Key} has {player.Value.ToString()}");
-            }
-
-            MSC.WriteLine($"Winner is Player #{game.GetWinnerPlayer()}");
-        }
-
-        void RandomCards(ushort players)
-        {
-            Dictionary<ushort, PokerHand> hands = new();
-            for (ushort i = 1; i <= players; i++)
-            {
-                PokerHand playerHand = new(_deck.Pick(5).ToArray());
-                hands.Add(i, playerHand);
-            }
-            List<KeyValuePair<ushort, PokerHand>> playersHands = hands.OrderBy((a) => a.Value).ToList();
-            PrintWinner(playersHands);
-        }
-
-        void PrintWinner(IReadOnlyList<KeyValuePair<ushort, PokerHand>> playersHands)
-        {
-            ushort win = playersHands.FirstOrDefault().Key;
-            MSC.WriteLine(win == 0 ? "The table winner" : $"The winner is player #{win}".ToUpperInvariant());
-            MSC.WriteLine($"Ranked players hands:");
-            foreach (KeyValuePair<ushort, PokerHand> item in playersHands)
-            {
-                MSC.WriteLine(item.Key == 0 ? $"Table has {item.Value}" : $"Player #{item.Key} has {item.Value}");
             }
         }
     }
