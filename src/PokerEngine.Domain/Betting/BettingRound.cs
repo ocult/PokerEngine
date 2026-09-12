@@ -4,6 +4,7 @@ namespace PokerEngine.Domain.Betting
     {
         private readonly Dictionary<ushort, BettingPlayer> _players;
         private readonly List<ushort> _playerOrder;
+        private ushort? _lastActionPlayerId;
 
         public BettingRound(IEnumerable<BettingPlayer> players)
         {
@@ -25,8 +26,11 @@ namespace PokerEngine.Domain.Betting
                 throw new ArgumentException("Player IDs must be unique.", nameof(players));
             }
 
-            _players = playerList.ToDictionary(player => player.Id, ClonePlayer);
+            _players = playerList.ToDictionary(
+                player => player.Id,
+                player => new BettingPlayer(player.Id, player.RemainingStack));
             _playerOrder = playerList.Select(player => player.Id).ToList();
+            _lastActionPlayerId = null;
             BiggestContribution = 0;
             Status = BettingRoundStatus.Open;
         }
@@ -49,17 +53,29 @@ namespace PokerEngine.Domain.Betting
                 return null;
             }
 
-            if (BiggestContribution == 0)
+            int startIndex = _lastActionPlayerId is ushort lastActionPlayerId
+                ? (_playerOrder.IndexOf(lastActionPlayerId) + 1) % _playerOrder.Count
+                : 0;
+
+            for (int offset = 0; offset < _playerOrder.Count; offset++)
             {
-                return _playerOrder
-                    .Select(playerId => _players[playerId])
-                    .FirstOrDefault(player => player.Status != BettingPlayerStatus.Folded);
+                ushort playerId = _playerOrder[(startIndex + offset) % _playerOrder.Count];
+                BettingPlayer player = _players[playerId];
+
+                if (player.Status == BettingPlayerStatus.Folded
+                    || player.Status == BettingPlayerStatus.AllIn)
+                {
+                    continue;
+                }
+
+                if (player.Status == BettingPlayerStatus.Pending
+                    || player.Contribution < BiggestContribution)
+                {
+                    return player;
+                }
             }
 
-            return _playerOrder
-                .Select(playerId => _players[playerId])
-                .FirstOrDefault(player => player.Status != BettingPlayerStatus.Folded
-                    && player.Contribution < BiggestContribution);
+            return null;
         }
 
         public void Contribute(ushort playerId, long amount)
@@ -83,6 +99,7 @@ namespace PokerEngine.Domain.Betting
             }
 
             player.Contribute(amount);
+            _lastActionPlayerId = playerId;
 
             if (player.Contribution > BiggestContribution)
             {
@@ -101,6 +118,7 @@ namespace PokerEngine.Domain.Betting
             }
 
             player.Fold();
+            _lastActionPlayerId = playerId;
         }
 
         public void Call(ushort playerId)
@@ -124,6 +142,7 @@ namespace PokerEngine.Domain.Betting
             }
 
             player.Contribute(amountToCall);
+            _lastActionPlayerId = playerId;
         }
 
         public void Close()
@@ -241,30 +260,6 @@ namespace PokerEngine.Domain.Betting
             }
 
             return player;
-        }
-
-        private static BettingPlayer ClonePlayer(BettingPlayer player)
-        {
-            BettingPlayer clone = new (player.Id, player.RemainingStack);
-            if (player.Contribution > 0)
-            {
-                clone.Contribute(player.Contribution);
-            }
-
-            if (player.Status == BettingPlayerStatus.Folded)
-            {
-                clone.Fold();
-            }
-
-            return clone;
-        }
-
-        private static void EnsurePending(BettingPlayer player)
-        {
-            if (player.Status != BettingPlayerStatus.Pending)
-            {
-                throw new InvalidOperationException("Each player may act only once.");
-            }
         }
 
         private void EnsureOpen()
