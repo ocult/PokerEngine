@@ -2,39 +2,15 @@ using PokerEngine.Domain.Models;
 
 namespace PokerEngine.Domain.TexasHoldem
 {
-    public sealed class TexasHoldemGame : HoldemGame
+    public sealed class TexasHoldemGame : HoldemGame<TexasHoldemPlayerCards>
     {
         
         override protected int CardsPerPlayer => 2;
 
-        private readonly Dictionary<ushort, TexasHoldemPlayerCards> _playersCards;
-
         public TexasHoldemGame(ushort players, CardDeck? deck = null)
-            : base(players, deck)
+            : base(players, cards => new TexasHoldemPlayerCards(cards), deck)
         {
-            Dictionary<ushort, List<Card>> playerCards = new Dictionary<ushort, List<Card>>();
-            _playersCards = new Dictionary<ushort, TexasHoldemPlayerCards>();
-
-            for (ushort playerIndex = 1; playerIndex <= players; playerIndex++)
-            {
-                playerCards[playerIndex] = new List<Card>();
-            }
-
-            for (ushort card = 0; card < CardsPerPlayer; card++)
-            {
-                for (ushort playerIndex = 1; playerIndex <= players; playerIndex++)
-                {
-                    playerCards[playerIndex].Add(_deck.Pick());
-                }
-            }
-
-            foreach (KeyValuePair<ushort, List<Card>> player in playerCards)
-            {
-                _playersCards[player.Key] = new TexasHoldemPlayerCards(player.Value[0], player.Value[1]);
-            }
         }
-
-        public IReadOnlyDictionary<ushort, TexasHoldemPlayerCards> PlayersCards => _playersCards;
 
         protected override IDictionary<ushort, PokerHand> EvaluateBestHands()
         {

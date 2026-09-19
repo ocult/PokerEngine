@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
-
 namespace PokerEngine.Domain.Models
 {
-    public abstract class HoldemGame : PokerGame
+    public abstract class HoldemGame<TPlayerCards> : PokerGame where TPlayerCards : HoldemPlayerCards
     {
         protected int MaxPlayersPerDeck => (52 - 9) / CardsPerPlayer;
 
@@ -12,13 +9,18 @@ namespace PokerEngine.Domain.Models
 
         protected readonly CardDeck _deck;
         protected readonly List<Card> _communityCards;
+        protected readonly Dictionary<ushort, TPlayerCards> _playersCards;
 
-        protected HoldemGame(ushort players, CardDeck? deck = null)
+        protected HoldemGame(ushort players, Func<IReadOnlyList<Card>, TPlayerCards> playerCardsFactory, CardDeck? deck = null)
         {
             if (players == 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(players));
             }
+
+            Players = players;
+            _deck = deck ?? new CardDeck();
+            _communityCards = new List<Card>();
 
             if (players > MaxPlayersPerDeck)
             {
@@ -26,11 +28,28 @@ namespace PokerEngine.Domain.Models
                     $"A standard deck cannot support {players} players. The maximum supported is {MaxPlayersPerDeck}.");
             }
 
-            Players = players;
-            _deck = deck ?? new CardDeck();
-            _communityCards = new List<Card>();
-
             Stage = HoldemStage.PreFlop;
+
+            Dictionary<ushort, List<Card>> playerCards = new Dictionary<ushort, List<Card>>();
+            _playersCards = new Dictionary<ushort, TPlayerCards>();
+
+            for (ushort playerIndex = 1; playerIndex <= players; playerIndex++)
+            {
+                playerCards[playerIndex] = new List<Card>();
+            }
+
+            for (ushort card = 0; card < CardsPerPlayer; card++)
+            {
+                for (ushort playerIndex = 1; playerIndex <= players; playerIndex++)
+                {
+                    playerCards[playerIndex].Add(_deck.Pick());
+                }
+            }
+
+            foreach (KeyValuePair<ushort, List<Card>> player in playerCards)
+            {
+                _playersCards[player.Key] = playerCardsFactory(player.Value);
+            }
         }
 
         public override ushort Players { get; }
@@ -38,6 +57,8 @@ namespace PokerEngine.Domain.Models
         public HoldemStage Stage { get; protected set; }
 
         public IReadOnlyList<Card> CommunityCards => _communityCards.AsReadOnly();
+
+        public IReadOnlyDictionary<ushort, TPlayerCards> PlayersCards => _playersCards;
 
         public IReadOnlyList<Card> Continue()
         {

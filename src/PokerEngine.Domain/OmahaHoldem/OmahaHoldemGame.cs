@@ -2,39 +2,15 @@ using PokerEngine.Domain.Models;
 
 namespace PokerEngine.Domain.OmahaHoldem
 {
-    public sealed class OmahaHoldemGame : HoldemGame
+    public sealed class OmahaHoldemGame : HoldemGame<OmahaHoldemPlayerCards>
     {
 
         override protected int CardsPerPlayer => 4;
 
-        private readonly Dictionary<ushort, OmahaHoldemPlayerCards> _playersCards;
-
         public OmahaHoldemGame(ushort players, CardDeck? deck = null)
-            : base(players, deck)
+            : base(players, cards => new OmahaHoldemPlayerCards(cards), deck)
         {
-            Dictionary<ushort, List<Card>> playerCards = new Dictionary<ushort, List<Card>>();
-            _playersCards = new Dictionary<ushort, OmahaHoldemPlayerCards>();
-
-            for (ushort playerIndex = 1; playerIndex <= players; playerIndex++)
-            {
-                playerCards[playerIndex] = new List<Card>();
-            }
-
-            for (ushort card = 0; card < CardsPerPlayer; card++)
-            {
-                for (ushort playerIndex = 1; playerIndex <= players; playerIndex++)
-                {
-                    playerCards[playerIndex].Add(_deck.Pick());
-                }
-            }
-
-            foreach (KeyValuePair<ushort, List<Card>> player in playerCards)
-            {
-                _playersCards[player.Key] = new OmahaHoldemPlayerCards(player.Value[0], player.Value[1], player.Value[2], player.Value[3]);
-            }
         }
-
-        public IReadOnlyDictionary<ushort, OmahaHoldemPlayerCards> PlayersCards => _playersCards;
 
         protected override IDictionary<ushort, PokerHand> EvaluateBestHands()
         {
