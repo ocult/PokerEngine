@@ -79,36 +79,5 @@ namespace PokerEngine.Domain.TexasHoldem
                 GetCombinationsHelper(cards, k, i + 1, current, index + 1, result);
             }
         }
-
-        private void BurnTwoCards()
-        {
-            EnsureDeckHasCards(2);
-            _deck.Pick();
-            _deck.Pick();
-        }
-
-        private void BurnOneCard()
-        {
-            EnsureDeckHasCards(1);
-            _deck.Pick();
-        }
-
-        private void DealCommunityCards(int quantity)
-        {
-            EnsureDeckHasCards(quantity);
-            for (int i = 0; i < quantity; i++)
-            {
-                _communityCards.Add(_deck.Pick());
-            }
-        }
-
-        private void EnsureDeckHasCards(int requiredCards)
-        {
-            if (_deck.Count < requiredCards)
-            {
-                throw new InvalidOperationException(
-                    $"The deck does not have enough cards to continue the hand. Required: {requiredCards}, available: {_deck.Count}.");
-            }
-        }
     }
 }
