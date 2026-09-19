@@ -1,6 +1,6 @@
-namespace PokerEngine.Domain.TexasHoldem
+namespace PokerEngine.Domain.Models
 {
-    public enum TexasHoldemStage
+    public enum HoldemStage
     {
         PreFlop,
         Flop,

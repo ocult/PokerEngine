@@ -2,43 +2,29 @@ using PokerEngine.Domain.Models;
 
 namespace PokerEngine.Domain.OmahaHoldem
 {
-    public sealed class OmahaHoldemGame : PokerGame
+    public sealed class OmahaHoldemGame : HoldemGame
     {
-        private const int MaxPlayersPerDeck = 10;
 
-        private readonly CardDeck _deck;
+        override protected int CardsPerPlayer => 4;
+
         private readonly Dictionary<ushort, OmahaHoldemPlayerCards> _playersCards;
-        private readonly List<Card> _communityCards;
 
         public OmahaHoldemGame(ushort players, CardDeck? deck = null)
+            : base(players, deck)
         {
-            if (players == 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(players));
-            }
-
-            if (players > MaxPlayersPerDeck)
-            {
-                throw new InvalidOperationException(
-                    $"A standard deck cannot support {players} players in Omaha Hold'em. The maximum supported is {MaxPlayersPerDeck}.");
-            }
-
-            Players = players;
-            _deck = deck ?? new CardDeck();
             Dictionary<ushort, List<Card>> playerCards = new Dictionary<ushort, List<Card>>();
             _playersCards = new Dictionary<ushort, OmahaHoldemPlayerCards>();
-            _communityCards = new List<Card>();
 
-            for (ushort i = 1; i <= players; i++)
+            for (ushort playerIndex = 1; playerIndex <= players; playerIndex++)
             {
-                playerCards[i] = new List<Card>();
+                playerCards[playerIndex] = new List<Card>();
             }
 
-            for (ushort round = 0; round < 4; round++)
+            for (ushort card = 0; card < CardsPerPlayer; card++)
             {
-                for (ushort i = 1; i <= players; i++)
+                for (ushort playerIndex = 1; playerIndex <= players; playerIndex++)
                 {
-                    playerCards[i].Add(_deck.Pick());
+                    playerCards[playerIndex].Add(_deck.Pick());
                 }
             }
 
@@ -46,49 +32,9 @@ namespace PokerEngine.Domain.OmahaHoldem
             {
                 _playersCards[player.Key] = new OmahaHoldemPlayerCards(player.Value[0], player.Value[1], player.Value[2], player.Value[3]);
             }
-
-            Stage = OmahaHoldemStage.PreFlop;
         }
-
-        public override ushort Players { get; }
-
-        public OmahaHoldemStage Stage { get; private set; }
 
         public IReadOnlyDictionary<ushort, OmahaHoldemPlayerCards> PlayersCards => _playersCards;
-
-        public IReadOnlyList<Card> CommunityCards => _communityCards.AsReadOnly();
-
-        public IReadOnlyList<Card> Continue()
-        {
-            switch (Stage)
-            {
-                case OmahaHoldemStage.PreFlop:
-                    BurnTwoCards();
-                    DealCommunityCards(3);
-                    Stage = OmahaHoldemStage.Flop;
-                    return CommunityCards;
-                case OmahaHoldemStage.Flop:
-                    BurnOneCard();
-                    DealCommunityCards(1);
-                    Stage = OmahaHoldemStage.Turn;
-                    return CommunityCards;
-                case OmahaHoldemStage.Turn:
-                    BurnOneCard();
-                    DealCommunityCards(1);
-                    Stage = OmahaHoldemStage.River;
-                    return CommunityCards;
-                case OmahaHoldemStage.River:
-                    Stage = OmahaHoldemStage.Complete;
-                    return CommunityCards;
-                default:
-                    return CommunityCards;
-            }
-        }
-
-        public IReadOnlyList<KeyValuePair<ushort, PokerHand>> GetBestHands()
-        {
-            return GetRankedHands();
-        }
 
         protected override IDictionary<ushort, PokerHand> EvaluateBestHands()
         {
@@ -148,37 +94,6 @@ namespace PokerEngine.Domain.OmahaHoldem
             }
             
             return possibleHands.OrderBy(h => h).First();
-        }
-
-        private void BurnTwoCards()
-        {
-            EnsureDeckHasCards(2);
-            _deck.Pick();
-            _deck.Pick();
-        }
-
-        private void BurnOneCard()
-        {
-            EnsureDeckHasCards(1);
-            _deck.Pick();
-        }
-
-        private void DealCommunityCards(int quantity)
-        {
-            EnsureDeckHasCards(quantity);
-            for (int i = 0; i < quantity; i++)
-            {
-                _communityCards.Add(_deck.Pick());
-            }
-        }
-
-        private void EnsureDeckHasCards(int requiredCards)
-        {
-            if (_deck.Count < requiredCards)
-            {
-                throw new InvalidOperationException(
-                    $"The deck does not have enough cards to continue the hand. Required: {requiredCards}, available: {_deck.Count}.");
-            }
         }
     }
 }
