@@ -33,6 +33,7 @@ namespace PokerEngine.Console
             MSC.WriteLine("Press any key to continue to the showdown...");
             MSC.ReadLine();
 
+            MSC.WriteLine($"Table has [{string.Join(", ", river)}] cards");
             IReadOnlyList<KeyValuePair<ushort, PokerHand>> hands = game.GetBestHands();
             foreach (KeyValuePair<ushort, PokerHand> hand in hands)
             {
