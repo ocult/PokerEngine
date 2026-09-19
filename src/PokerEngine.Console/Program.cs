@@ -1,4 +1,4 @@
-using PokerEngine.Console;
+﻿using PokerEngine.Console;
 using MSC = System.Console;
 
 internal class Program
@@ -37,6 +37,7 @@ internal class Program
             EvaluateRunner.Help();
             SimpleRunner.Help();
             TexasRunner.Help();
+            OmahaRunner.Help();
             BetRunner.Help();
             MSC.WriteLine("=================================");
             ReadCards();
@@ -67,6 +68,19 @@ internal class Program
                 }
 
                 TexasRunner.Run(players);
+                ReadCards();
+                return;
+            }
+            
+            if (cards.StartsWith("OMAHA"))
+            {
+                string strPlayers = string.Join("", cards.Skip(5)).Trim();
+                if (!ushort.TryParse(strPlayers, out ushort players))
+                {
+                    throw new ArgumentException(nameof(players));
+                }
+
+                OmahaRunner.Run(players);
                 ReadCards();
                 return;
             }
