@@ -2,6 +2,8 @@ using PokerEngine.Domain.Models;
 
 namespace PokerEngine.Web.Endpoints;
 
+public record HandRequest(string? Cards);
+
 public static class HandEndpoints
 {
     public static void Map(WebApplication app)
