@@ -8,5 +8,6 @@ public static class PokerEndpoints
     {
         HandEndpoints.Map(app);
         TexasHoldemEndpoints.Map(app);
+        OmahaHoldemEndpoints.Map(app);
     }
 }
