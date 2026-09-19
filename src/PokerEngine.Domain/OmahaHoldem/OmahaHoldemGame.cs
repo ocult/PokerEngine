@@ -108,21 +108,6 @@ namespace PokerEngine.Domain.OmahaHoldem
             return hands;
         }
 
-        private List<PokerHand> AddCardsToPossibleHands(OmahaHoldemPlayerCards playerCards, Card card1, Card card2, Card card3)
-        {
-            List<PokerHand> possibleHands =
-            [
-                new (card1, card2, card3, playerCards[0], playerCards[1]),
-                new (card1, card2, card3, playerCards[0], playerCards[2]),
-                new (card1, card2, card3, playerCards[0], playerCards[3]),
-                new (card1, card2, card3, playerCards[1], playerCards[2]),
-                new (card1, card2, card3, playerCards[1], playerCards[3]),
-                new (card1, card2, card3, playerCards[2], playerCards[3]),
-            ];
-
-            return possibleHands;
-        }
-
         private PokerHand GetBestHandForPlayer(ushort player)
         {
             OmahaHoldemPlayerCards playerCards = _playersCards[player];
@@ -130,24 +115,44 @@ namespace PokerEngine.Domain.OmahaHoldem
             {
                 throw new InvalidOperationException("The community cards must be flop enough before evaluating best hands.");
             }
-            List<PokerHand> possibleHands = AddCardsToPossibleHands(playerCards, _communityCards[0], _communityCards[1], _communityCards[2]);
-            if (_communityCards.Count > 3)
+
+            List<Card[]> playerCombos = GetCombinations(playerCards.Cards, 2);
+            List<Card[]> communityCombos = GetCombinations(_communityCards, 3);
+
+            List<PokerHand> possibleHands = new();
+            foreach (Card[] pCombo in playerCombos)
             {
-                possibleHands.AddRange(AddCardsToPossibleHands(playerCards, _communityCards[0], _communityCards[1], _communityCards[3]));
-                possibleHands.AddRange(AddCardsToPossibleHands(playerCards, _communityCards[0], _communityCards[2], _communityCards[3]));
-                possibleHands.AddRange(AddCardsToPossibleHands(playerCards, _communityCards[1], _communityCards[2], _communityCards[3]));
-                if (_communityCards.Count > 4)
+                foreach (Card[] cCombo in communityCombos)
                 {
-                    possibleHands.AddRange(AddCardsToPossibleHands(playerCards, _communityCards[0], _communityCards[1], _communityCards[4]));
-                    possibleHands.AddRange(AddCardsToPossibleHands(playerCards, _communityCards[0], _communityCards[2], _communityCards[4]));
-                    possibleHands.AddRange(AddCardsToPossibleHands(playerCards, _communityCards[1], _communityCards[2], _communityCards[4]));
-                    possibleHands.AddRange(AddCardsToPossibleHands(playerCards, _communityCards[0], _communityCards[3], _communityCards[4]));
-                    possibleHands.AddRange(AddCardsToPossibleHands(playerCards, _communityCards[1], _communityCards[3], _communityCards[4]));
-                    possibleHands.AddRange(AddCardsToPossibleHands(playerCards, _communityCards[2], _communityCards[3], _communityCards[4]));
+                    possibleHands.Add(new PokerHand(pCombo[0], pCombo[1], cCombo[0], cCombo[1], cCombo[2]));
                 }
             }
-            
+
             return possibleHands.OrderBy(h => h).First();
+        }
+
+        private static List<Card[]> GetCombinations(IReadOnlyList<Card> cards, int k)
+        {
+            List<Card[]> result = new();
+            GetCombinationsHelper(cards, k, 0, new Card[k], 0, result);
+            return result;
+        }
+
+        private static void GetCombinationsHelper(IReadOnlyList<Card> cards, int k, int start, Card[] current, int index, List<Card[]> result)
+        {
+            if (index == k)
+            {
+                Card[] combination = new Card[k];
+                Array.Copy(current, combination, k);
+                result.Add(combination);
+                return;
+            }
+
+            for (int i = start; i <= cards.Count - k + index; i++)
+            {
+                current[index] = cards[i];
+                GetCombinationsHelper(cards, k, i + 1, current, index + 1, result);
+            }
         }
 
         private void BurnTwoCards()
