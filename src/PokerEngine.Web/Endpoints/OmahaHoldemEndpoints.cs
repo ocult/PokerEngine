@@ -58,7 +58,13 @@ public static class OmahaHoldemEndpoints
             phase = game.Stage.ToString(),
             holeCards = game.PlayersCards.ToDictionary(
                 item => item.Key,
-                item => new[] { item.Value.FirstCard.ToString(), item.Value.SecondCard.ToString() }),
+                item => new[] 
+                { 
+                    item.Value.FirstCard.ToString(), 
+                    item.Value.SecondCard.ToString(), 
+                    item.Value.ThirdCard.ToString(), 
+                    item.Value.FourthCard.ToString()
+                }),
             communityCards = game.CommunityCards.Select(card => card.ToString()).ToArray(),
             bestHands = default(IEnumerable<KeyValuePair<ushort, PokerHand>>),
             winner = default(KeyValuePair<ushort, PokerHand>)
@@ -86,7 +92,13 @@ public static class OmahaHoldemEndpoints
             phase = game.Stage.ToString(),
             holeCards = game.PlayersCards.ToDictionary(
                 item => item.Key,
-                item => new[] { item.Value.FirstCard.ToString(), item.Value.SecondCard.ToString() }),
+                item => new[] 
+                { 
+                    item.Value.FirstCard.ToString(), 
+                    item.Value.SecondCard.ToString(), 
+                    item.Value.ThirdCard.ToString(), 
+                    item.Value.FourthCard.ToString()
+                }),
             communityCards = game.CommunityCards.Select(card => card.ToString()).ToArray(),
             bestHands = bestHands is null ? null : bestHands.Select(item => new
             {
