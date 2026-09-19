@@ -232,6 +232,7 @@ namespace PokerEngine.Domain.Models
                 my._qualified = false;
                 if (my[2].Value == my[0].Value)
                 {
+                    my._qualified = true;
                     my._threeOfKind = my[0].Value;
                     my._kicker = my[3];
                     my._secondKicker = my[4];

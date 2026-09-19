@@ -301,5 +301,53 @@ namespace PokerEngine.XunitTest
 
             Assert.Throws<InvalidOperationException>(() => game.Continue());
         }
+
+        [Fact]
+        public void OmahaCaseGame()
+        {
+            var deck = new CardDeck(new[]
+            {
+                new Card("2C"),
+                new Card("JD"),
+                new Card("4D"),
+                new Card("6H"),
+                new Card("TD"),
+                new Card("5S"),                
+                new Card("3S"),
+                new Card("KH"),
+                new Card("9S"),
+                new Card("AD"),
+                new Card("KD"),
+                new Card("7C"),
+                new Card("3D"),
+                new Card("QS"),
+                new Card("3H"),
+                new Card("KS"),
+                new Card("9H"),
+                new Card("QC"),
+                new Card("JC"),
+                new Card("TC"),
+                new Card("TS"),
+                new Card("TH"),
+            });
+
+            var game = new OmahaHoldemGame(3, deck);
+
+            _ = game.Continue();
+            _ = game.Continue();
+            _ = game.Continue();
+            _ = game.Continue();
+
+            Assert.Equal(new[] { new Card("2C"), new Card("6H"), new Card("3S"), new Card("AD") }, game.PlayersCards[1].Cards);
+            Assert.Equal(new[] { new Card("JD"), new Card("TD"), new Card("KH"), new Card("KD") }, game.PlayersCards[2].Cards);
+            Assert.Equal(new[] { new Card("4D"), new Card("5S"), new Card("9S"), new Card("7C") }, game.PlayersCards[3].Cards);
+            Assert.Equal(new[] { new Card("3H"), new Card("KS"), new Card("9H"), new Card("JC"), new Card("TS") }, game.CommunityCards);
+
+            var hands = game.GetBestHands();
+            Assert.Equal(3, hands.Count);
+            Assert.Equal(new PokerHand(new[] { new Card("KS"), new Card("KD"), new Card("KH"), new Card("JC"), new Card("TS") }), hands[0].Value);
+            Assert.Equal(new PokerHand(new[] { new Card("9H"), new Card("9S"), new Card("KS"), new Card("JC"), new Card("7C") }), hands[1].Value);
+            Assert.Equal(new PokerHand(new[] { new Card("3H"), new Card("3S"), new Card("AD"), new Card("KS"), new Card("JC") }), hands[2].Value);
+        }
     }
 }

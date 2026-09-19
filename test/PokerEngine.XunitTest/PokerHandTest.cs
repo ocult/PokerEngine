@@ -110,6 +110,7 @@ namespace PokerEngine.XunitTest
         [InlineData("8C,8H,8S,3D,3C", HandRankingEnum.FullHouse, "A full house, eights over threes")]
         [InlineData("KC,9C,7C,4C,2C", HandRankingEnum.Flush, "A king-high flush of Clubs")]
         [InlineData("8C,8H,8S,KC,2D", HandRankingEnum.ThreeOfKind, "A three of eights with a king kicker")]
+        [InlineData("KS,KH,KD,9H,3H", HandRankingEnum.ThreeOfKind, "A three of kings with a nine kicker")]
         [InlineData("KC,8H,8S,3D,3C", HandRankingEnum.TwoPairs, "A two pairs, eights and threes with king kicker")]
         [InlineData("KC,8H,8S,3D,2C", HandRankingEnum.Pair, "A pair of eights with a king kicker")]
         [InlineData("KC,9H,7S,4D,2C", HandRankingEnum.HighCard, "A king high card")]
