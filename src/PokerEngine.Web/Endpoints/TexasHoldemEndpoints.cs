@@ -74,10 +74,10 @@ public static class TexasHoldemEndpoints
             return Results.NotFound(new { error = "Game not found." });
         }
 
-        if (game.Stage != TexasHoldemStage.Complete) game.Continue();
+        if (game.Stage != HoldemStage.Complete) game.Continue();
 
-        IReadOnlyList<KeyValuePair<ushort, PokerHand>>? bestHands = game.Stage != TexasHoldemStage.PreFlop ? game.GetBestHands() : default;
-        KeyValuePair<ushort, PokerHand> winner = game.Stage == TexasHoldemStage.Complete ? bestHands.First() : default;
+        IReadOnlyList<KeyValuePair<ushort, PokerHand>>? bestHands = game.Stage != HoldemStage.PreFlop ? game.GetBestHands() : default;
+        KeyValuePair<ushort, PokerHand> winner = game.Stage == HoldemStage.Complete ? bestHands.First() : default;
 
         return Results.Ok(new
         {

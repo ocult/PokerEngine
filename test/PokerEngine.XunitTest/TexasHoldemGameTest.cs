@@ -11,27 +11,27 @@ namespace PokerEngine.XunitTest
         {
             var game = new TexasHoldemGame(2);
 
-            Assert.Equal(TexasHoldemStage.PreFlop, game.Stage);
+            Assert.Equal(HoldemStage.PreFlop, game.Stage);
             Assert.Equal(2, game.PlayersCards.Count);
             Assert.Empty(game.CommunityCards);
 
             var flop = game.Continue();
-            Assert.Equal(TexasHoldemStage.Flop, game.Stage);
+            Assert.Equal(HoldemStage.Flop, game.Stage);
             Assert.Equal(3, flop.Count);
             Assert.Equal(3, game.CommunityCards.Count);
 
             var turn = game.Continue();
-            Assert.Equal(TexasHoldemStage.Turn, game.Stage);
+            Assert.Equal(HoldemStage.Turn, game.Stage);
             Assert.Equal(4, turn.Count);
             Assert.Equal(4, game.CommunityCards.Count);
 
             var river = game.Continue();
-            Assert.Equal(TexasHoldemStage.River, game.Stage);
+            Assert.Equal(HoldemStage.River, game.Stage);
             Assert.Equal(5, river.Count);
             Assert.Equal(5, game.CommunityCards.Count);
 
             var complete = game.Continue();
-            Assert.Equal(TexasHoldemStage.Complete, game.Stage);
+            Assert.Equal(HoldemStage.Complete, game.Stage);
             Assert.Equal(5, complete.Count);
         }
 
@@ -99,7 +99,7 @@ namespace PokerEngine.XunitTest
 
             var hands = game.GetBestHands();
 
-            Assert.Equal(TexasHoldemStage.Flop, game.Stage);
+            Assert.Equal(HoldemStage.Flop, game.Stage);
             Assert.Equal(2, hands.Count);
             Assert.All(hands, hand => Assert.Equal(5, hand.Value.Cards.Length));
             Assert.Contains(hands, hand => hand.Key == 1);
@@ -116,7 +116,7 @@ namespace PokerEngine.XunitTest
 
             var hands = game.GetBestHands();
 
-            Assert.Equal(TexasHoldemStage.Turn, game.Stage);
+            Assert.Equal(HoldemStage.Turn, game.Stage);
             Assert.Equal(2, hands.Count);
             Assert.All(hands, hand => Assert.Equal(5, hand.Value.Cards.Length));
             Assert.Contains(hands, hand => hand.Key == 1);
@@ -159,24 +159,24 @@ namespace PokerEngine.XunitTest
             
             Assert.Equal(p5c1, game.PlayersCards[5].FirstCard);
             Assert.Equal(p5c2, game.PlayersCards[5].SecondCard);
-            Assert.Equal(TexasHoldemStage.PreFlop, game.Stage);
+            Assert.Equal(HoldemStage.PreFlop, game.Stage);
 
             var flop = game.Continue();
             Assert.Equal(3, flop.Count);
             Assert.Equal(3, game.CommunityCards.Count);            
-            Assert.Equal(TexasHoldemStage.Flop, game.Stage);
+            Assert.Equal(HoldemStage.Flop, game.Stage);
             Assert.Equal(flop1, flop[0]);
             Assert.Equal(flop2, flop[1]);
             Assert.Equal(flop3, flop[2]);
 
             var turn = game.Continue();
             Assert.Equal(4, turn.Count);
-            Assert.Equal(TexasHoldemStage.Turn, game.Stage);
+            Assert.Equal(HoldemStage.Turn, game.Stage);
             Assert.Equal(turnExpected, turn[3]);
 
             var river = game.Continue();
             Assert.Equal(5, river.Count);
-            Assert.Equal(TexasHoldemStage.River, game.Stage);
+            Assert.Equal(HoldemStage.River, game.Stage);
             Assert.Equal(riverExpected, river[4]);
         }
 
@@ -250,7 +250,7 @@ namespace PokerEngine.XunitTest
             var complete = game.Continue();
             var afterComplete = game.Continue();
 
-            Assert.Equal(TexasHoldemStage.Complete, game.Stage);
+            Assert.Equal(HoldemStage.Complete, game.Stage);
             Assert.Equal(complete, afterComplete);
             Assert.Equal(5, afterComplete.Count);
         }

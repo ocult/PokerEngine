@@ -80,10 +80,10 @@ public static class OmahaHoldemEndpoints
             return Results.NotFound(new { error = "Game not found." });
         }
 
-        if (game.Stage != OmahaHoldemStage.Complete) game.Continue();
+        if (game.Stage != HoldemStage.Complete) game.Continue();
 
-        IReadOnlyList<KeyValuePair<ushort, PokerHand>>? bestHands = game.Stage != OmahaHoldemStage.PreFlop ? game.GetBestHands() : default;
-        KeyValuePair<ushort, PokerHand> winner = game.Stage == OmahaHoldemStage.Complete ? bestHands.First() : default;
+        IReadOnlyList<KeyValuePair<ushort, PokerHand>>? bestHands = game.Stage != HoldemStage.PreFlop ? game.GetBestHands() : default;
+        KeyValuePair<ushort, PokerHand> winner = game.Stage == HoldemStage.Complete ? bestHands.First() : default;
 
         return Results.Ok(new
         {

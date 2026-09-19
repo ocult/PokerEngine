@@ -2,92 +2,14 @@ using PokerEngine.Domain.Models;
 
 namespace PokerEngine.Domain.TexasHoldem
 {
-    public sealed class TexasHoldemGame : PokerGame
+    public sealed class TexasHoldemGame : HoldemGame<TexasHoldemPlayerCards>
     {
-        private const int MaxPlayersPerDeck = 21;
-
-        private readonly CardDeck _deck;
-        private readonly Dictionary<ushort, TexasHoldemPlayerCards> _playersCards;
-        private readonly List<Card> _communityCards;
+        
+        override protected int CardsPerPlayer => 2;
 
         public TexasHoldemGame(ushort players, CardDeck? deck = null)
+            : base(players, cards => new TexasHoldemPlayerCards(cards), deck)
         {
-            if (players == 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(players));
-            }
-
-            if (players > MaxPlayersPerDeck)
-            {
-                throw new InvalidOperationException(
-                    $"A standard deck cannot support {players} players in Texas Hold'em. The maximum supported is {MaxPlayersPerDeck}.");
-            }
-
-            Players = players;
-            _deck = deck ?? new CardDeck();
-            Dictionary<ushort, List<Card>> playerCards = new Dictionary<ushort, List<Card>>();
-            _playersCards = new Dictionary<ushort, TexasHoldemPlayerCards>();
-            _communityCards = new List<Card>();
-
-            for (ushort i = 1; i <= players; i++)
-            {
-                playerCards[i] = new List<Card>();
-            }
-
-            for (ushort round = 0; round < 2; round++)
-            {
-                for (ushort i = 1; i <= players; i++)
-                {
-                    playerCards[i].Add(_deck.Pick());
-                }
-            }
-
-            foreach (KeyValuePair<ushort, List<Card>> player in playerCards)
-            {
-                _playersCards[player.Key] = new TexasHoldemPlayerCards(player.Value[0], player.Value[1]);
-            }
-
-            Stage = TexasHoldemStage.PreFlop;
-        }
-
-        public override ushort Players { get; }
-
-        public TexasHoldemStage Stage { get; private set; }
-
-        public IReadOnlyDictionary<ushort, TexasHoldemPlayerCards> PlayersCards => _playersCards;
-
-        public IReadOnlyList<Card> CommunityCards => _communityCards.AsReadOnly();
-
-        public IReadOnlyList<Card> Continue()
-        {
-            switch (Stage)
-            {
-                case TexasHoldemStage.PreFlop:
-                    BurnTwoCards();
-                    DealCommunityCards(3);
-                    Stage = TexasHoldemStage.Flop;
-                    return CommunityCards;
-                case TexasHoldemStage.Flop:
-                    BurnOneCard();
-                    DealCommunityCards(1);
-                    Stage = TexasHoldemStage.Turn;
-                    return CommunityCards;
-                case TexasHoldemStage.Turn:
-                    BurnOneCard();
-                    DealCommunityCards(1);
-                    Stage = TexasHoldemStage.River;
-                    return CommunityCards;
-                case TexasHoldemStage.River:
-                    Stage = TexasHoldemStage.Complete;
-                    return CommunityCards;
-                default:
-                    return CommunityCards;
-            }
-        }
-
-        public IReadOnlyList<KeyValuePair<ushort, PokerHand>> GetBestHands()
-        {
-            return GetRankedHands();
         }
 
         protected override IDictionary<ushort, PokerHand> EvaluateBestHands()

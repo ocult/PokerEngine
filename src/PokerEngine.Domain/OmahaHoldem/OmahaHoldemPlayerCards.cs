@@ -2,33 +2,26 @@ using PokerEngine.Domain.Models;
 
 namespace PokerEngine.Domain.OmahaHoldem
 {
-    public sealed class OmahaHoldemPlayerCards
+    public sealed class OmahaHoldemPlayerCards : HoldemPlayerCards
     {
         public OmahaHoldemPlayerCards(Card firstCard, Card secondCard, Card thirdCard, Card fourthCard)
+            : base(new[] { firstCard, secondCard, thirdCard, fourthCard })
         {
-            FirstCard = firstCard;
-            SecondCard = secondCard;
-            ThirdCard = thirdCard;
-            FourthCard = fourthCard;
         }
 
-        public Card FirstCard { get; }
-
-        public Card SecondCard { get; }
-
-        public Card ThirdCard { get; }
-
-        public Card FourthCard { get; }
-
-        public IReadOnlyList<Card> Cards => new[] { FirstCard, SecondCard, ThirdCard, FourthCard };
-
-        public Card this[int index] => index switch
+        public OmahaHoldemPlayerCards(IReadOnlyList<Card> cards)
+            : base(cards)
         {
-            0 => FirstCard,
-            1 => SecondCard,
-            2 => ThirdCard,
-            3 => FourthCard,
-            _ => throw new ArgumentOutOfRangeException(nameof(index))
-        };
+            if (cards == null) throw new ArgumentNullException(nameof(cards));
+            if (cards.Count < 4) throw new ArgumentException("Omaha Holdem player cards must contain at least 4 cards.", nameof(cards));
+        }
+
+        public Card FirstCard => Cards[0];
+
+        public Card SecondCard => Cards[1];
+
+        public Card ThirdCard => Cards[2];
+
+        public Card FourthCard => Cards[3];
     }
 }
