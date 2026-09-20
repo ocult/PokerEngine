@@ -150,27 +150,27 @@ namespace PokerEngine.Domain.Models
 
         protected abstract PokerHand GetBestHandForPlayer(ushort player);
 
-        protected static List<Card[]> GetCombinations(IReadOnlyList<Card> cards, int k)
+        protected static List<Card[]> GetCombinations(IReadOnlyList<Card> cards, int combinationSize)
         {
-            List<Card[]> result = new();
-            GetCombinationsHelper(cards, k, 0, new Card[k], 0, result);
-            return result;
+            List<Card[]> combinations = new();
+            GetCombinationsHelper(cards, combinationSize, 0, new Card[combinationSize], 0, combinations);
+            return combinations;
         }
 
-        private static void GetCombinationsHelper(IReadOnlyList<Card> cards, int k, int start, Card[] current, int index, List<Card[]> result)
+        private static void GetCombinationsHelper(IReadOnlyList<Card> cards, int combinationSize, int startIndex, Card[] currentCombination, int currentPosition, List<Card[]> combinations)
         {
-            if (index == k)
+            if (currentPosition == combinationSize)
             {
-                Card[] combination = new Card[k];
-                Array.Copy(current, combination, k);
-                result.Add(combination);
+                Card[] combination = new Card[combinationSize];
+                Array.Copy(currentCombination, combination, combinationSize);
+                combinations.Add(combination);
                 return;
             }
 
-            for (int i = start; i <= cards.Count - k + index; i++)
+            for (int i = startIndex; i <= cards.Count - combinationSize + currentPosition; i++)
             {
-                current[index] = cards[i];
-                GetCombinationsHelper(cards, k, i + 1, current, index + 1, result);
+                currentCombination[currentPosition] = cards[i];
+                GetCombinationsHelper(cards, combinationSize, i + 1, currentCombination, currentPosition + 1, combinations);
             }
         }
     }
