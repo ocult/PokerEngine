@@ -6,6 +6,11 @@ namespace PokerEngine.Console
 {
     public static class SimpleRunner
     {
+        public static void Help()
+        {
+            MSC.WriteLine("SIMPLE: 'simple [players]' - Deals 5 cards to each player for [players] (2+) and determines the winner.");
+        }
+
         public static void Run(ushort players)
         {
             SimpleCardGame game = new(players);

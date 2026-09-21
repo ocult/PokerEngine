@@ -6,6 +6,11 @@ namespace PokerEngine.Console
 {
     public static class OmahaRunner
     {
+        public static void Help()
+        {
+            MSC.WriteLine("OMAHA: 'omaha [players]' - Plays Omaha Hold'em dealing hands, flop, turn, river, and showdown for [players] (2+).");
+        }
+
         public static void Run(ushort players)
         {
             OmahaHoldemGame game = new(players);

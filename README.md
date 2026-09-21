@@ -12,6 +12,7 @@ O projeto já inclui um `global.json` para fixar a versão do SDK e garantir com
 ## Estrutura do projeto
 
 - `src/PokerEngine.Domain/Models` — regras de cartas, baralho e avaliação de mãos.
+- `src/PokerEngine.Domain/Betting` — regras desacopladas de uma rodada de apostas e divisão dos potes.
 - `src/PokerEngine.Domain/TexasHoldem` — regras específicas do jogo Texas Hold'em.
 - `src/PokerEngine.Domain/SimpleGame` — jogo simples de distribuição de cinco cartas.
 - `src/PokerEngine.Console` — aplicação de console para testar a engine.
