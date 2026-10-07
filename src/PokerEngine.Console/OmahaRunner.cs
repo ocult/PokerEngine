@@ -14,6 +14,7 @@ namespace PokerEngine.Console
         public static void Run(ushort players)
         {
             OmahaHoldemGame game = new(players);
+            HoldemTable<OmahaHoldemGame, OmahaHoldemPlayerCards> table = new(game);
 
             foreach (KeyValuePair<ushort, OmahaHoldemPlayerCards> player in game.PlayersCards)
             {
@@ -23,20 +24,30 @@ namespace PokerEngine.Console
             MSC.WriteLine("Press any key to continue to the table cards...");
             MSC.ReadLine();
 
-            IReadOnlyList<Card> flop = game.Continue();
+            table.CloseBettingRound();
+            table.AdvanceStreet();
+            IReadOnlyList<Card> flop = game.CommunityCards;
             MSC.WriteLine($"Table flop is [{flop[0]}, {flop[1]}, {flop[2]}]");
             MSC.WriteLine("Press any key to continue to the turn card...");
             MSC.ReadLine();
 
-            IReadOnlyList<Card> turn = game.Continue();
+            table.CloseBettingRound();
+            table.AdvanceStreet();
+            IReadOnlyList<Card> turn = game.CommunityCards;
             MSC.WriteLine($"Table turn is {turn[3]}");
             MSC.WriteLine("Press any key to continue to the river card...");
             MSC.ReadLine();
 
-            IReadOnlyList<Card> river = game.Continue();
+            table.CloseBettingRound();
+            table.AdvanceStreet();
+            IReadOnlyList<Card> river = game.CommunityCards;
             MSC.WriteLine($"Table river is {river[4]}");
             MSC.WriteLine("Press any key to continue to the showdown...");
             MSC.ReadLine();
+
+            table.CloseBettingRound();
+            table.AdvanceStreet();
+            table.CompleteHand();
 
             MSC.WriteLine($"Table has [{string.Join(", ", river)}] cards");
             IReadOnlyList<KeyValuePair<ushort, PokerHand>> hands = game.GetBestHands();
