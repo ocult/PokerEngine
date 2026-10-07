@@ -7,7 +7,6 @@ namespace PokerEngine.Domain.Models
         private readonly TGame _game;
         private readonly List<ushort> _playerOrder;
         private int _nextPlayerIndex;
-        private bool _bettingClosed;
 
         public HoldemTable(TGame game)
         {
@@ -18,7 +17,6 @@ namespace PokerEngine.Domain.Models
                 .ToList();
 
             _nextPlayerIndex = 0;
-            _bettingClosed = false;
             CurrentAction = HoldemActionStage.Betting;
         }
 
@@ -60,36 +58,42 @@ namespace PokerEngine.Domain.Models
                 throw new InvalidOperationException("The hand is already complete and no betting round is open.");
             }
 
-            _bettingClosed = true;
+            if (CurrentAction != HoldemActionStage.Betting)
+            {
+                throw new InvalidOperationException("Betting can only be closed while the table is awaiting player actions.");
+            }
+
             CurrentAction = HoldemActionStage.CommunityCards;
             ResetTurn();
         }
 
         public void AdvanceStreet()
         {
-            if (Stage == HoldemStage.Complete)
+            if (CurrentAction != HoldemActionStage.CommunityCards)
             {
-                CurrentAction = HoldemActionStage.Complete;
-                return;
-            }
-
-            if (!_bettingClosed)
-            {
-                CurrentAction = HoldemActionStage.Betting;
-                return;
+                throw new InvalidOperationException("A new street can only be advanced after a betting round closes.");
             }
 
             _game.Continue();
-            _bettingClosed = false;
             ResetTurn();
 
             if (Stage == HoldemStage.Complete)
             {
-                CurrentAction = HoldemActionStage.Complete;
+                CurrentAction = HoldemActionStage.Showdown;
                 return;
             }
 
             CurrentAction = HoldemActionStage.Betting;
+        }
+
+        public void CompleteHand()
+        {
+            if (Stage != HoldemStage.Complete)
+            {
+                throw new InvalidOperationException("The hand can only be completed once the final street is resolved.");
+            }
+
+            CurrentAction = HoldemActionStage.Complete;
         }
     }
 }

@@ -39,7 +39,7 @@ namespace PokerEngine.XunitTest
         }
 
         [Fact]
-        public void HoldemTable_TransitionsThroughRiver_AndCompletesHand()
+        public void HoldemTable_TransitionsThroughRiver_AndReachesShowdown()
         {
             var table = new HoldemTable<TexasHoldemGame, TexasHoldemPlayerCards>(new TexasHoldemGame(2));
 
@@ -53,7 +53,18 @@ namespace PokerEngine.XunitTest
             table.AdvanceStreet();
 
             Assert.Equal(HoldemStage.Complete, table.Stage);
+            Assert.Equal(HoldemActionStage.Showdown, table.CurrentAction);
+
+            table.CompleteHand();
             Assert.Equal(HoldemActionStage.Complete, table.CurrentAction);
+        }
+
+        [Fact]
+        public void HoldemTable_RejectsAdvancingStreetBeforeClosingBettingRound()
+        {
+            var table = new HoldemTable<TexasHoldemGame, TexasHoldemPlayerCards>(new TexasHoldemGame(2));
+
+            Assert.Throws<InvalidOperationException>(() => table.AdvanceStreet());
         }
 
         [Fact]
