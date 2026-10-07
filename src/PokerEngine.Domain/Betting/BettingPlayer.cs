@@ -3,6 +3,11 @@ namespace PokerEngine.Domain.Betting
     public sealed class BettingPlayer
     {
         public BettingPlayer(ushort id, long stack)
+            : this(id, stack, BettingPlayerStatus.Pending)
+        {
+        }
+
+        public BettingPlayer(ushort id, long stack, BettingPlayerStatus status)
         {
             if (id == 0)
             {
@@ -14,9 +19,17 @@ namespace PokerEngine.Domain.Betting
                 throw new ArgumentOutOfRangeException(nameof(stack));
             }
 
+            if (status != BettingPlayerStatus.Pending
+                && status != BettingPlayerStatus.Active
+                && status != BettingPlayerStatus.Folded
+                && status != BettingPlayerStatus.AllIn)
+            {
+                throw new ArgumentOutOfRangeException(nameof(status));
+            }
+
             Id = id;
             RemainingStack = stack;
-            Status = BettingPlayerStatus.Pending;
+            Status = status;
         }
 
         public ushort Id { get; }

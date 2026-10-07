@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\PokerEngine.Domain\PokerEngine.Domain.csproj" />
+    <ProjectReference Include="..\..\src\PokerEngine.Console\PokerEngine.Console.csproj" />
   </ItemGroup>
 
 </Project>

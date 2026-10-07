@@ -1,3 +1,4 @@
+using PokerEngine.Domain.Betting;
 using PokerEngine.Domain.Models;
 using PokerEngine.Domain.TexasHoldem;
 using MSC = System.Console;
@@ -11,64 +12,130 @@ namespace PokerEngine.Console
             MSC.WriteLine("TEXAS: 'texas [players]' - Plays Texas Hold'em dealing hands, flop, turn, river, and showdown for [players] (2+).");
         }
 
-        public static void Run(ushort players)
+        public static void Run(ushort players, IReadOnlyList<BettingPlayer>? currentPlayers = null)
         {
             TexasHoldemGame game = new(players);
             HoldemTable<TexasHoldemGame, TexasHoldemPlayerCards> table = new(game);
+            IReadOnlyList<BettingPlayer> activePlayers = currentPlayers is not null && currentPlayers.Count == players
+                ? currentPlayers
+                : Enumerable.Range(1, players)
+                    .Select(playerNumber => new BettingPlayer((ushort)playerNumber, 100))
+                    .ToList();
 
             foreach (KeyValuePair<ushort, TexasHoldemPlayerCards> player in game.PlayersCards)
             {
                 MSC.WriteLine($"Player #{player.Key} have [{player.Value.FirstCard}, {player.Value.SecondCard}] in hand");
             }
 
-            MSC.WriteLine("Press any key to continue to the table cards...");
-            MSC.ReadLine();
+            Func<ushort, string> getPlayerCards = playerId =>
+                $"[{game.PlayersCards[playerId].FirstCard}, {game.PlayersCards[playerId].SecondCard}]";
 
-            table.CloseBettingRound();
-            table.AdvanceStreet();
-            IReadOnlyList<Card> flop = game.CommunityCards;
-            MSC.WriteLine($"Table flop is [{flop[0]}, {flop[1]}, {flop[2]}]");
-            MSC.WriteLine("Press any key to continue to the turn card...");
-            MSC.ReadLine();
+            Func<ushort, string> getBestHandText = playerId =>
+                game.CommunityCards.Count >= 3
+                    ? game.GetBestHands()
+                        .FirstOrDefault(hand => hand.Key == playerId)
+                        .Key == playerId
+                            ? game.GetBestHands().First(hand => hand.Key == playerId).Value.ToString()
+                            : "No hand available"
+                    : string.Empty;
 
-            table.CloseBettingRound();
-            table.AdvanceStreet();
-            IReadOnlyList<Card> turn = game.CommunityCards;
-            MSC.WriteLine($"Table turn is {turn[3]}");
-            MSC.WriteLine("Press any key to continue to the river card...");
-            MSC.ReadLine();
+            try
+            {
+                activePlayers = HoldemRunner.PlayPreFlop(table, activePlayers, getPlayerCards, getBestHandText);
 
-            table.CloseBettingRound();
-            table.AdvanceStreet();
-            IReadOnlyList<Card> river = game.CommunityCards;
-            MSC.WriteLine($"Table river is {river[4]}");
-            MSC.WriteLine("Press any key to continue to the showdown...");
-            MSC.ReadLine();
+                activePlayers = HoldemRunner.PlayStreet(
+                    table,
+                    activePlayers,
+                    "flop",
+                    () => game.CommunityCards,
+                    flop => MSC.WriteLine($"Table cards: [{string.Join(", ", flop)}]"),
+                    getPlayerCards,
+                    getBestHandText);
 
-            table.CloseBettingRound();
-            table.AdvanceStreet();
-            table.CompleteHand();
+                activePlayers = HoldemRunner.PlayStreet(
+                    table,
+                    activePlayers,
+                    "turn",
+                    () => game.CommunityCards,
+                    turn => MSC.WriteLine($"Table cards: [{string.Join(", ", turn)}]"),
+                    getPlayerCards,
+                    getBestHandText);
+
+                activePlayers = HoldemRunner.PlayStreet(
+                    table,
+                    activePlayers,
+                    "river",
+                    () => game.CommunityCards,
+                    river => MSC.WriteLine($"Table cards: [{string.Join(", ", river)}]"),
+                    getPlayerCards,
+                    getBestHandText);
+            }
+            catch (ConsoleRoundQuitException)
+            {
+                MSC.WriteLine("Quit requested. Exiting the Texas Hold'em round.");
+                return;
+            }
+
+            HoldemRunner.CompleteHand(table);
+
+            IReadOnlyList<BettingPlayer> remainingPlayers = activePlayers
+                .Where(player => player.Status != BettingPlayerStatus.Folded)
+                .ToList();
 
             IReadOnlyList<KeyValuePair<ushort, PokerHand>> hands = game.GetBestHands();
+
+            if (remainingPlayers.Count <= 1)
+            {
+                MSC.WriteLine("Press any key to go to the pot winner announcement...");
+                string? input = MSC.ReadLine();
+                if (Program.IsQuitCommand(input))
+                {
+                    return;
+                }
+
+                HoldemRunner.PrintPotWinner(
+                    remainingPlayers,
+                    playerId => getPlayerCards(playerId),
+                    game.CommunityCards,
+                    remainingPlayers.Count == 1 ? new ushort[] { remainingPlayers[0].Id } : null);
+                HoldemRunner.PrintPlayerStacks(activePlayers);
+                if (activePlayers.Count(player => player.RemainingStack > 0) > 1)
+                {
+                    MSC.WriteLine("Starting next round with the current chip values.");
+                    Run(players, activePlayers);
+                }
+                return;
+            }
             foreach (KeyValuePair<ushort, PokerHand> hand in hands)
             {
                 string status = hand.Key == 0 ? "Table" : $"Player #{hand.Key}";
                 MSC.WriteLine($"{status} best possible hand is {hand.Value}");
             }
 
-            MSC.WriteLine("Press any key to goes to winner announcement...");
-            MSC.ReadLine();
-            PrintWinner(hands);
-        }
+            HoldemRunner.PrintCurrentPots(activePlayers);
 
-        private static void PrintWinner(IReadOnlyList<KeyValuePair<ushort, PokerHand>> playersHands)
-        {
-            ushort win = playersHands.FirstOrDefault().Key;
-            MSC.WriteLine(win == 0 ? "The table winner" : $"The winner is player #{win}".ToUpperInvariant());
-            MSC.WriteLine("Ranked players hands:");
-            foreach (KeyValuePair<ushort, PokerHand> item in playersHands)
+            MSC.WriteLine("Press any key to goes to winner announcement...");
+            string? continueInput = MSC.ReadLine();
+            if (Program.IsQuitCommand(continueInput))
             {
-                MSC.WriteLine(item.Key == 0 ? $"Table has {item.Value}" : $"Player #{item.Key} has {item.Value}");
+                return;
+            }
+
+            HoldemRunner.PrintPotWinner(
+                remainingPlayers,
+                playerId => getPlayerCards(playerId),
+                game.CommunityCards,
+                hands
+                    .Where(hand => hand.Value.Equals(hands.First().Value))
+                    .Select(hand => hand.Key)
+                    .ToArray());
+            HoldemRunner.PrintWinner(hands, playerId => getPlayerCards(playerId), game.CommunityCards);
+            HoldemRunner.PrintPlayerStacks(activePlayers);
+
+            if (activePlayers.Count(player => player.RemainingStack > 0) > 1)
+            {
+                MSC.WriteLine("Starting next round with the current chip values.");
+                Run(players, activePlayers);
             }
         }
     }

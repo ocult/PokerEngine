@@ -1,3 +1,5 @@
+using PokerEngine.Domain.Models;
+
 namespace PokerEngine.Domain.Betting
 {
     public sealed class BettingRound
@@ -28,7 +30,10 @@ namespace PokerEngine.Domain.Betting
 
             _players = playerList.ToDictionary(
                 player => player.Id,
-                player => new BettingPlayer(player.Id, player.RemainingStack));
+                player => new BettingPlayer(
+                    player.Id,
+                    player.RemainingStack,
+                    player.Status == BettingPlayerStatus.Folded ? BettingPlayerStatus.Folded : BettingPlayerStatus.Pending));
             _playerOrder = playerList.Select(player => player.Id).ToList();
             _lastActionPlayerId = null;
             BiggestContribution = 0;
@@ -83,6 +88,12 @@ namespace PokerEngine.Domain.Betting
             ArgumentNullException.ThrowIfNull(action);
 
             BettingPlayer player = GetPlayer(action.PlayerId);
+            if (player.Status == BettingPlayerStatus.Folded
+                || player.Status == BettingPlayerStatus.AllIn)
+            {
+                throw new InvalidOperationException("Folded or all-in players cannot act.");
+            }
+
             long amountToCall = BiggestContribution - player.Contribution;
 
             switch (action.Type)
@@ -274,13 +285,46 @@ namespace PokerEngine.Domain.Betting
             return BuildPots();
         }
 
-        public BettingSettlement Settle(IReadOnlyDictionary<int, IReadOnlyCollection<ushort>> winnersByPot)
+        public BettingSettlement Settle(
+            IReadOnlyDictionary<int, IReadOnlyCollection<ushort>> winnersByPot,
+            IReadOnlyDictionary<ushort, PokerHand>? bestHands = null)
         {
             ArgumentNullException.ThrowIfNull(winnersByPot);
             EnsureClosed();
 
             IReadOnlyList<BettingPot> pots = BuildPots();
             List<BettingPayout> payouts = [];
+
+            if (bestHands is not null)
+            {
+                HashSet<ushort> declaredWinners = bestHands.Keys.ToHashSet();
+
+                foreach (BettingPot pot in pots)
+                {
+                    if (!winnersByPot.TryGetValue(pot.Index, out IReadOnlyCollection<ushort>? winners)
+                        || winners.Count == 0)
+                    {
+                        throw new ArgumentException($"Winners are required for pot {pot.Index}.", nameof(winnersByPot));
+                    }
+
+                    foreach (ushort winnerId in winners)
+                    {
+                        if (!declaredWinners.Contains(winnerId))
+                        {
+                            throw new ArgumentException(
+                                $"Winner #{winnerId} for pot {pot.Index} must be informed by the hand evaluation before settlement.",
+                                nameof(winnersByPot));
+                        }
+
+                        if (!pot.EligiblePlayers.Contains(winnerId))
+                        {
+                            throw new ArgumentException(
+                                $"Winner #{winnerId} for pot {pot.Index} is not eligible for that pot.",
+                                nameof(winnersByPot));
+                        }
+                    }
+                }
+            }
 
             foreach (BettingPot pot in pots)
             {
@@ -324,7 +368,7 @@ namespace PokerEngine.Domain.Betting
             }
 
             IReadOnlyList<BettingPlayer> nextPlayers = Players
-                .Where(player => player.RemainingStack > 0)
+                .Where(player => player.RemainingStack > 0 && player.Status != BettingPlayerStatus.Folded)
                 .ToList();
 
             Status = BettingRoundStatus.Settled;

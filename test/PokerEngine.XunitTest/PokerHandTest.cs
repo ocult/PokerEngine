@@ -54,7 +54,7 @@ namespace PokerEngine.XunitTest
             var s5 = PokerHandTestHelper.GetCharSuit(se5);            
             if (s1 == 'X' || s2 == 'X' ||s3 == 'X' ||s4 == 'X' ||s5 == 'X' )
             {
-                Console.Error.WriteLine($"Theory args are invalid [{se1},{se2},{se3},{se4},{se5}]");
+                global::System.Console.Error.WriteLine($"Theory args are invalid [{se1},{se2},{se3},{se4},{se5}]");
                 return;
             }
 

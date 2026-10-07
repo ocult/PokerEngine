@@ -1,3 +1,5 @@
+using PokerEngine.Domain.Betting;
+
 namespace PokerEngine.Domain.Models
 {
     public sealed class HoldemTable<TGame, TPlayerCards>
@@ -94,6 +96,29 @@ namespace PokerEngine.Domain.Models
             }
 
             CurrentAction = HoldemActionStage.Complete;
+        }
+
+        public BettingSettlement SettleHand(
+            BettingRound round,
+            IReadOnlyDictionary<int, IReadOnlyCollection<ushort>> winnersByPot,
+            IReadOnlyDictionary<ushort, PokerHand>? bestHands = null)
+        {
+            ArgumentNullException.ThrowIfNull(round);
+            ArgumentNullException.ThrowIfNull(winnersByPot);
+
+            if (Stage != HoldemStage.Complete)
+            {
+                throw new InvalidOperationException("The hand must be complete before the betting round can be settled.");
+            }
+
+            IReadOnlyDictionary<ushort, PokerHand> evaluatedHands = bestHands is not null
+                ? bestHands
+                : _game.GetBestHands()
+                    .ToDictionary(hand => hand.Key, hand => hand.Value);
+
+            BettingSettlement settlement = round.Settle(winnersByPot, evaluatedHands);
+            CurrentAction = HoldemActionStage.Complete;
+            return settlement;
         }
     }
 }

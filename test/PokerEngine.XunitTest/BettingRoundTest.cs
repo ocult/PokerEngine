@@ -1,4 +1,5 @@
 using PokerEngine.Domain.Betting;
+using PokerEngine.Domain.Models;
 using Xunit;
 
 namespace PokerEngine.XunitTest
@@ -248,6 +249,27 @@ namespace PokerEngine.XunitTest
         }
 
         [Fact]
+        public void BettingRound_RequiresWinnerToBeDeclaredByCardEvaluationBeforeSettlement()
+        {
+            var round = CreateRound((1, 100), (2, 100));
+            round.Contribute(1, 100);
+            round.Contribute(2, 100);
+            round.Close();
+
+            var bestHands = new Dictionary<ushort, PokerHand>
+            {
+                [1] = new PokerHand("AC, KC, QC, JC, TC")
+            };
+
+            Assert.Throws<ArgumentException>(() => round.Settle(
+                new Dictionary<int, IReadOnlyCollection<ushort>>
+                {
+                    [0] = new ushort[] { 2 }
+                },
+                bestHands));
+        }
+
+        [Fact]
         public void BettingRound_RejectsInvalidSettlementAndActionsAfterClose()
         {
             var round = CreateRound((1, 10), (2, 10));
@@ -329,12 +351,14 @@ namespace PokerEngine.XunitTest
         }
 
         [Fact]
-        public void BettingRound_ChainedRoundResetsPlayerStateForNextRound()
+        public void BettingRound_ChainedRoundExcludesFoldedPlayersFromNextRound()
         {
-            var round1 = CreateRound((1, 100), (2, 100), (3, 50));
-            round1.Contribute(1, 50);
+            var round1 = CreateRound((1, 100), (2, 100), (3, 100), (4, 100));
+            round1.Contribute(1, 20);
+            round1.Contribute(2, 20);
             round1.Fold(2);
-            round1.Contribute(3, 50);
+            round1.Contribute(3, 20);
+            round1.Contribute(4, 20);
             round1.Close();
 
             var settlement = round1.Settle(new Dictionary<int, IReadOnlyCollection<ushort>>
@@ -342,7 +366,8 @@ namespace PokerEngine.XunitTest
                 [0] = new ushort[] { 1 }
             });
 
-            Assert.Equal(2, settlement.NextPlayers.Count);
+            Assert.Equal(3, settlement.NextPlayers.Count);
+            Assert.DoesNotContain(settlement.NextPlayers, player => player.Id == 2);
 
             var round2 = new BettingRound(settlement.NextPlayers);
 
@@ -351,21 +376,35 @@ namespace PokerEngine.XunitTest
             Assert.Equal(0, round2.BiggestContribution);
 
             var p1 = round2.Players.Single(p => p.Id == 1);
-            var p2 = round2.Players.Single(p => p.Id == 2);
-
-            Assert.Equal(150, p1.RemainingStack);
+            Assert.Equal(160, p1.RemainingStack);
             Assert.Equal(0, p1.Contribution);
             Assert.Equal(BettingPlayerStatus.Pending, p1.Status);
 
-            Assert.Equal(100, p2.RemainingStack);
-            Assert.Equal(0, p2.Contribution);
-            Assert.Equal(BettingPlayerStatus.Pending, p2.Status);
-
             Assert.Equal((ushort)1, round2.Next()!.Id);
             round2.Contribute(1, 20);
-            Assert.Equal((ushort)2, round2.Next()!.Id);
-            round2.Call(2);
+            Assert.Equal((ushort)3, round2.Next()!.Id);
+            round2.Call(3);
+            Assert.Equal((ushort)4, round2.Next()!.Id);
+            round2.Call(4);
             Assert.Null(round2.Next());
+        }
+
+        [Fact]
+        public void BettingRound_FoldedPlayersCannotActInTheNextRound()
+        {
+            var round = CreateRound((1, 100), (2, 100), (3, 100));
+            round.Fold(1);
+            round.ApplyAction(new PlayerAction(2, PlayerActionType.Check, 0));
+            round.ApplyAction(new PlayerAction(3, PlayerActionType.Check, 0));
+            round.Close();
+
+            var nextRound = new BettingRound(round.Players
+                .Where(player => player.Status != BettingPlayerStatus.Folded)
+                .Select(player => new BettingPlayer(player.Id, player.RemainingStack, player.Status))
+                .ToList());
+
+            Assert.Equal((ushort)2, nextRound.Next()!.Id);
+            Assert.Throws<ArgumentException>(() => nextRound.ApplyAction(new PlayerAction(1, PlayerActionType.Check, 0)));
         }
 
         [Fact]
