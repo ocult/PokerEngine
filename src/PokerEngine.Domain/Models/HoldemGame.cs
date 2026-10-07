@@ -123,5 +123,55 @@ namespace PokerEngine.Domain.Models
                     $"The deck does not have enough cards to continue the hand. Required: {requiredCards}, available: {_deck.Count}.");
             }
         }
+
+        protected override IDictionary<ushort, PokerHand> EvaluateBestHands()
+        {
+            if (_communityCards.Count < 3)
+            {
+                throw new InvalidOperationException("The community cards must be flop enough before evaluating best hands.");
+            }
+
+            Dictionary<ushort, PokerHand> hands = new();
+
+            for (ushort i = 1; i <= Players; i++)
+            {
+                PokerHand bestHand = GetBestHandForPlayer(i);
+                hands.Add(i, bestHand);
+            }
+
+            AddExtraHands(hands);
+
+            return hands;
+        }
+
+        protected virtual void AddExtraHands(Dictionary<ushort, PokerHand> hands)
+        {
+        }
+
+        protected abstract PokerHand GetBestHandForPlayer(ushort player);
+
+        protected static List<Card[]> GetCombinations(IReadOnlyList<Card> cards, int combinationSize)
+        {
+            List<Card[]> combinations = new();
+            GetCombinationsHelper(cards, combinationSize, 0, new Card[combinationSize], 0, combinations);
+            return combinations;
+        }
+
+        private static void GetCombinationsHelper(IReadOnlyList<Card> cards, int combinationSize, int startIndex, Card[] currentCombination, int currentPosition, List<Card[]> combinations)
+        {
+            if (currentPosition == combinationSize)
+            {
+                Card[] combination = new Card[combinationSize];
+                Array.Copy(currentCombination, combination, combinationSize);
+                combinations.Add(combination);
+                return;
+            }
+
+            for (int i = startIndex; i <= cards.Count - combinationSize + currentPosition; i++)
+            {
+                currentCombination[currentPosition] = cards[i];
+                GetCombinationsHelper(cards, combinationSize, i + 1, currentCombination, currentPosition + 1, combinations);
+            }
+        }
     }
 }
