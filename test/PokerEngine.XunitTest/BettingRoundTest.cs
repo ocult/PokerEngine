@@ -139,14 +139,14 @@ namespace PokerEngine.XunitTest
         {
             var round = CreateRound((1, 100), (2, 100));
 
-            Assert.Throws<ArgumentException>(() => round.Contribute(3, 10));
-            Assert.Throws<ArgumentOutOfRangeException>(() => round.Contribute(1, 0));
-            Assert.Throws<ArgumentOutOfRangeException>(() => round.Contribute(1, 101));
+            Assert.Throws<ArgumentException>(() => round.ApplyAction(new PlayerAction(3, PlayerActionType.Call, 0)));
+            Assert.Throws<InvalidOperationException>(() => round.ApplyAction(new PlayerAction(1, PlayerActionType.Bet, 0)));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new PlayerAction(1, PlayerActionType.Raise, -5));
 
             round.Contribute(1, 25);
-            round.Contribute(1, 10);
-            round.Fold(1);
-            Assert.Throws<InvalidOperationException>(() => round.Fold(1));
+            round.ApplyAction(new PlayerAction(1, PlayerActionType.Bet, 10));
+            round.ApplyAction(new PlayerAction(1, PlayerActionType.Fold, 0));
+            Assert.Throws<InvalidOperationException>(() => round.ApplyAction(new PlayerAction(1, PlayerActionType.Fold, 0)));
         }
 
         [Fact]
@@ -451,14 +451,14 @@ namespace PokerEngine.XunitTest
             var round = CreateRound((1, 100), (2, 100), (3, 100));
 
             Assert.Equal((ushort)1, round.Next()!.Id);
-            round.Check(1);
+            round.ApplyAction(new PlayerAction(1, PlayerActionType.Check, 0));
             Assert.Equal(BettingPlayerStatus.Active, round.Players.Single(p => p.Id == 1).Status);
 
             Assert.Equal((ushort)2, round.Next()!.Id);
-            round.Check(2);
+            round.ApplyAction(new PlayerAction(2, PlayerActionType.Check, 0));
 
             Assert.Equal((ushort)3, round.Next()!.Id);
-            round.Check(3);
+            round.ApplyAction(new PlayerAction(3, PlayerActionType.Check, 0));
 
             Assert.Null(round.Next());
             round.Close();
@@ -471,13 +471,13 @@ namespace PokerEngine.XunitTest
             var round = CreateRound((1, 100), (2, 100));
 
             Assert.Equal((ushort)1, round.Next()!.Id);
-            round.Check(1);
+            round.ApplyAction(new PlayerAction(1, PlayerActionType.Check, 0));
 
             Assert.Equal((ushort)2, round.Next()!.Id);
-            round.Contribute(2, 30);
+            round.ApplyAction(new PlayerAction(2, PlayerActionType.Bet, 30));
 
             Assert.Equal((ushort)1, round.Next()!.Id);
-            round.Call(1);
+            round.ApplyAction(new PlayerAction(1, PlayerActionType.Call, 0));
 
             Assert.Null(round.Next());
             round.Close();
@@ -490,16 +490,16 @@ namespace PokerEngine.XunitTest
             var round = CreateRound((1, 100), (2, 100));
             round.Contribute(1, 30);
 
-            Assert.Throws<InvalidOperationException>(() => round.Check(2));
-            Assert.Throws<ArgumentException>(() => round.Check(99));
+            Assert.Throws<InvalidOperationException>(() => round.ApplyAction(new PlayerAction(2, PlayerActionType.Check, 0)));
+            Assert.Throws<ArgumentException>(() => round.ApplyAction(new PlayerAction(99, PlayerActionType.Check, 0)));
 
             var round2 = CreateRound((1, 100), (2, 100));
             round2.Fold(1);
-            Assert.Throws<InvalidOperationException>(() => round2.Check(1));
+            Assert.Throws<InvalidOperationException>(() => round2.ApplyAction(new PlayerAction(1, PlayerActionType.Check, 0)));
 
-            round2.Check(2);
+            round2.ApplyAction(new PlayerAction(2, PlayerActionType.Check, 0));
             round2.Close();
-            Assert.Throws<InvalidOperationException>(() => round2.Check(2));
+            Assert.Throws<InvalidOperationException>(() => round2.ApplyAction(new PlayerAction(2, PlayerActionType.Check, 0)));
         }
 
         [Fact]

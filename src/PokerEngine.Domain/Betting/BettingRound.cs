@@ -78,6 +78,72 @@ namespace PokerEngine.Domain.Betting
             return null;
         }
 
+        public void ApplyAction(PlayerAction action)
+        {
+            ArgumentNullException.ThrowIfNull(action);
+
+            BettingPlayer player = GetPlayer(action.PlayerId);
+            long amountToCall = BiggestContribution - player.Contribution;
+
+            switch (action.Type)
+            {
+                case PlayerActionType.Fold:
+                    if (action.Amount != 0)
+                    {
+                        throw new InvalidOperationException("Fold actions must not include a chip amount.");
+                    }
+                    Fold(action.PlayerId);
+                    break;
+
+                case PlayerActionType.Check:
+                    if (action.Amount != 0)
+                    {
+                        throw new InvalidOperationException("Check actions must not include a chip amount.");
+                    }
+                    Check(action.PlayerId);
+                    break;
+
+                case PlayerActionType.Call:
+                    if (action.Amount != 0)
+                    {
+                        throw new InvalidOperationException("Call actions must not include a chip amount.");
+                    }
+                    if (amountToCall <= 0)
+                    {
+                        throw new InvalidOperationException("There is no current bet to call.");
+                    }
+                    Call(action.PlayerId);
+                    break;
+
+                case PlayerActionType.Bet:
+                case PlayerActionType.Raise:
+                    if (action.Amount <= 0)
+                    {
+                        throw new InvalidOperationException("A bet or raise must include a positive chip amount.");
+                    }
+
+                    long minimumRequiredAmount = Math.Max(1, BiggestContribution - player.Contribution);
+                    if (action.Amount <= minimumRequiredAmount)
+                    {
+                        throw new InvalidOperationException("A raise must exceed the current contribution requirement.");
+                    }
+
+                    Contribute(action.PlayerId, action.Amount);
+                    break;
+
+                case PlayerActionType.AllIn:
+                    if (action.Amount != 0)
+                    {
+                        throw new InvalidOperationException("All-in actions must not include a chip amount; the remaining stack is used automatically.");
+                    }
+                    AllIn(action.PlayerId);
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(action.Type), action.Type, "Unsupported player action type.");
+            }
+        }
+
         public void Contribute(ushort playerId, long amount)
         {
             EnsureOpen();
