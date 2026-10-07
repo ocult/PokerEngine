@@ -6,6 +6,11 @@ namespace PokerEngine.Console
 {
     public static class TexasRunner
     {
+        public static void Help()
+        {
+            MSC.WriteLine("TEXAS: 'texas [players]' - Plays Texas Hold'em dealing hands, flop, turn, river, and showdown for [players] (2+).");
+        }
+
         public static void Run(ushort players)
         {
             TexasHoldemGame game = new(players);

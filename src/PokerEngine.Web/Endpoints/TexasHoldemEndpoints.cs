@@ -25,7 +25,7 @@ public static class TexasHoldemEndpoints
         
         if (string.IsNullOrWhiteSpace(players) && string.IsNullOrWhiteSpace(gameId))
         {
-            var payload = await request.ReadFromJsonAsync<TexasHoldemRequest>();
+            TexasHoldemRequest? payload = await request.ReadFromJsonAsync<TexasHoldemRequest>();
             players = payload?.Players.ToString();
             gameId = payload?.GameId.ToString();
         }
