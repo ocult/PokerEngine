@@ -1,6 +1,7 @@
 using PokerEngine.Domain.Betting;
+using PokerEngine.Domain.Models;
 
-namespace PokerEngine.Domain.Models
+namespace PokerEngine.Domain.Holdem
 {
     public sealed class HoldemTable<TGame, TPlayerCards>
         where TGame : HoldemGame<TPlayerCards>
@@ -108,14 +109,7 @@ namespace PokerEngine.Domain.Models
         {
             ArgumentNullException.ThrowIfNull(players);
 
-            return players
-                .Where(player => player.RemainingStack > 0)
-                .Select(player => new BettingPlayer(
-                    player.Id,
-                    player.RemainingStack + player.Contribution,
-                    player.Contribution,
-                    BettingPlayerStatus.Pending))
-                .ToList();
+            return BettingRound.CreateContinuationRound(players).Players;
         }
 
         public BettingSettlement SettleHand(
