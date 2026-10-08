@@ -98,6 +98,25 @@ namespace PokerEngine.Domain.Models
             CurrentAction = HoldemActionStage.Complete;
         }
 
+        public BettingRound CreateBettingRound(IReadOnlyList<BettingPlayer> players)
+        {
+            ArgumentNullException.ThrowIfNull(players);
+            return BettingRound.FromCurrentState(players);
+        }
+
+        public IReadOnlyList<BettingPlayer> PrepareNextRoundPlayers(IReadOnlyList<BettingPlayer> players)
+        {
+            ArgumentNullException.ThrowIfNull(players);
+
+            return players
+                .Where(player => player.RemainingStack > 0)
+                .Select(player => new BettingPlayer(
+                    player.Id,
+                    player.RemainingStack,
+                    BettingPlayerStatus.Pending))
+                .ToList();
+        }
+
         public BettingSettlement SettleHand(
             BettingRound round,
             IReadOnlyDictionary<int, IReadOnlyCollection<ushort>> winnersByPot,

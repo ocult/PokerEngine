@@ -203,6 +203,28 @@ namespace PokerEngine.XunitTest
         }
 
         [Fact]
+        public void HoldemTable_PreparesNextRoundPlayersWithoutLosingChipTotal()
+        {
+            var table = new HoldemTable<TexasHoldemGame, TexasHoldemPlayerCards>(new TexasHoldemGame(2));
+            var round = new BettingRound(new[]
+            {
+                new BettingPlayer(1, 100),
+                new BettingPlayer(2, 100)
+            });
+
+            round.Contribute(1, 30);
+            round.Contribute(2, 30);
+
+            IReadOnlyList<BettingPlayer> nextRoundPlayers = table.PrepareNextRoundPlayers(round.Players);
+
+            Assert.Equal(2, nextRoundPlayers.Count);
+            Assert.Equal(70, nextRoundPlayers.Single(player => player.Id == 1).RemainingStack);
+            Assert.Equal(0, nextRoundPlayers.Single(player => player.Id == 1).Contribution);
+            Assert.Equal(70, nextRoundPlayers.Single(player => player.Id == 2).RemainingStack);
+            Assert.Equal(BettingPlayerStatus.Pending, nextRoundPlayers.Single(player => player.Id == 1).Status);
+        }
+
+        [Fact]
         public void HoldemTable_IsGenericAcrossHoldemVariants()
         {
             var texasTable = new HoldemTable<TexasHoldemGame, TexasHoldemPlayerCards>(new TexasHoldemGame(2));

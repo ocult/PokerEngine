@@ -99,8 +99,9 @@ namespace PokerEngine.Console
                 HoldemRunner.PrintPlayerStacks(activePlayers);
                 if (activePlayers.Count(player => player.RemainingStack > 0) > 1)
                 {
+                    IReadOnlyList<BettingPlayer> nextRoundPlayers = table.PrepareNextRoundPlayers(activePlayers);
                     MSC.WriteLine("Starting next round with the current chip values.");
-                    Run(players, activePlayers);
+                    Run(players, nextRoundPlayers);
                 }
                 return;
             }
@@ -133,8 +134,9 @@ namespace PokerEngine.Console
 
             if (activePlayers.Count(player => player.RemainingStack > 0) > 1)
             {
+                IReadOnlyList<BettingPlayer> nextRoundPlayers = table.PrepareNextRoundPlayers(activePlayers);
                 MSC.WriteLine("Starting next round with the current chip values.");
-                Run(players, activePlayers);
+                Run(players, nextRoundPlayers);
             }
         }
     }

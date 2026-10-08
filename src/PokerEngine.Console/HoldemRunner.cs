@@ -286,7 +286,7 @@ namespace PokerEngine.Console
                 return players;
             }
 
-            var round = BettingRound.CreateSettlementRound(players);
+            var round = table.CreateBettingRound(players);
             round.Close();
 
             var winnersByPot = new Dictionary<int, IReadOnlyCollection<ushort>>();

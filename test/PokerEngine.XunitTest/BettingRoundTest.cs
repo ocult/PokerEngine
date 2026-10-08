@@ -1,5 +1,6 @@
 using PokerEngine.Domain.Betting;
 using PokerEngine.Domain.Models;
+using PokerEngine.Domain.TexasHoldem;
 using Xunit;
 
 namespace PokerEngine.XunitTest
@@ -351,7 +352,7 @@ namespace PokerEngine.XunitTest
         }
 
         [Fact]
-        public void BettingRound_ChainedRoundExcludesFoldedPlayersFromNextRound()
+        public void BettingRound_FoldedPlayersReturnInTheNextRound()
         {
             var round1 = CreateRound((1, 100), (2, 100), (3, 100), (4, 100));
             round1.Contribute(1, 20);
@@ -366,8 +367,8 @@ namespace PokerEngine.XunitTest
                 [0] = new ushort[] { 1 }
             });
 
-            Assert.Equal(3, settlement.NextPlayers.Count);
-            Assert.DoesNotContain(settlement.NextPlayers, player => player.Id == 2);
+            Assert.Equal(4, settlement.NextPlayers.Count);
+            Assert.Contains(settlement.NextPlayers, player => player.Id == 2);
 
             var round2 = new BettingRound(settlement.NextPlayers);
 
@@ -380,8 +381,15 @@ namespace PokerEngine.XunitTest
             Assert.Equal(0, p1.Contribution);
             Assert.Equal(BettingPlayerStatus.Pending, p1.Status);
 
+            var p2 = round2.Players.Single(p => p.Id == 2);
+            Assert.Equal(80, p2.RemainingStack);
+            Assert.Equal(0, p2.Contribution);
+            Assert.Equal(BettingPlayerStatus.Pending, p2.Status);
+
             Assert.Equal((ushort)1, round2.Next()!.Id);
             round2.Contribute(1, 20);
+            Assert.Equal((ushort)2, round2.Next()!.Id);
+            round2.Call(2);
             Assert.Equal((ushort)3, round2.Next()!.Id);
             round2.Call(3);
             Assert.Equal((ushort)4, round2.Next()!.Id);
@@ -390,7 +398,7 @@ namespace PokerEngine.XunitTest
         }
 
         [Fact]
-        public void BettingRound_FoldedPlayersCannotActInTheNextRound()
+        public void BettingRound_FoldedPlayersCanActAgainInTheNextRound()
         {
             var round = CreateRound((1, 100), (2, 100), (3, 100));
             round.Fold(1);
@@ -399,12 +407,12 @@ namespace PokerEngine.XunitTest
             round.Close();
 
             var nextRound = new BettingRound(round.Players
-                .Where(player => player.Status != BettingPlayerStatus.Folded)
-                .Select(player => new BettingPlayer(player.Id, player.RemainingStack, player.Status))
+                .Select(player => new BettingPlayer(player.Id, player.RemainingStack, BettingPlayerStatus.Pending))
                 .ToList());
 
+            Assert.Equal((ushort)1, nextRound.Next()!.Id);
+            nextRound.ApplyAction(new PlayerAction(1, PlayerActionType.Check, 0));
             Assert.Equal((ushort)2, nextRound.Next()!.Id);
-            Assert.Throws<ArgumentException>(() => nextRound.ApplyAction(new PlayerAction(1, PlayerActionType.Check, 0)));
         }
 
         [Fact]

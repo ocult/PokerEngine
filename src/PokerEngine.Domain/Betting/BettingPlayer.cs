@@ -77,5 +77,11 @@ namespace PokerEngine.Domain.Betting
         {
             RemainingStack += amount;
         }
+
+        internal void ResetForNextRound()
+        {
+            Contribution = 0;
+            Status = BettingPlayerStatus.Pending;
+        }
     }
 }
