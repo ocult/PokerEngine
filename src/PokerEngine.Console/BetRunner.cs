@@ -200,7 +200,7 @@ namespace PokerEngine.Console
                         continue;
                     }
 
-                    if (!long.TryParse(action, out long targetContribution) || targetContribution <= 0)
+                    if (!long.TryParse(action, out long raiseAmount) || raiseAmount <= 0)
                     {
                         HoldemRunner.WriteInfo("Contribution must be a positive integer.");
                         continue;
@@ -208,19 +208,21 @@ namespace PokerEngine.Console
 
                     try
                     {
-                        if (currentBiggestBet > 0 && targetContribution < currentBiggestBet)
+                        long requiredToCall = Math.Max(0, currentBiggestBet - playerToAct.Contribution);
+                        if (requiredToCall > 0 && raiseAmount < requiredToCall)
                         {
-                            throw new ArgumentOutOfRangeException(nameof(targetContribution), $"The target contribution must be at least {currentBiggestBet} to call or raise.");
+                            throw new ArgumentOutOfRangeException(nameof(raiseAmount), $"The raised amount must be at least {requiredToCall} to call or raise.");
                         }
 
-                        long contribution = targetContribution - playerToAct.Contribution;
-                        if (contribution <= 0)
+                        if (requiredToCall > 0 && raiseAmount == requiredToCall)
                         {
-                            throw new ArgumentOutOfRangeException(nameof(targetContribution), "The target contribution must be greater than the player's current contribution.");
+                            round.Call(playerToAct.Id);
+                            HoldemRunner.WriteInfo($"Player #{playerToAct.Id} called and contributed {requiredToCall} chips.");
+                            break;
                         }
 
-                        round.Contribute(playerToAct.Id, contribution);
-                        HoldemRunner.WriteInfo($"Player #{playerToAct.Id} contributed {contribution} chips and now has {targetContribution} total chips in the pot.");
+                        round.Contribute(playerToAct.Id, raiseAmount);
+                        HoldemRunner.WriteInfo($"Player #{playerToAct.Id} contributed {raiseAmount} chips and now has {playerToAct.Contribution} total chips in the pot.");
                         break;
                     }
                     catch (Exception ex)

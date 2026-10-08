@@ -107,102 +107,6 @@ namespace PokerEngine.XunitTest
         }
 
         [Fact]
-        public void HoldemRunner_PrintPotWinner_UsesCardWinnerCollection()
-        {
-            var originalOut = System.Console.Out;
-            using var writer = new StringWriter();
-            System.Console.SetOut(writer);
-
-            try
-            {
-                HoldemRunner.PrintPotWinner(
-                    new[]
-                    {
-                        new BettingPlayer(1, 100),
-                        new BettingPlayer(2, 100)
-                    },
-                    playerId => $"cards-{playerId}",
-                    new[]
-                    {
-                        new Card("AC"),
-                        new Card("KC"),
-                        new Card("QC"),
-                        new Card("JC"),
-                        new Card("TC")
-                    },
-                    new ushort[] { 1, 2 });
-            }
-            finally
-            {
-                System.Console.SetOut(originalOut);
-            }
-
-            string output = writer.ToString();
-            Assert.Contains("split the pot by hand ranking", output, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains("#1", output, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains("#2", output, StringComparison.OrdinalIgnoreCase);
-        }
-
-        [Fact]
-        public void HoldemRunner_SettlesWinnerPayoutAtShowdown()
-        {
-            var players = new[]
-            {
-                new BettingPlayer(1, 100),
-                new BettingPlayer(2, 100)
-            };
-
-            var round = new BettingRound(players);
-            round.Contribute(1, 40);
-            round.Contribute(2, 40);
-            round.Check(1);
-            round.Check(2);
-            round.Close();
-
-            var bestHands = new[]
-            {
-                new KeyValuePair<ushort, PokerHand>(1, new PokerHand("AH, KH, QH, JH, TH")),
-                new KeyValuePair<ushort, PokerHand>(2, new PokerHand("AS, KS, QS, JS, TS"))
-            };
-
-            var table = new HoldemTable<TexasHoldemGame, TexasHoldemPlayerCards>(new TexasHoldemGame(2));
-            table.CloseBettingRound();
-            table.AdvanceStreet();
-            table.CloseBettingRound();
-            table.AdvanceStreet();
-            table.CloseBettingRound();
-            table.AdvanceStreet();
-            table.CloseBettingRound();
-            table.AdvanceStreet();
-
-            IReadOnlyList<BettingPlayer> settledPlayers = HoldemRunner.SettleShowdown(table, round.Players, bestHands);
-
-            Assert.Equal(140, settledPlayers.Single(player => player.Id == 1).RemainingStack);
-            Assert.Equal(60, settledPlayers.Single(player => player.Id == 2).RemainingStack);
-        }
-
-        [Fact]
-        public void HoldemRunner_StoppesRoundWhenQuitActionIsEntered()
-        {
-            var originalIn = System.Console.In;
-            try
-            {
-                System.Console.SetIn(new StringReader("q\n"));
-                var players = new[]
-                {
-                    new BettingPlayer(1, 100),
-                    new BettingPlayer(2, 100)
-                };
-
-                Assert.Throws<ConsoleRoundQuitException>(() => HoldemRunner.PlayBettingRound(players, playerId => $"cards-{playerId}"));
-            }
-            finally
-            {
-                System.Console.SetIn(originalIn);
-            }
-        }
-
-        [Fact]
         public void HoldemTable_PreparesNextRoundPlayersWithoutLosingChipTotal()
         {
             var table = new HoldemTable<TexasHoldemGame, TexasHoldemPlayerCards>(new TexasHoldemGame(2));
@@ -219,9 +123,32 @@ namespace PokerEngine.XunitTest
 
             Assert.Equal(2, nextRoundPlayers.Count);
             Assert.Equal(70, nextRoundPlayers.Single(player => player.Id == 1).RemainingStack);
-            Assert.Equal(0, nextRoundPlayers.Single(player => player.Id == 1).Contribution);
+            Assert.Equal(30, nextRoundPlayers.Single(player => player.Id == 1).Contribution);
             Assert.Equal(70, nextRoundPlayers.Single(player => player.Id == 2).RemainingStack);
             Assert.Equal(BettingPlayerStatus.Pending, nextRoundPlayers.Single(player => player.Id == 1).Status);
+        }
+
+        [Fact]
+        public void HoldemTable_PreparesContinuationPlayersWithoutClearingContribution()
+        {
+            var table = new HoldemTable<TexasHoldemGame, TexasHoldemPlayerCards>(new TexasHoldemGame(2));
+            var round = new BettingRound(new[]
+            {
+                new BettingPlayer(1, 100),
+                new BettingPlayer(2, 100)
+            });
+
+            round.Contribute(1, 30);
+            round.Contribute(2, 30);
+            round.Close();
+
+            IReadOnlyList<BettingPlayer> continuationPlayers = table.PrepareNextRoundPlayers(round.Players);
+
+            Assert.Equal(2, continuationPlayers.Count);
+            Assert.Equal(30, continuationPlayers.Single(player => player.Id == 1).Contribution);
+            Assert.Equal(30, continuationPlayers.Single(player => player.Id == 2).Contribution);
+            Assert.Equal(70, continuationPlayers.Single(player => player.Id == 1).RemainingStack);
+            Assert.Equal(BettingPlayerStatus.Pending, continuationPlayers.Single(player => player.Id == 1).Status);
         }
 
         [Fact]

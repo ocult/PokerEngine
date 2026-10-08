@@ -112,7 +112,8 @@ namespace PokerEngine.Domain.Models
                 .Where(player => player.RemainingStack > 0)
                 .Select(player => new BettingPlayer(
                     player.Id,
-                    player.RemainingStack,
+                    player.RemainingStack + player.Contribution,
+                    player.Contribution,
                     BettingPlayerStatus.Pending))
                 .ToList();
         }

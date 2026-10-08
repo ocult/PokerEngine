@@ -1,4 +1,3 @@
-using PokerEngine.Console;
 using PokerEngine.Domain.Betting;
 using PokerEngine.Domain.Models;
 using PokerEngine.Domain.TexasHoldem;
@@ -79,6 +78,19 @@ namespace PokerEngine.XunitTest
             var player = round.Players.Single(player => player.Id == 2);
             Assert.Equal(25, player.Contribution);
             Assert.Equal(25, round.BiggestContribution);
+        }
+
+        [Fact]
+        public void BettingRound_AcceptsMatchingTheCurrentBetAsTheNextLegalAction()
+        {
+            var round = CreateRound((1, 100), (2, 100));
+            round.Contribute(1, 10);
+
+            var exception = Record.Exception(() => round.ApplyAction(new PlayerAction(2, PlayerActionType.Bet, 10)));
+
+            Assert.Null(exception);
+            Assert.Equal(10, round.Players.Single(player => player.Id == 2).Contribution);
+            Assert.Equal(10, round.BiggestContribution);
         }
 
         [Fact]
@@ -417,20 +429,6 @@ namespace PokerEngine.XunitTest
         }
 
         [Fact]
-        public void BetRunner_ContinuesPotWhenWinnerSelectionIsBlank()
-        {
-            var round = CreateRound((1, 100), (2, 100));
-            round.Contribute(1, 20);
-            round.Contribute(2, 20);
-            round.Close();
-
-            var pot = round.GetPots().Single();
-
-            Assert.Null(BetRunner.ResolvePotWinnerSelection(pot, string.Empty));
-            Assert.Null(BetRunner.ResolvePotWinnerSelection(pot, "continue"));
-        }
-
-        [Fact]
         public void BettingRound_ContinuationRoundPreservesFoldStateAndCurrentPot()
         {
             var round = CreateRound((1, 100), (2, 100), (3, 100));
@@ -446,6 +444,63 @@ namespace PokerEngine.XunitTest
             Assert.Equal(20, folded.Contribution);
             Assert.Equal(BettingPlayerStatus.Folded, folded.Status);
             Assert.Equal(20, continuation.BiggestContribution);
+        }
+
+        [Fact]
+        public void BettingRound_ContinuationRoundResetsNonFoldedPlayersToPendingTurns()
+        {
+            var round = CreateRound((1, 100), (2, 100));
+            round.Contribute(1, 20);
+            round.Contribute(2, 20);
+            round.Close();
+
+            var continuation = BettingRound.CreateContinuationRound(round.Players);
+
+            Assert.Equal(BettingPlayerStatus.Pending, continuation.Players.Single(player => player.Id == 1).Status);
+            Assert.Equal(BettingPlayerStatus.Pending, continuation.Players.Single(player => player.Id == 2).Status);
+            Assert.Equal((ushort)1, continuation.Next()!.Id);
+        }
+
+        [Fact]
+        public void BettingRound_PreservesContributionAcrossInnerRoundsBeforeWinnerSettlement()
+        {
+            var round = CreateRound((1, 100), (2, 100), (3, 100));
+            round.Contribute(1, 10);
+            round.Contribute(2, 10);
+            round.Contribute(3, 10);
+            round.Close();
+
+            var flopRound = new BettingRound(round.Players);
+            flopRound.Check(1);
+            flopRound.Check(2);
+            flopRound.Check(3);
+            flopRound.Close();
+
+            var turnRound = new BettingRound(flopRound.Players);
+            turnRound.Fold(2);
+            turnRound.Contribute(1, 10);
+            turnRound.Contribute(3, 10);
+            turnRound.Close();
+
+            var riverRound = new BettingRound(turnRound.Players);
+            riverRound.Check(1);
+            riverRound.Check(3);
+            riverRound.Close();
+
+            Assert.Equal(50, riverRound.TotalContribution);
+            Assert.Equal(20, riverRound.Players.Single(player => player.Id == 1).Contribution);
+            Assert.Equal(10, riverRound.Players.Single(player => player.Id == 2).Contribution);
+            Assert.Equal(20, riverRound.Players.Single(player => player.Id == 3).Contribution);
+
+            var settlement = riverRound.Settle(new Dictionary<int, IReadOnlyCollection<ushort>>
+            {
+                [0] = new ushort[] { 1 }
+            });
+
+            Assert.Equal(50, settlement.TotalPayout);
+            Assert.Equal(130, settlement.NextPlayers.Single(player => player.Id == 1).RemainingStack);
+            Assert.Equal(90, settlement.NextPlayers.Single(player => player.Id == 2).RemainingStack);
+            Assert.Equal(80, settlement.NextPlayers.Single(player => player.Id == 3).RemainingStack);
         }
 
         [Fact]

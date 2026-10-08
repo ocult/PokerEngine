@@ -215,6 +215,13 @@ namespace PokerEngine.Console
 
             if (long.TryParse(normalized, out long chips) && chips > 0)
             {
+                long amountToCall = Math.Max(0, round.BiggestContribution - playerToAct.Contribution);
+                if ((amountToCall > 0 && chips == amountToCall)
+                    || (amountToCall == 0 && chips == round.BiggestContribution))
+                {
+                    return new PlayerAction(playerToAct.Id, PlayerActionType.Call, 0);
+                }
+
                 if (round.BiggestContribution == 0 || playerToAct.Contribution == round.BiggestContribution)
                 {
                     return new PlayerAction(playerToAct.Id, PlayerActionType.Bet, chips);

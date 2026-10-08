@@ -32,7 +32,8 @@ namespace PokerEngine.Domain.Betting
                 player => player.Id,
                 player => new BettingPlayer(
                     player.Id,
-                    player.RemainingStack,
+                    player.RemainingStack + player.Contribution,
+                    player.Contribution,
                     player.Status == BettingPlayerStatus.Folded
                         ? BettingPlayerStatus.Folded
                         : player.Status == BettingPlayerStatus.AllIn
@@ -54,30 +55,28 @@ namespace PokerEngine.Domain.Betting
                 throw new ArgumentException("At least two players are required.", nameof(players));
             }
 
-            BettingRound continuation = new(players.Select(player => new BettingPlayer(
+            BettingRound continuation = new(playerList.Select(player => new BettingPlayer(
                 player.Id,
                 player.RemainingStack + player.Contribution,
                 player.Status == BettingPlayerStatus.Folded
                     ? BettingPlayerStatus.Folded
                     : player.Status == BettingPlayerStatus.AllIn
                         ? BettingPlayerStatus.AllIn
-                        : player.Status == BettingPlayerStatus.Active
-                            ? BettingPlayerStatus.Active
-                            : BettingPlayerStatus.Pending)));
+                        : BettingPlayerStatus.Pending)));
 
             foreach (BettingPlayer player in playerList)
             {
+                BettingPlayerStatus status = player.Status == BettingPlayerStatus.Folded
+                    ? BettingPlayerStatus.Folded
+                    : player.Status == BettingPlayerStatus.AllIn
+                        ? BettingPlayerStatus.AllIn
+                        : BettingPlayerStatus.Pending;
+
                 continuation._players[player.Id] = new BettingPlayer(
                     player.Id,
                     player.RemainingStack + player.Contribution,
                     player.Contribution,
-                    player.Status == BettingPlayerStatus.Folded
-                        ? BettingPlayerStatus.Folded
-                        : player.Status == BettingPlayerStatus.AllIn
-                            ? BettingPlayerStatus.AllIn
-                            : player.Status == BettingPlayerStatus.Active
-                                ? BettingPlayerStatus.Active
-                                : BettingPlayerStatus.Pending);
+                    status);
             }
 
             continuation.BiggestContribution = playerList.Any() ? playerList.Max(player => player.Contribution) : 0;
@@ -207,7 +206,7 @@ namespace PokerEngine.Domain.Betting
                     }
 
                     long minimumRequiredAmount = Math.Max(1, BiggestContribution - player.Contribution);
-                    if (action.Amount <= minimumRequiredAmount)
+                    if (action.Amount < minimumRequiredAmount)
                     {
                         throw new InvalidOperationException("A raise must exceed the current contribution requirement.");
                     }
