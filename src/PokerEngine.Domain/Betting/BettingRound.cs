@@ -44,6 +44,47 @@ namespace PokerEngine.Domain.Betting
             Status = BettingRoundStatus.Open;
         }
 
+        public static BettingRound CreateContinuationRound(IEnumerable<BettingPlayer> players)
+        {
+            ArgumentNullException.ThrowIfNull(players);
+
+            IReadOnlyList<BettingPlayer> playerList = players.ToList();
+            if (playerList.Count < 2)
+            {
+                throw new ArgumentException("At least two players are required.", nameof(players));
+            }
+
+            BettingRound continuation = new(players.Select(player => new BettingPlayer(
+                player.Id,
+                player.RemainingStack + player.Contribution,
+                player.Status == BettingPlayerStatus.Folded
+                    ? BettingPlayerStatus.Folded
+                    : player.Status == BettingPlayerStatus.AllIn
+                        ? BettingPlayerStatus.AllIn
+                        : player.Status == BettingPlayerStatus.Active
+                            ? BettingPlayerStatus.Active
+                            : BettingPlayerStatus.Pending)));
+
+            foreach (BettingPlayer player in playerList)
+            {
+                continuation._players[player.Id] = new BettingPlayer(
+                    player.Id,
+                    player.RemainingStack + player.Contribution,
+                    player.Contribution,
+                    player.Status == BettingPlayerStatus.Folded
+                        ? BettingPlayerStatus.Folded
+                        : player.Status == BettingPlayerStatus.AllIn
+                            ? BettingPlayerStatus.AllIn
+                            : player.Status == BettingPlayerStatus.Active
+                                ? BettingPlayerStatus.Active
+                                : BettingPlayerStatus.Pending);
+            }
+
+            continuation.BiggestContribution = playerList.Any() ? playerList.Max(player => player.Contribution) : 0;
+            continuation.Status = BettingRoundStatus.Open;
+            return continuation;
+        }
+
         internal static BettingRound FromCurrentState(IEnumerable<BettingPlayer> players)
         {
             ArgumentNullException.ThrowIfNull(players);

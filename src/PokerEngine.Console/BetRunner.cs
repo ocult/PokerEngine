@@ -36,14 +36,74 @@ namespace PokerEngine.Console
             Betting(initialPlayers);
         }
 
-        private static void Betting(IReadOnlyList<BettingPlayer> players)
+        public static IReadOnlyCollection<ushort>? ResolvePotWinnerSelection(BettingPot pot, string? rawWinners)
+        {
+            ArgumentNullException.ThrowIfNull(pot);
+
+            if (pot.EligiblePlayers.Count == 1)
+            {
+                return new ushort[] { pot.EligiblePlayers[0] };
+            }
+
+            if (string.IsNullOrWhiteSpace(rawWinners)
+                || rawWinners.Equals("CONTINUE", StringComparison.OrdinalIgnoreCase)
+                || rawWinners.Equals("NEXT", StringComparison.OrdinalIgnoreCase)
+                || rawWinners.Equals("POT", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            var parsedWinners = rawWinners
+                .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .Select(winner =>
+                {
+                    if (!ushort.TryParse(winner, out ushort playerId))
+                    {
+                        throw new ArgumentException($"Invalid player id '{winner}'. Use numeric ids only.");
+                    }
+
+                    return playerId;
+                })
+                .ToArray();
+
+            if (parsedWinners.Length == 0)
+            {
+                throw new ArgumentException("At least one winner must be informed.");
+            }
+
+            var duplicateWinners = parsedWinners
+                .GroupBy(player => player)
+                .Where(group => group.Count() > 1)
+                .Select(group => group.Key)
+                .ToList();
+
+            if (duplicateWinners.Count > 0)
+            {
+                throw new ArgumentException($"Winner ids must be unique. Duplicates: {string.Join(", ", duplicateWinners.Select(playerId => $"#{playerId}"))}.");
+            }
+
+            var invalidWinners = parsedWinners
+                .Where(playerId => !pot.EligiblePlayers.Contains(playerId))
+                .ToArray();
+
+            if (invalidWinners.Length > 0)
+            {
+                throw new ArgumentException($"Invalid winner ids for this pot: {string.Join(", ", invalidWinners.Select(playerId => $"#{playerId}"))}. Eligible players are {string.Join(", ", pot.EligiblePlayers.Select(playerId => $"#{playerId}"))}.");
+            }
+
+            return parsedWinners;
+        }
+
+        private static void Betting(IReadOnlyList<BettingPlayer> players, bool preserveCurrentPotState = false)
         {
             if (players.Count < 2)
             {
                 throw new ArgumentException("Betting requires at least two players.", nameof(players));
             }
 
-            BettingRound round = new(players);
+            BettingRound round = preserveCurrentPotState
+                ? BettingRound.CreateContinuationRound(players)
+                : new BettingRound(players);
 
             HoldemRunner.WriteInfo($"Started a betting round with {players.Count} players, each holding the current stack values.");
 
@@ -191,13 +251,7 @@ namespace PokerEngine.Console
                 while (true)
                 {
                     HoldemRunner.WriteInfo($"Pot #{pot.Index} is contested by players: {string.Join(", ", pot.EligiblePlayers.Select(playerId => $"#{playerId}"))}.");
-                    if (pot.EligiblePlayers.Count == 1)
-                    {
-                        HoldemRunner.WriteInfo($"Only one player is eligible for this pot, so Player #{pot.EligiblePlayers[0]} is the winner by default.");
-                        winnersByPot[pot.Index] = new ushort[] { pot.EligiblePlayers[0] };
-                        break;
-                    }
-                    HoldemRunner.WriteWaiting("Inform the winning player id(s) for this pot (comma separated, or press Enter to select the first eligible player): ");
+                    HoldemRunner.WriteWaiting("Inform the winning player id(s) for this pot (comma separated, or press Enter/'continue' to keep the pot open for the next round): ");
                     string? rawWinners = MSC.ReadLine();
 
                     if (Program.IsQuitCommand(rawWinners))
@@ -208,52 +262,28 @@ namespace PokerEngine.Console
 
                     try
                     {
-                        IReadOnlyCollection<ushort> winners;
-                        if (string.IsNullOrWhiteSpace(rawWinners))
+                        IReadOnlyCollection<ushort>? winners = ResolvePotWinnerSelection(pot, rawWinners);
+                        if (winners is null)
                         {
-                            winners = new ushort[] { pot.EligiblePlayers[0] };
-                        }
-                        else
-                        {
-                            var parsedWinners = rawWinners
-                                .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-                                .Select(winner =>
-                                {
-                                    if (!ushort.TryParse(winner, out ushort playerId))
-                                    {
-                                        throw new ArgumentException($"Invalid player id '{winner}'. Use numeric ids only.");
-                                    }
-
-                                    return playerId;
-                                })
-                                .ToArray();
-
-                            if (parsedWinners.Length == 0)
-                            {
-                                throw new ArgumentException("At least one winner must be informed.");
-                            }
-
-                            var duplicateWinners = parsedWinners
-                                .GroupBy(player => player)
-                                .Where(group => group.Count() > 1)
-                                .Select(group => group.Key)
+                            HoldemRunner.WriteInfo("Pot continues to the next betting round without a final winner.");
+                            IReadOnlyList<BettingPlayer> continuedPlayers = round.Players
+                                .Where(player => player.RemainingStack > 0)
                                 .ToList();
 
-                            if (duplicateWinners.Count > 0)
+                            if (continuedPlayers.Count < 2)
                             {
-                                throw new ArgumentException($"Winner ids must be unique. Duplicates: {string.Join(", ", duplicateWinners.Select(playerId => $"#{playerId}"))}.");
+                                HoldemRunner.WriteInfo("Betting ended because fewer than two players still have chips.");
+                                return;
                             }
 
-                            var invalidWinners = parsedWinners
-                                .Where(playerId => !pot.EligiblePlayers.Contains(playerId))
-                                .ToArray();
-
-                            if (invalidWinners.Length > 0)
+                            HoldemRunner.WriteInfo("Starting a new betting round with the current players and chip values.");
+                            foreach (BettingPlayer player in continuedPlayers)
                             {
-                                throw new ArgumentException($"Invalid winner ids for this pot: {string.Join(", ", invalidWinners.Select(playerId => $"#{playerId}"))}. Eligible players are {string.Join(", ", pot.EligiblePlayers.Select(playerId => $"#{playerId}"))}.");
+                                HoldemRunner.WriteInfo($"Player #{player.Id} starts with {player.RemainingStack} chips.");
                             }
 
-                            winners = parsedWinners;
+                            Betting(continuedPlayers, preserveCurrentPotState: true);
+                            return;
                         }
 
                         winnersByPot[pot.Index] = winners;

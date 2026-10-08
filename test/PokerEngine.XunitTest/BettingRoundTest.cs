@@ -1,3 +1,4 @@
+using PokerEngine.Console;
 using PokerEngine.Domain.Betting;
 using PokerEngine.Domain.Models;
 using PokerEngine.Domain.TexasHoldem;
@@ -413,6 +414,38 @@ namespace PokerEngine.XunitTest
             Assert.Equal((ushort)1, nextRound.Next()!.Id);
             nextRound.ApplyAction(new PlayerAction(1, PlayerActionType.Check, 0));
             Assert.Equal((ushort)2, nextRound.Next()!.Id);
+        }
+
+        [Fact]
+        public void BetRunner_ContinuesPotWhenWinnerSelectionIsBlank()
+        {
+            var round = CreateRound((1, 100), (2, 100));
+            round.Contribute(1, 20);
+            round.Contribute(2, 20);
+            round.Close();
+
+            var pot = round.GetPots().Single();
+
+            Assert.Null(BetRunner.ResolvePotWinnerSelection(pot, string.Empty));
+            Assert.Null(BetRunner.ResolvePotWinnerSelection(pot, "continue"));
+        }
+
+        [Fact]
+        public void BettingRound_ContinuationRoundPreservesFoldStateAndCurrentPot()
+        {
+            var round = CreateRound((1, 100), (2, 100), (3, 100));
+            round.Contribute(1, 20);
+            round.Contribute(2, 20);
+            round.Fold(2);
+            round.Contribute(3, 20);
+            round.Close();
+
+            var continuation = BettingRound.CreateContinuationRound(round.Players);
+
+            var folded = continuation.Players.Single(player => player.Id == 2);
+            Assert.Equal(20, folded.Contribution);
+            Assert.Equal(BettingPlayerStatus.Folded, folded.Status);
+            Assert.Equal(20, continuation.BiggestContribution);
         }
 
         [Fact]
