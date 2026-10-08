@@ -22,11 +22,6 @@ namespace PokerEngine.Console
                     .Select(playerNumber => new BettingPlayer((ushort)playerNumber, 100))
                     .ToList();
 
-            foreach (KeyValuePair<ushort, TexasHoldemPlayerCards> player in game.PlayersCards)
-            {
-                MSC.WriteLine($"Player #{player.Key} have [{player.Value.FirstCard}, {player.Value.SecondCard}] in hand");
-            }
-
             Func<ushort, string> getPlayerCards = playerId =>
                 $"[{game.PlayersCards[playerId].FirstCard}, {game.PlayersCards[playerId].SecondCard}]";
 
@@ -98,6 +93,7 @@ namespace PokerEngine.Console
                     playerId => getPlayerCards(playerId),
                     game.CommunityCards,
                     remainingPlayers.Count == 1 ? new ushort[] { remainingPlayers[0].Id } : null);
+                activePlayers = HoldemRunner.SettleShowdown(table, activePlayers, hands);
                 HoldemRunner.PrintPlayerStacks(activePlayers);
                 if (activePlayers.Count(player => player.RemainingStack > 0) > 1)
                 {
@@ -130,6 +126,7 @@ namespace PokerEngine.Console
                     .Select(hand => hand.Key)
                     .ToArray());
             HoldemRunner.PrintWinner(hands, playerId => getPlayerCards(playerId), game.CommunityCards);
+            activePlayers = HoldemRunner.SettleShowdown(table, activePlayers, hands);
             HoldemRunner.PrintPlayerStacks(activePlayers);
 
             if (activePlayers.Count(player => player.RemainingStack > 0) > 1)

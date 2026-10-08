@@ -8,6 +8,11 @@ namespace PokerEngine.Domain.Betting
         }
 
         public BettingPlayer(ushort id, long stack, BettingPlayerStatus status)
+            : this(id, stack, 0, status)
+        {
+        }
+
+        internal BettingPlayer(ushort id, long stack, long contribution, BettingPlayerStatus status)
         {
             if (id == 0)
             {
@@ -19,6 +24,11 @@ namespace PokerEngine.Domain.Betting
                 throw new ArgumentOutOfRangeException(nameof(stack));
             }
 
+            if (contribution < 0 || contribution > stack)
+            {
+                throw new ArgumentOutOfRangeException(nameof(contribution));
+            }
+
             if (status != BettingPlayerStatus.Pending
                 && status != BettingPlayerStatus.Active
                 && status != BettingPlayerStatus.Folded
@@ -28,7 +38,8 @@ namespace PokerEngine.Domain.Betting
             }
 
             Id = id;
-            RemainingStack = stack;
+            RemainingStack = stack - contribution;
+            Contribution = contribution;
             Status = status;
         }
 

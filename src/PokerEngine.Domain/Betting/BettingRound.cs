@@ -9,6 +9,11 @@ namespace PokerEngine.Domain.Betting
         private ushort? _lastActionPlayerId;
 
         public BettingRound(IEnumerable<BettingPlayer> players)
+            : this(players, preserveCurrentContributionState: false)
+        {
+        }
+
+        private BettingRound(IEnumerable<BettingPlayer> players, bool preserveCurrentContributionState)
         {
             ArgumentNullException.ThrowIfNull(players);
 
@@ -30,14 +35,25 @@ namespace PokerEngine.Domain.Betting
 
             _players = playerList.ToDictionary(
                 player => player.Id,
-                player => new BettingPlayer(
-                    player.Id,
-                    player.RemainingStack,
-                    player.Status == BettingPlayerStatus.Folded ? BettingPlayerStatus.Folded : BettingPlayerStatus.Pending));
+                player => preserveCurrentContributionState
+                    ? new BettingPlayer(
+                        player.Id,
+                        player.RemainingStack + player.Contribution,
+                        player.Contribution,
+                        player.Status)
+                    : new BettingPlayer(
+                        player.Id,
+                        player.RemainingStack,
+                        player.Status == BettingPlayerStatus.Folded ? BettingPlayerStatus.Folded : BettingPlayerStatus.Pending));
             _playerOrder = playerList.Select(player => player.Id).ToList();
             _lastActionPlayerId = null;
             BiggestContribution = 0;
             Status = BettingRoundStatus.Open;
+        }
+
+        public static BettingRound CreateSettlementRound(IEnumerable<BettingPlayer> players)
+        {
+            return new BettingRound(players, preserveCurrentContributionState: true);
         }
 
         public BettingRoundStatus Status { get; private set; }

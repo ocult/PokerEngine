@@ -47,14 +47,6 @@ namespace PokerEngine.Console
             where TGame : HoldemGame<TPlayerCards>
             where TPlayerCards : HoldemPlayerCards
         {
-            WriteWaiting("Press any key to continue to the pre-flop betting round...");
-            string? input = MSC.ReadLine();
-            if (Program.IsQuitCommand(input))
-            {
-                WriteInfo("Quit requested. Leaving the hand.");
-                throw new ConsoleRoundQuitException();
-            }
-
             IReadOnlyList<BettingPlayer> nextPlayers = PlayBettingRound(players, playerCards, bestHandText);
             PrintCurrentPots(nextPlayers);
             table.CloseBettingRound();
@@ -276,6 +268,61 @@ namespace PokerEngine.Console
                 WriteInfo($"Current pot #{index}: {amount} chips | contributors: {string.Join(", ", contributors.Select(playerId => $"#{playerId}"))} | eligible: {string.Join(", ", eligiblePlayers.Select(playerId => $"#{playerId}"))}");
                 previousLevel = level;
             }
+        }
+
+        public static IReadOnlyList<BettingPlayer> SettleShowdown<TGame, TPlayerCards>(
+            HoldemTable<TGame, TPlayerCards> table,
+            IReadOnlyList<BettingPlayer> players,
+            IReadOnlyList<KeyValuePair<ushort, PokerHand>> hands)
+            where TGame : HoldemGame<TPlayerCards>
+            where TPlayerCards : HoldemPlayerCards
+        {
+            ArgumentNullException.ThrowIfNull(table);
+            ArgumentNullException.ThrowIfNull(players);
+            ArgumentNullException.ThrowIfNull(hands);
+
+            if (players.Count == 0)
+            {
+                return players;
+            }
+
+            var round = BettingRound.CreateSettlementRound(players);
+            round.Close();
+
+            var winnersByPot = new Dictionary<int, IReadOnlyCollection<ushort>>();
+            foreach (BettingPot pot in round.GetPots())
+            {
+                IReadOnlyList<ushort> eligible = pot.EligiblePlayers;
+                if (eligible.Count == 0)
+                {
+                    continue;
+                }
+
+                if (eligible.Count == 1)
+                {
+                    winnersByPot[pot.Index] = new ushort[] { eligible[0] };
+                    continue;
+                }
+
+                PokerHand bestHand = hands
+                    .Where(hand => eligible.Contains(hand.Key))
+                    .Select(hand => hand.Value)
+                    .Max();
+
+                ushort[] winners = hands
+                    .Where(hand => eligible.Contains(hand.Key) && hand.Value.Equals(bestHand))
+                    .Select(hand => hand.Key)
+                    .OrderBy(playerId => playerId)
+                    .ToArray();
+
+                winnersByPot[pot.Index] = winners;
+            }
+
+            IReadOnlyDictionary<ushort, PokerHand> bestHands = hands
+                .ToDictionary(hand => hand.Key, hand => hand.Value);
+
+            BettingSettlement settlement = table.SettleHand(round, winnersByPot, bestHands);
+            return settlement.NextPlayers;
         }
 
         public static void PrintWinner(

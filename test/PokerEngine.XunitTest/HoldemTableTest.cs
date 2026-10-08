@@ -144,6 +144,44 @@ namespace PokerEngine.XunitTest
         }
 
         [Fact]
+        public void HoldemRunner_SettlesWinnerPayoutAtShowdown()
+        {
+            var players = new[]
+            {
+                new BettingPlayer(1, 100),
+                new BettingPlayer(2, 100)
+            };
+
+            var round = new BettingRound(players);
+            round.Contribute(1, 40);
+            round.Contribute(2, 40);
+            round.Check(1);
+            round.Check(2);
+            round.Close();
+
+            var bestHands = new[]
+            {
+                new KeyValuePair<ushort, PokerHand>(1, new PokerHand("AH, KH, QH, JH, TH")),
+                new KeyValuePair<ushort, PokerHand>(2, new PokerHand("AS, KS, QS, JS, TS"))
+            };
+
+            var table = new HoldemTable<TexasHoldemGame, TexasHoldemPlayerCards>(new TexasHoldemGame(2));
+            table.CloseBettingRound();
+            table.AdvanceStreet();
+            table.CloseBettingRound();
+            table.AdvanceStreet();
+            table.CloseBettingRound();
+            table.AdvanceStreet();
+            table.CloseBettingRound();
+            table.AdvanceStreet();
+
+            IReadOnlyList<BettingPlayer> settledPlayers = HoldemRunner.SettleShowdown(table, round.Players, bestHands);
+
+            Assert.Equal(140, settledPlayers.Single(player => player.Id == 1).RemainingStack);
+            Assert.Equal(60, settledPlayers.Single(player => player.Id == 2).RemainingStack);
+        }
+
+        [Fact]
         public void HoldemRunner_StoppesRoundWhenQuitActionIsEntered()
         {
             var originalIn = System.Console.In;
