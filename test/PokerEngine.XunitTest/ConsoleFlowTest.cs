@@ -142,6 +142,62 @@ namespace PokerEngine.XunitTest
         }
 
         [Fact]
+        public void HoldemRunner_SettlesThreePlayerTexasHandToTheBestRankedPlayer()
+        {
+            var players = new[]
+            {
+                new BettingPlayer(1, 80),
+                new BettingPlayer(2, 80),
+                new BettingPlayer(3, 140)
+            };
+
+            var preFlop = new BettingRound(players);
+            preFlop.Contribute(1, 20);
+            preFlop.Call(2);
+            preFlop.Fold(3);
+            preFlop.Close();
+
+            var flop = new BettingRound(preFlop.Players);
+            flop.Check(1);
+            flop.Check(2);
+            flop.Close();
+
+            var turn = new BettingRound(flop.Players);
+            turn.Check(1);
+            turn.Check(2);
+            turn.Close();
+
+            var river = new BettingRound(turn.Players);
+            river.Contribute(1, 40);
+            river.Call(2);
+            river.Close();
+
+            var bestHands = new[]
+            {
+                new KeyValuePair<ushort, PokerHand>(1, new PokerHand("TS, TC, AD, KH, 5C")),
+                new KeyValuePair<ushort, PokerHand>(2, new PokerHand("TS, TC, TD, 5C, 4H")),
+                new KeyValuePair<ushort, PokerHand>(3, new PokerHand("TS, TC, 4H, 4C, 8S"))
+            };
+
+            var table = new HoldemTable<TexasHoldemGame, TexasHoldemPlayerCards>(new TexasHoldemGame(3));
+            table.CloseBettingRound();
+            table.AdvanceStreet();
+            table.CloseBettingRound();
+            table.AdvanceStreet();
+            table.CloseBettingRound();
+            table.AdvanceStreet();
+            table.CloseBettingRound();
+            table.AdvanceStreet();
+
+            IReadOnlyList<BettingPlayer> settledPlayers =
+                HoldemRunner.SettleShowdown(table, river.Players, bestHands);
+
+            Assert.Equal(20, settledPlayers.Single(player => player.Id == 1).RemainingStack);
+            Assert.Equal(140, settledPlayers.Single(player => player.Id == 2).RemainingStack);
+            Assert.Equal(140, settledPlayers.Single(player => player.Id == 3).RemainingStack);
+        }
+
+        [Fact]
         public void HoldemRunner_StoppesRoundWhenQuitActionIsEntered()
         {
             var originalIn = System.Console.In;

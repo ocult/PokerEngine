@@ -334,7 +334,8 @@ namespace PokerEngine.Console
                 PokerHand bestHand = hands
                     .Where(hand => eligible.Contains(hand.Key))
                     .Select(hand => hand.Value)
-                    .Max();
+                    .OrderBy(hand => hand)
+                    .First();
 
                 ushort[] winners = hands
                     .Where(hand => eligible.Contains(hand.Key) && hand.Value.Equals(bestHand))
