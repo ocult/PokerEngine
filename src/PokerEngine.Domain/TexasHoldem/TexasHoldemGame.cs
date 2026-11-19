@@ -15,7 +15,7 @@ namespace PokerEngine.Domain.TexasHoldem
         protected override void AddExtraHands(Dictionary<ushort, PokerHand> hands)
         {
             if (_communityCards.Count == 5)
-            {                
+            {
                 PokerHand tableHand = new(_communityCards.ToArray());
                 hands.Add(0, tableHand);
             }

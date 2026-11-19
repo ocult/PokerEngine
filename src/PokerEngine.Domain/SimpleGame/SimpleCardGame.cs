@@ -57,7 +57,7 @@ namespace PokerEngine.Domain.SimpleGame
 
             Stage = SimpleGameStage.Dealing;
             
-            var dealtCards = new List<KeyValuePair<ushort, Card>>(Players);
+            List<KeyValuePair<ushort, Card>> dealtCards = new (Players);
             for (ushort c = 0; c < CardsPerPlayer; c++)
             {
                 foreach (ushort player in _playersCards.Keys)
