@@ -99,6 +99,12 @@ namespace PokerEngine.Domain.Holdem
             CurrentAction = HoldemActionStage.Complete;
         }
 
+        public void CompleteHandByDefault()
+        {
+            _game.CompleteWithoutMoreCards();
+            CurrentAction = HoldemActionStage.Showdown;
+        }
+
         public BettingRound CreateBettingRound(IReadOnlyList<BettingPlayer> players)
         {
             ArgumentNullException.ThrowIfNull(players);
@@ -125,12 +131,16 @@ namespace PokerEngine.Domain.Holdem
                 throw new InvalidOperationException("The hand must be complete before the betting round can be settled.");
             }
 
-            IReadOnlyDictionary<ushort, PokerHand> evaluatedHands = bestHands is not null
-                ? bestHands
-                : _game.GetBestHands()
+            IReadOnlyDictionary<ushort, PokerHand>? evaluatedHands = bestHands;
+            if (evaluatedHands is null && _game.CommunityCards.Count >= 3)
+            {
+                evaluatedHands = _game.GetBestHands()
                     .ToDictionary(hand => hand.Key, hand => hand.Value);
+            }
 
-            BettingSettlement settlement = round.Settle(winnersByPot, evaluatedHands);
+            BettingSettlement settlement = evaluatedHands is { Count: > 0 }
+                ? round.Settle(winnersByPot, evaluatedHands)
+                : round.Settle(winnersByPot);
             CurrentAction = HoldemActionStage.Complete;
             return settlement;
         }

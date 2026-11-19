@@ -89,6 +89,11 @@ namespace PokerEngine.Domain.Holdem
             return CommunityCards;
         }
 
+        public void CompleteWithoutMoreCards()
+        {
+            Stage = HoldemStage.Complete;
+        }
+
         public IReadOnlyList<KeyValuePair<ushort, PokerHand>> GetBestHands()
         {
             return GetRankedHands();

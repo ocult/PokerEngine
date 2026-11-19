@@ -80,10 +80,13 @@ namespace PokerEngine.Console
 
             IReadOnlyList<Card> river = game.CommunityCards;
             MSC.WriteLine($"Table has [{string.Join(", ", river)}] cards");
-            IReadOnlyList<KeyValuePair<ushort, PokerHand>> hands = game.GetBestHands();
+            IReadOnlyList<KeyValuePair<ushort, PokerHand>> hands = game.CommunityCards.Count >= 3
+                ? game.GetBestHands()
+                : [];
 
             if (remainingPlayers.Count <= 1)
             {
+                HoldemRunner.CompleteHand(table);
                 MSC.WriteLine("Press any key to go to the pot winner announcement...");
                 string? input = MSC.ReadLine();
                 if (Program.IsQuitCommand(input))

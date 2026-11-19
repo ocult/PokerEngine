@@ -50,6 +50,13 @@ namespace PokerEngine.Console
         {
             IReadOnlyList<BettingPlayer> nextPlayers = PlayBettingRound(players, playerCards, bestHandText);
             PrintCurrentPots(nextPlayers);
+
+            if (nextPlayers.Count(player => player.Status != BettingPlayerStatus.Folded) <= 1)
+            {
+                table.CompleteHandByDefault();
+                return nextPlayers;
+            }
+
             table.CloseBettingRound();
             table.AdvanceStreet();
             return nextPlayers;
@@ -66,6 +73,11 @@ namespace PokerEngine.Console
             where TGame : HoldemGame<TPlayerCards>
             where TPlayerCards : HoldemPlayerCards
         {
+            if (table.Stage == HoldemStage.Complete)
+            {
+                return players;
+            }
+
             IReadOnlyList<Card> board = boardReader();
 
             WriteWaiting($"Press any key to continue to the {streetName} betting round...");
@@ -78,6 +90,13 @@ namespace PokerEngine.Console
 
             IReadOnlyList<BettingPlayer> nextPlayers = PlayBettingRound(players, playerCards, bestHandText, () => board, boardPrinter);
             PrintCurrentPots(nextPlayers);
+
+            if (nextPlayers.Count(player => player.Status != BettingPlayerStatus.Folded) <= 1)
+            {
+                table.CompleteHandByDefault();
+                return nextPlayers;
+            }
+
             table.CloseBettingRound();
             table.AdvanceStreet();
             return nextPlayers;
@@ -324,6 +343,12 @@ namespace PokerEngine.Console
                     .ToArray();
 
                 winnersByPot[pot.Index] = winners;
+            }
+
+            if (hands.Count == 0)
+            {
+                BettingSettlement defaultSettlement = table.SettleHand(round, winnersByPot);
+                return defaultSettlement.NextPlayers;
             }
 
             IReadOnlyDictionary<ushort, PokerHand> bestHands = hands

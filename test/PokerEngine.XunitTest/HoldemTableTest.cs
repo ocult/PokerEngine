@@ -164,6 +164,28 @@ namespace PokerEngine.XunitTest
             Assert.Equal(2, omahaTable.Players);
         }
 
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void HoldemTable_CompleteHandByDefault_SkipsRemainingStreets(bool omaha)
+        {
+            if (omaha)
+            {
+                var table = new HoldemTable<OmahaHoldemGame, OmahaHoldemPlayerCards>(new OmahaHoldemGame(2));
+                table.CompleteHandByDefault();
+
+                Assert.Equal(HoldemStage.Complete, table.Stage);
+                Assert.Equal(HoldemActionStage.Showdown, table.CurrentAction);
+                return;
+            }
+
+            var texasTable = new HoldemTable<TexasHoldemGame, TexasHoldemPlayerCards>(new TexasHoldemGame(2));
+            texasTable.CompleteHandByDefault();
+
+            Assert.Equal(HoldemStage.Complete, texasTable.Stage);
+            Assert.Equal(HoldemActionStage.Showdown, texasTable.CurrentAction);
+        }
+
         [Fact]
         public void PlayerAction_RejectsIllegalCallAndRaiseAcrossStreets()
         {
