@@ -3,6 +3,16 @@ namespace PokerEngine.Domain.Betting
     public sealed class BettingPlayer
     {
         public BettingPlayer(ushort id, long stack)
+            : this(id, stack, BettingPlayerStatus.Pending)
+        {
+        }
+
+        public BettingPlayer(ushort id, long stack, BettingPlayerStatus status)
+            : this(id, stack, 0, status)
+        {
+        }
+
+        internal BettingPlayer(ushort id, long stack, long contribution, BettingPlayerStatus status)
         {
             if (id == 0)
             {
@@ -14,9 +24,23 @@ namespace PokerEngine.Domain.Betting
                 throw new ArgumentOutOfRangeException(nameof(stack));
             }
 
+            if (contribution < 0 || contribution > stack)
+            {
+                throw new ArgumentOutOfRangeException(nameof(contribution));
+            }
+
+            if (status != BettingPlayerStatus.Pending
+                && status != BettingPlayerStatus.Active
+                && status != BettingPlayerStatus.Folded
+                && status != BettingPlayerStatus.AllIn)
+            {
+                throw new ArgumentOutOfRangeException(nameof(status));
+            }
+
             Id = id;
-            RemainingStack = stack;
-            Status = BettingPlayerStatus.Pending;
+            RemainingStack = stack - contribution;
+            Contribution = contribution;
+            Status = status;
         }
 
         public ushort Id { get; }
@@ -52,6 +76,12 @@ namespace PokerEngine.Domain.Betting
         internal void Payout(long amount)
         {
             RemainingStack += amount;
+        }
+
+        internal void ResetForNextRound()
+        {
+            Contribution = 0;
+            Status = BettingPlayerStatus.Pending;
         }
     }
 }

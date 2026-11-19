@@ -10,7 +10,7 @@ internal class Program
         if (args != null && args.Length > 0)
         {
             cards = args.Length > 1 ? string.Join(',', args) : args[0];
-            MSC.WriteLine($"Your cards are {cards}");
+            HoldemRunner.WriteInfo($"Your cards are {cards}");
         }
 
         ReadCards(cards);
@@ -20,7 +20,7 @@ internal class Program
     {
         while (string.IsNullOrWhiteSpace(cards))
         {
-            MSC.WriteLine("Enter cards or command (type 'h' for options, or 'q' to quit):");
+            HoldemRunner.WriteWaiting("Enter cards or command (type 'h' for options, or 'q' to quit):");
             cards = MSC.ReadLine();
         }
 
@@ -33,13 +33,14 @@ internal class Program
 
         if (cards.Equals("HELP", StringComparison.OrdinalIgnoreCase) || cards.Equals("H", StringComparison.OrdinalIgnoreCase))
         {
-            MSC.WriteLine("=== POKER ENGINE CONSOLE HELP ===");
+            HoldemRunner.WriteHelp("=== POKER ENGINE CONSOLE HELP ===");
+            HoldemRunner.WriteHelp("- " + nameof(EvaluateRunner));
             EvaluateRunner.Help();
             SimpleRunner.Help();
             TexasRunner.Help();
             OmahaRunner.Help();
             BetRunner.Help();
-            MSC.WriteLine("=================================");
+            HoldemRunner.WriteHelp("=================================");
             ReadCards();
             return;
         }

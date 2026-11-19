@@ -1,4 +1,6 @@
 using PokerEngine.Domain.Betting;
+using PokerEngine.Domain.Models;
+using PokerEngine.Domain.TexasHoldem;
 using Xunit;
 
 namespace PokerEngine.XunitTest
@@ -79,6 +81,19 @@ namespace PokerEngine.XunitTest
         }
 
         [Fact]
+        public void BettingRound_AcceptsMatchingTheCurrentBetAsTheNextLegalAction()
+        {
+            var round = CreateRound((1, 100), (2, 100));
+            round.Contribute(1, 10);
+
+            var exception = Record.Exception(() => round.ApplyAction(new PlayerAction(2, PlayerActionType.Bet, 10)));
+
+            Assert.Null(exception);
+            Assert.Equal(10, round.Players.Single(player => player.Id == 2).Contribution);
+            Assert.Equal(10, round.BiggestContribution);
+        }
+
+        [Fact]
         public void BettingRound_ContributeUpdatesPlayerAndAllInStatus()
         {
             var round = CreateRound((1, 100), (2, 60));
@@ -139,14 +154,14 @@ namespace PokerEngine.XunitTest
         {
             var round = CreateRound((1, 100), (2, 100));
 
-            Assert.Throws<ArgumentException>(() => round.Contribute(3, 10));
-            Assert.Throws<ArgumentOutOfRangeException>(() => round.Contribute(1, 0));
-            Assert.Throws<ArgumentOutOfRangeException>(() => round.Contribute(1, 101));
+            Assert.Throws<ArgumentException>(() => round.ApplyAction(new PlayerAction(3, PlayerActionType.Call, 0)));
+            Assert.Throws<InvalidOperationException>(() => round.ApplyAction(new PlayerAction(1, PlayerActionType.Bet, 0)));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new PlayerAction(1, PlayerActionType.Raise, -5));
 
             round.Contribute(1, 25);
-            round.Contribute(1, 10);
-            round.Fold(1);
-            Assert.Throws<InvalidOperationException>(() => round.Fold(1));
+            round.ApplyAction(new PlayerAction(1, PlayerActionType.Bet, 10));
+            round.ApplyAction(new PlayerAction(1, PlayerActionType.Fold, 0));
+            Assert.Throws<InvalidOperationException>(() => round.ApplyAction(new PlayerAction(1, PlayerActionType.Fold, 0)));
         }
 
         [Fact]
@@ -248,6 +263,27 @@ namespace PokerEngine.XunitTest
         }
 
         [Fact]
+        public void BettingRound_RequiresWinnerToBeDeclaredByCardEvaluationBeforeSettlement()
+        {
+            var round = CreateRound((1, 100), (2, 100));
+            round.Contribute(1, 100);
+            round.Contribute(2, 100);
+            round.Close();
+
+            var bestHands = new Dictionary<ushort, PokerHand>
+            {
+                [1] = new PokerHand("AC, KC, QC, JC, TC")
+            };
+
+            Assert.Throws<ArgumentException>(() => round.Settle(
+                new Dictionary<int, IReadOnlyCollection<ushort>>
+                {
+                    [0] = new ushort[] { 2 }
+                },
+                bestHands));
+        }
+
+        [Fact]
         public void BettingRound_RejectsInvalidSettlementAndActionsAfterClose()
         {
             var round = CreateRound((1, 10), (2, 10));
@@ -329,12 +365,14 @@ namespace PokerEngine.XunitTest
         }
 
         [Fact]
-        public void BettingRound_ChainedRoundResetsPlayerStateForNextRound()
+        public void BettingRound_FoldedPlayersReturnInTheNextRound()
         {
-            var round1 = CreateRound((1, 100), (2, 100), (3, 50));
-            round1.Contribute(1, 50);
+            var round1 = CreateRound((1, 100), (2, 100), (3, 100), (4, 100));
+            round1.Contribute(1, 20);
+            round1.Contribute(2, 20);
             round1.Fold(2);
-            round1.Contribute(3, 50);
+            round1.Contribute(3, 20);
+            round1.Contribute(4, 20);
             round1.Close();
 
             var settlement = round1.Settle(new Dictionary<int, IReadOnlyCollection<ushort>>
@@ -342,7 +380,8 @@ namespace PokerEngine.XunitTest
                 [0] = new ushort[] { 1 }
             });
 
-            Assert.Equal(2, settlement.NextPlayers.Count);
+            Assert.Equal(4, settlement.NextPlayers.Count);
+            Assert.Contains(settlement.NextPlayers, player => player.Id == 2);
 
             var round2 = new BettingRound(settlement.NextPlayers);
 
@@ -351,13 +390,12 @@ namespace PokerEngine.XunitTest
             Assert.Equal(0, round2.BiggestContribution);
 
             var p1 = round2.Players.Single(p => p.Id == 1);
-            var p2 = round2.Players.Single(p => p.Id == 2);
-
-            Assert.Equal(150, p1.RemainingStack);
+            Assert.Equal(160, p1.RemainingStack);
             Assert.Equal(0, p1.Contribution);
             Assert.Equal(BettingPlayerStatus.Pending, p1.Status);
 
-            Assert.Equal(100, p2.RemainingStack);
+            var p2 = round2.Players.Single(p => p.Id == 2);
+            Assert.Equal(80, p2.RemainingStack);
             Assert.Equal(0, p2.Contribution);
             Assert.Equal(BettingPlayerStatus.Pending, p2.Status);
 
@@ -365,7 +403,104 @@ namespace PokerEngine.XunitTest
             round2.Contribute(1, 20);
             Assert.Equal((ushort)2, round2.Next()!.Id);
             round2.Call(2);
+            Assert.Equal((ushort)3, round2.Next()!.Id);
+            round2.Call(3);
+            Assert.Equal((ushort)4, round2.Next()!.Id);
+            round2.Call(4);
             Assert.Null(round2.Next());
+        }
+
+        [Fact]
+        public void BettingRound_FoldedPlayersCanActAgainInTheNextRound()
+        {
+            var round = CreateRound((1, 100), (2, 100), (3, 100));
+            round.Fold(1);
+            round.ApplyAction(new PlayerAction(2, PlayerActionType.Check, 0));
+            round.ApplyAction(new PlayerAction(3, PlayerActionType.Check, 0));
+            round.Close();
+
+            var nextRound = new BettingRound(round.Players
+                .Select(player => new BettingPlayer(player.Id, player.RemainingStack, BettingPlayerStatus.Pending))
+                .ToList());
+
+            Assert.Equal((ushort)1, nextRound.Next()!.Id);
+            nextRound.ApplyAction(new PlayerAction(1, PlayerActionType.Check, 0));
+            Assert.Equal((ushort)2, nextRound.Next()!.Id);
+        }
+
+        [Fact]
+        public void BettingRound_ContinuationRoundPreservesFoldStateAndCurrentPot()
+        {
+            var round = CreateRound((1, 100), (2, 100), (3, 100));
+            round.Contribute(1, 20);
+            round.Contribute(2, 20);
+            round.Fold(2);
+            round.Contribute(3, 20);
+            round.Close();
+
+            var continuation = BettingRound.CreateContinuationRound(round.Players);
+
+            var folded = continuation.Players.Single(player => player.Id == 2);
+            Assert.Equal(20, folded.Contribution);
+            Assert.Equal(BettingPlayerStatus.Folded, folded.Status);
+            Assert.Equal(20, continuation.BiggestContribution);
+        }
+
+        [Fact]
+        public void BettingRound_ContinuationRoundResetsNonFoldedPlayersToPendingTurns()
+        {
+            var round = CreateRound((1, 100), (2, 100));
+            round.Contribute(1, 20);
+            round.Contribute(2, 20);
+            round.Close();
+
+            var continuation = BettingRound.CreateContinuationRound(round.Players);
+
+            Assert.Equal(BettingPlayerStatus.Pending, continuation.Players.Single(player => player.Id == 1).Status);
+            Assert.Equal(BettingPlayerStatus.Pending, continuation.Players.Single(player => player.Id == 2).Status);
+            Assert.Equal((ushort)1, continuation.Next()!.Id);
+        }
+
+        [Fact]
+        public void BettingRound_PreservesContributionAcrossInnerRoundsBeforeWinnerSettlement()
+        {
+            var round = CreateRound((1, 100), (2, 100), (3, 100));
+            round.Contribute(1, 10);
+            round.Contribute(2, 10);
+            round.Contribute(3, 10);
+            round.Close();
+
+            var flopRound = new BettingRound(round.Players);
+            flopRound.Check(1);
+            flopRound.Check(2);
+            flopRound.Check(3);
+            flopRound.Close();
+
+            var turnRound = new BettingRound(flopRound.Players);
+            turnRound.Fold(2);
+            turnRound.Contribute(1, 10);
+            turnRound.Contribute(3, 10);
+            turnRound.Close();
+
+            var riverRound = new BettingRound(turnRound.Players);
+            riverRound.Check(1);
+            riverRound.Check(3);
+            riverRound.Close();
+
+            Assert.Equal(50, riverRound.TotalContribution);
+            Assert.Equal(20, riverRound.Players.Single(player => player.Id == 1).Contribution);
+            Assert.Equal(10, riverRound.Players.Single(player => player.Id == 2).Contribution);
+            Assert.Equal(20, riverRound.Players.Single(player => player.Id == 3).Contribution);
+
+            var settlement = riverRound.Settle(new Dictionary<int, IReadOnlyCollection<ushort>>
+            {
+                [0] = new ushort[] { 1 }
+            });
+
+            Assert.Equal(50, settlement.TotalPayout);
+            Assert.Equal(130, settlement.NextPlayers.Single(player => player.Id == 1).RemainingStack);
+            Assert.Equal(90, settlement.NextPlayers.Single(player => player.Id == 2).RemainingStack);
+            Assert.Equal(80, settlement.NextPlayers.Single(player => player.Id == 3).RemainingStack);
         }
 
         [Fact]
@@ -451,14 +586,14 @@ namespace PokerEngine.XunitTest
             var round = CreateRound((1, 100), (2, 100), (3, 100));
 
             Assert.Equal((ushort)1, round.Next()!.Id);
-            round.Check(1);
+            round.ApplyAction(new PlayerAction(1, PlayerActionType.Check, 0));
             Assert.Equal(BettingPlayerStatus.Active, round.Players.Single(p => p.Id == 1).Status);
 
             Assert.Equal((ushort)2, round.Next()!.Id);
-            round.Check(2);
+            round.ApplyAction(new PlayerAction(2, PlayerActionType.Check, 0));
 
             Assert.Equal((ushort)3, round.Next()!.Id);
-            round.Check(3);
+            round.ApplyAction(new PlayerAction(3, PlayerActionType.Check, 0));
 
             Assert.Null(round.Next());
             round.Close();
@@ -471,13 +606,13 @@ namespace PokerEngine.XunitTest
             var round = CreateRound((1, 100), (2, 100));
 
             Assert.Equal((ushort)1, round.Next()!.Id);
-            round.Check(1);
+            round.ApplyAction(new PlayerAction(1, PlayerActionType.Check, 0));
 
             Assert.Equal((ushort)2, round.Next()!.Id);
-            round.Contribute(2, 30);
+            round.ApplyAction(new PlayerAction(2, PlayerActionType.Bet, 30));
 
             Assert.Equal((ushort)1, round.Next()!.Id);
-            round.Call(1);
+            round.ApplyAction(new PlayerAction(1, PlayerActionType.Call, 0));
 
             Assert.Null(round.Next());
             round.Close();
@@ -490,16 +625,16 @@ namespace PokerEngine.XunitTest
             var round = CreateRound((1, 100), (2, 100));
             round.Contribute(1, 30);
 
-            Assert.Throws<InvalidOperationException>(() => round.Check(2));
-            Assert.Throws<ArgumentException>(() => round.Check(99));
+            Assert.Throws<InvalidOperationException>(() => round.ApplyAction(new PlayerAction(2, PlayerActionType.Check, 0)));
+            Assert.Throws<ArgumentException>(() => round.ApplyAction(new PlayerAction(99, PlayerActionType.Check, 0)));
 
             var round2 = CreateRound((1, 100), (2, 100));
             round2.Fold(1);
-            Assert.Throws<InvalidOperationException>(() => round2.Check(1));
+            Assert.Throws<InvalidOperationException>(() => round2.ApplyAction(new PlayerAction(1, PlayerActionType.Check, 0)));
 
-            round2.Check(2);
+            round2.ApplyAction(new PlayerAction(2, PlayerActionType.Check, 0));
             round2.Close();
-            Assert.Throws<InvalidOperationException>(() => round2.Check(2));
+            Assert.Throws<InvalidOperationException>(() => round2.ApplyAction(new PlayerAction(2, PlayerActionType.Check, 0)));
         }
 
         [Fact]
