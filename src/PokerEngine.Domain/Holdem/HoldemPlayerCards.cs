@@ -1,4 +1,6 @@
-namespace PokerEngine.Domain.Models
+using PokerEngine.Domain.Models;
+
+namespace PokerEngine.Domain.Holdem
 {
     public abstract class HoldemPlayerCards
     {
@@ -17,6 +19,7 @@ namespace PokerEngine.Domain.Models
                 {
                     throw new ArgumentOutOfRangeException(nameof(index));
                 }
+
                 return Cards[index];
             }
         }

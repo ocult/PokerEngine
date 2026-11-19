@@ -1,11 +1,12 @@
-namespace PokerEngine.Domain.Models
+using PokerEngine.Domain.Models;
+
+namespace PokerEngine.Domain.Holdem
 {
     public abstract class HoldemGame<TPlayerCards> : PokerGame where TPlayerCards : HoldemPlayerCards
     {
         protected int MaxPlayersPerDeck => (52 - 9) / CardsPerPlayer;
 
         protected abstract int CardsPerPlayer { get; }
-
 
         protected readonly CardDeck _deck;
         protected readonly List<Card> _communityCards;
@@ -62,25 +63,25 @@ namespace PokerEngine.Domain.Models
 
         public IReadOnlyList<Card> Continue()
         {
-            if (EqualityComparer<HoldemStage>.Default.Equals(Stage, HoldemStage.PreFlop))
+            if (Stage == HoldemStage.PreFlop)
             {
                 BurnTwoCards();
                 DealCommunityCards(3);
                 Stage = HoldemStage.Flop;
             }
-            else if (EqualityComparer<HoldemStage>.Default.Equals(Stage, HoldemStage.Flop))
+            else if (Stage == HoldemStage.Flop)
             {
                 BurnOneCard();
                 DealCommunityCards(1);
                 Stage = HoldemStage.Turn;
             }
-            else if (EqualityComparer<HoldemStage>.Default.Equals(Stage, HoldemStage.Turn))
+            else if (Stage == HoldemStage.Turn)
             {
                 BurnOneCard();
                 DealCommunityCards(1);
                 Stage = HoldemStage.River;
             }
-            else if (EqualityComparer<HoldemStage>.Default.Equals(Stage, HoldemStage.River))
+            else if (Stage == HoldemStage.River)
             {
                 Stage = HoldemStage.Complete;
             }

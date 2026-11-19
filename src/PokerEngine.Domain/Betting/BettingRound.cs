@@ -1,3 +1,5 @@
+using PokerEngine.Domain.Models;
+
 namespace PokerEngine.Domain.Betting
 {
     public sealed class BettingRound
@@ -28,11 +30,86 @@ namespace PokerEngine.Domain.Betting
 
             _players = playerList.ToDictionary(
                 player => player.Id,
-                player => new BettingPlayer(player.Id, player.RemainingStack));
+                player => new BettingPlayer(
+                    player.Id,
+                    player.RemainingStack + player.Contribution,
+                    player.Contribution,
+                    player.Status == BettingPlayerStatus.Folded
+                        ? BettingPlayerStatus.Folded
+                        : player.Status == BettingPlayerStatus.AllIn
+                            ? BettingPlayerStatus.AllIn
+                            : BettingPlayerStatus.Pending));
             _playerOrder = playerList.Select(player => player.Id).ToList();
             _lastActionPlayerId = null;
             BiggestContribution = 0;
             Status = BettingRoundStatus.Open;
+        }
+
+        public static BettingRound CreateContinuationRound(IEnumerable<BettingPlayer> players)
+        {
+            ArgumentNullException.ThrowIfNull(players);
+
+            IReadOnlyList<BettingPlayer> playerList = players.ToList();
+            if (playerList.Count < 2)
+            {
+                throw new ArgumentException("At least two players are required.", nameof(players));
+            }
+
+            BettingRound continuation = new(playerList.Select(player => new BettingPlayer(
+                player.Id,
+                player.RemainingStack + player.Contribution,
+                player.Status == BettingPlayerStatus.Folded
+                    ? BettingPlayerStatus.Folded
+                    : player.Status == BettingPlayerStatus.AllIn
+                        ? BettingPlayerStatus.AllIn
+                        : BettingPlayerStatus.Pending)));
+
+            foreach (BettingPlayer player in playerList)
+            {
+                BettingPlayerStatus status = player.Status == BettingPlayerStatus.Folded
+                    ? BettingPlayerStatus.Folded
+                    : player.Status == BettingPlayerStatus.AllIn
+                        ? BettingPlayerStatus.AllIn
+                        : BettingPlayerStatus.Pending;
+
+                continuation._players[player.Id] = new BettingPlayer(
+                    player.Id,
+                    player.RemainingStack + player.Contribution,
+                    player.Contribution,
+                    status);
+            }
+
+            continuation.BiggestContribution = playerList.Any() ? playerList.Max(player => player.Contribution) : 0;
+            continuation.Status = BettingRoundStatus.Open;
+            return continuation;
+        }
+
+        internal static BettingRound FromCurrentState(IEnumerable<BettingPlayer> players)
+        {
+            ArgumentNullException.ThrowIfNull(players);
+
+            IReadOnlyList<BettingPlayer> playerList = players.ToList();
+            var round = new BettingRound(playerList.Select(player => new BettingPlayer(
+                player.Id,
+                player.RemainingStack + player.Contribution,
+                player.Status == BettingPlayerStatus.Folded
+                    ? BettingPlayerStatus.Folded
+                    : player.Status == BettingPlayerStatus.AllIn
+                        ? BettingPlayerStatus.AllIn
+                        : BettingPlayerStatus.Pending)));
+
+            foreach (BettingPlayer player in playerList)
+            {
+                round._players[player.Id] = new BettingPlayer(
+                    player.Id,
+                    player.RemainingStack + player.Contribution,
+                    player.Contribution,
+                    player.Status);
+            }
+
+            round.BiggestContribution = playerList.Any() ? playerList.Max(player => player.Contribution) : 0;
+            round.Status = BettingRoundStatus.Open;
+            return round;
         }
 
         public BettingRoundStatus Status { get; private set; }
@@ -76,6 +153,78 @@ namespace PokerEngine.Domain.Betting
             }
 
             return null;
+        }
+
+        public void ApplyAction(PlayerAction action)
+        {
+            ArgumentNullException.ThrowIfNull(action);
+
+            BettingPlayer player = GetPlayer(action.PlayerId);
+            if (player.Status == BettingPlayerStatus.Folded
+                || player.Status == BettingPlayerStatus.AllIn)
+            {
+                throw new InvalidOperationException("Folded or all-in players cannot act.");
+            }
+
+            long amountToCall = BiggestContribution - player.Contribution;
+
+            switch (action.Type)
+            {
+                case PlayerActionType.Fold:
+                    if (action.Amount != 0)
+                    {
+                        throw new InvalidOperationException("Fold actions must not include a chip amount.");
+                    }
+                    Fold(action.PlayerId);
+                    break;
+
+                case PlayerActionType.Check:
+                    if (action.Amount != 0)
+                    {
+                        throw new InvalidOperationException("Check actions must not include a chip amount.");
+                    }
+                    Check(action.PlayerId);
+                    break;
+
+                case PlayerActionType.Call:
+                    if (action.Amount != 0)
+                    {
+                        throw new InvalidOperationException("Call actions must not include a chip amount.");
+                    }
+                    if (amountToCall <= 0)
+                    {
+                        throw new InvalidOperationException("There is no current bet to call.");
+                    }
+                    Call(action.PlayerId);
+                    break;
+
+                case PlayerActionType.Bet:
+                case PlayerActionType.Raise:
+                    if (action.Amount <= 0)
+                    {
+                        throw new InvalidOperationException("A bet or raise must include a positive chip amount.");
+                    }
+
+                    long minimumRequiredAmount = Math.Max(1, BiggestContribution - player.Contribution);
+                    if (action.Amount < minimumRequiredAmount)
+                    {
+                        throw new InvalidOperationException("A raise must exceed the current contribution requirement.");
+                    }
+
+                    Contribute(action.PlayerId, action.Amount);
+                    break;
+
+                case PlayerActionType.AllIn:
+                    if (action.Amount != 0)
+                    {
+                        throw new InvalidOperationException("All-in actions must not include a chip amount; the remaining stack is used automatically.");
+                    }
+                    AllIn(action.PlayerId);
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(action.Type), action.Type, "Unsupported player action type.");
+            }
         }
 
         public void Contribute(ushort playerId, long amount)
@@ -208,13 +357,46 @@ namespace PokerEngine.Domain.Betting
             return BuildPots();
         }
 
-        public BettingSettlement Settle(IReadOnlyDictionary<int, IReadOnlyCollection<ushort>> winnersByPot)
+        public BettingSettlement Settle(
+            IReadOnlyDictionary<int, IReadOnlyCollection<ushort>> winnersByPot,
+            IReadOnlyDictionary<ushort, PokerHand>? bestHands = null)
         {
             ArgumentNullException.ThrowIfNull(winnersByPot);
             EnsureClosed();
 
             IReadOnlyList<BettingPot> pots = BuildPots();
             List<BettingPayout> payouts = [];
+
+            if (bestHands is not null)
+            {
+                HashSet<ushort> declaredWinners = bestHands.Keys.ToHashSet();
+
+                foreach (BettingPot pot in pots)
+                {
+                    if (!winnersByPot.TryGetValue(pot.Index, out IReadOnlyCollection<ushort>? winners)
+                        || winners.Count == 0)
+                    {
+                        throw new ArgumentException($"Winners are required for pot {pot.Index}.", nameof(winnersByPot));
+                    }
+
+                    foreach (ushort winnerId in winners)
+                    {
+                        if (!declaredWinners.Contains(winnerId))
+                        {
+                            throw new ArgumentException(
+                                $"Winner #{winnerId} for pot {pot.Index} must be informed by the hand evaluation before settlement.",
+                                nameof(winnersByPot));
+                        }
+
+                        if (!pot.EligiblePlayers.Contains(winnerId))
+                        {
+                            throw new ArgumentException(
+                                $"Winner #{winnerId} for pot {pot.Index} is not eligible for that pot.",
+                                nameof(winnersByPot));
+                        }
+                    }
+                }
+            }
 
             foreach (BettingPot pot in pots)
             {
@@ -255,10 +437,13 @@ namespace PokerEngine.Domain.Betting
                 {
                     player.Payout(payout);
                 }
+
+                player.ResetForNextRound();
             }
 
             IReadOnlyList<BettingPlayer> nextPlayers = Players
                 .Where(player => player.RemainingStack > 0)
+                .Select(player => new BettingPlayer(player.Id, player.RemainingStack, BettingPlayerStatus.Pending))
                 .ToList();
 
             Status = BettingRoundStatus.Settled;

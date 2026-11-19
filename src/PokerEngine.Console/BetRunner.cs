@@ -7,19 +7,19 @@ namespace PokerEngine.Console
     {
         public static void Help()
         {
-            MSC.WriteLine("BET: 'bet [players]' - Starts an interactive betting round for [players] (2+).");
+            HoldemRunner.WriteHelp("BET: 'bet [players]' - Starts an interactive betting round for [players] (2+).");
         }
 
         private static void ActionHelp()
         {
-            MSC.WriteLine("  Actions during a betting round:");
-            MSC.WriteLine("    - 'CHECK'/'PASS'/'P'   : Check (pass) when no bet has been placed.");
-            MSC.WriteLine("    - 'CALL'/'C'           : Match the current highest bet.");
-            MSC.WriteLine("    - '[amount]'           : Enter total contribution to open or raise.");
-            MSC.WriteLine("    - 'ALLIN'/'ALL-IN'/'A' : Go all-in with all remaining chips.");
-            MSC.WriteLine("    - 'FOLD'/'F'           : Fold current hand.");
-            MSC.WriteLine("    - 'HELP'/'H'           : Show betting actions help.");
-            MSC.WriteLine("    - 'QUIT'/'EXIT'/'Q'    : Quit the betting round.");
+            HoldemRunner.WriteHelp("  Actions during a betting round:");
+            HoldemRunner.WriteHelp("    - 'CHECK'/'PASS'/'P'   : Check (pass) when no bet has been placed.");
+            HoldemRunner.WriteHelp("    - 'CALL'/'C'           : Match the current highest bet.");
+            HoldemRunner.WriteHelp("    - '[amount]'           : Enter total contribution to open or raise.");
+            HoldemRunner.WriteHelp("    - 'ALLIN'/'ALL-IN'/'A' : Go all-in with all remaining chips.");
+            HoldemRunner.WriteHelp("    - 'FOLD'/'F'           : Fold current hand.");
+            HoldemRunner.WriteHelp("    - 'HELP'/'H'           : Show betting actions help.");
+            HoldemRunner.WriteHelp("    - 'QUIT'/'EXIT'/'Q'    : Quit the betting round.");
         }
 
         public static void Run(ushort players)
@@ -36,16 +36,76 @@ namespace PokerEngine.Console
             Betting(initialPlayers);
         }
 
-        private static void Betting(IReadOnlyList<BettingPlayer> players)
+        public static IReadOnlyCollection<ushort>? ResolvePotWinnerSelection(BettingPot pot, string? rawWinners)
+        {
+            ArgumentNullException.ThrowIfNull(pot);
+
+            if (pot.EligiblePlayers.Count == 1)
+            {
+                return new ushort[] { pot.EligiblePlayers[0] };
+            }
+
+            if (string.IsNullOrWhiteSpace(rawWinners)
+                || rawWinners.Equals("CONTINUE", StringComparison.OrdinalIgnoreCase)
+                || rawWinners.Equals("NEXT", StringComparison.OrdinalIgnoreCase)
+                || rawWinners.Equals("POT", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            var parsedWinners = rawWinners
+                .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .Select(winner =>
+                {
+                    if (!ushort.TryParse(winner, out ushort playerId))
+                    {
+                        throw new ArgumentException($"Invalid player id '{winner}'. Use numeric ids only.");
+                    }
+
+                    return playerId;
+                })
+                .ToArray();
+
+            if (parsedWinners.Length == 0)
+            {
+                throw new ArgumentException("At least one winner must be informed.");
+            }
+
+            var duplicateWinners = parsedWinners
+                .GroupBy(player => player)
+                .Where(group => group.Count() > 1)
+                .Select(group => group.Key)
+                .ToList();
+
+            if (duplicateWinners.Count > 0)
+            {
+                throw new ArgumentException($"Winner ids must be unique. Duplicates: {string.Join(", ", duplicateWinners.Select(playerId => $"#{playerId}"))}.");
+            }
+
+            var invalidWinners = parsedWinners
+                .Where(playerId => !pot.EligiblePlayers.Contains(playerId))
+                .ToArray();
+
+            if (invalidWinners.Length > 0)
+            {
+                throw new ArgumentException($"Invalid winner ids for this pot: {string.Join(", ", invalidWinners.Select(playerId => $"#{playerId}"))}. Eligible players are {string.Join(", ", pot.EligiblePlayers.Select(playerId => $"#{playerId}"))}.");
+            }
+
+            return parsedWinners;
+        }
+
+        private static void Betting(IReadOnlyList<BettingPlayer> players, bool preserveCurrentPotState = false)
         {
             if (players.Count < 2)
             {
                 throw new ArgumentException("Betting requires at least two players.", nameof(players));
             }
 
-            BettingRound round = new(players);
+            BettingRound round = preserveCurrentPotState
+                ? BettingRound.CreateContinuationRound(players)
+                : new BettingRound(players);
 
-            MSC.WriteLine($"Started a betting round with {players.Count} players, each holding the current stack values.");
+            HoldemRunner.WriteInfo($"Started a betting round with {players.Count} players, each holding the current stack values.");
 
             BettingPlayer? playerToAct = round.Next();
             while (playerToAct != null)
@@ -55,13 +115,13 @@ namespace PokerEngine.Console
                     long currentBiggestBet = round.BiggestContribution;
                     long amountToCall = Math.Max(0, currentBiggestBet - playerToAct.Contribution);
 
-                    MSC.WriteLine($"Player #{playerToAct.Id} stack: {playerToAct.RemainingStack} | Current highest bet: {currentBiggestBet}");
-                    MSC.Write("Enter action (or 'help'): ");
+                    HoldemRunner.WriteInfo($"Player #{playerToAct.Id} stack: {playerToAct.RemainingStack} | Current highest bet: {currentBiggestBet}");
+                    HoldemRunner.WriteWaiting("Enter action (or 'help'): ");
                     string? action = MSC.ReadLine();
 
                     if (string.IsNullOrWhiteSpace(action))
                     {
-                        MSC.WriteLine("Please enter a valid action (type 'help' for options).");
+                        HoldemRunner.WriteInfo("Please enter a valid action (type 'help' for options).");
                         continue;
                     }
 
@@ -82,7 +142,7 @@ namespace PokerEngine.Console
                         || action.Equals("F", StringComparison.OrdinalIgnoreCase))
                     {
                         round.Fold(playerToAct.Id);
-                        MSC.WriteLine($"Player #{playerToAct.Id} folded.");
+                        HoldemRunner.WriteInfo($"Player #{playerToAct.Id} folded.");
                         break;
                     }
 
@@ -93,12 +153,12 @@ namespace PokerEngine.Console
                         try
                         {
                             round.Check(playerToAct.Id);
-                            MSC.WriteLine($"Player #{playerToAct.Id} checked.");
+                            HoldemRunner.WriteInfo($"Player #{playerToAct.Id} checked.");
                             break;
                         }
                         catch (Exception ex)
                         {
-                            MSC.WriteLine(ex.Message);
+                            HoldemRunner.WriteInfo(ex.Message);
                         }
 
                         continue;
@@ -110,12 +170,12 @@ namespace PokerEngine.Console
                         try
                         {
                             round.Call(playerToAct.Id);
-                            MSC.WriteLine($"Player #{playerToAct.Id} called and contributed {amountToCall} chips.");
+                            HoldemRunner.WriteInfo($"Player #{playerToAct.Id} called and contributed {amountToCall} chips.");
                             break;
                         }
                         catch (Exception ex)
                         {
-                            MSC.WriteLine(ex.Message);
+                            HoldemRunner.WriteInfo(ex.Message);
                         }
 
                         continue;
@@ -129,43 +189,45 @@ namespace PokerEngine.Console
                         {
                             long allInAmount = playerToAct.RemainingStack;
                             round.AllIn(playerToAct.Id);
-                            MSC.WriteLine($"Player #{playerToAct.Id} went all-in with {allInAmount} chips.");
+                            HoldemRunner.WriteInfo($"Player #{playerToAct.Id} went all-in with {allInAmount} chips.");
                             break;
                         }
                         catch (Exception ex)
                         {
-                            MSC.WriteLine(ex.Message);
+                            HoldemRunner.WriteInfo(ex.Message);
                         }
 
                         continue;
                     }
 
-                    if (!long.TryParse(action, out long targetContribution) || targetContribution <= 0)
+                    if (!long.TryParse(action, out long raiseAmount) || raiseAmount <= 0)
                     {
-                        MSC.WriteLine("Contribution must be a positive integer.");
+                        HoldemRunner.WriteInfo("Contribution must be a positive integer.");
                         continue;
                     }
 
                     try
                     {
-                        if (currentBiggestBet > 0 && targetContribution < currentBiggestBet)
+                        long requiredToCall = Math.Max(0, currentBiggestBet - playerToAct.Contribution);
+                        if (requiredToCall > 0 && raiseAmount < requiredToCall)
                         {
-                            throw new ArgumentOutOfRangeException(nameof(targetContribution), $"The target contribution must be at least {currentBiggestBet} to call or raise.");
+                            throw new ArgumentOutOfRangeException(nameof(raiseAmount), $"The raised amount must be at least {requiredToCall} to call or raise.");
                         }
 
-                        long contribution = targetContribution - playerToAct.Contribution;
-                        if (contribution <= 0)
+                        if (requiredToCall > 0 && raiseAmount == requiredToCall)
                         {
-                            throw new ArgumentOutOfRangeException(nameof(targetContribution), "The target contribution must be greater than the player's current contribution.");
+                            round.Call(playerToAct.Id);
+                            HoldemRunner.WriteInfo($"Player #{playerToAct.Id} called and contributed {requiredToCall} chips.");
+                            break;
                         }
 
-                        round.Contribute(playerToAct.Id, contribution);
-                        MSC.WriteLine($"Player #{playerToAct.Id} contributed {contribution} chips and now has {targetContribution} total chips in the pot.");
+                        round.Contribute(playerToAct.Id, raiseAmount);
+                        HoldemRunner.WriteInfo($"Player #{playerToAct.Id} contributed {raiseAmount} chips and now has {playerToAct.Contribution} total chips in the pot.");
                         break;
                     }
                     catch (Exception ex)
                     {
-                        MSC.WriteLine(ex.Message);
+                        HoldemRunner.WriteInfo(ex.Message);
                     }
                 }
 
@@ -175,14 +237,14 @@ namespace PokerEngine.Console
             round.Close();
             IReadOnlyList<BettingPot> pots = round.GetPots();
 
-            MSC.WriteLine("Betting round closed. Pots:");
+            HoldemRunner.WriteInfo("Betting round closed. Pots:");
             foreach (BettingPot pot in pots)
             {
                 string eligiblePlayers = pot.EligiblePlayers.Count == 0
                     ? "none"
                     : string.Join(", ", pot.EligiblePlayers.Select(playerId => $"#{playerId}"));
 
-                MSC.WriteLine($"Pot #{pot.Index}: {pot.Amount} chips | contributors: {string.Join(", ", pot.Contributors.Select(playerId => $"#{playerId}"))} | eligible: {eligiblePlayers}");
+                HoldemRunner.WriteInfo($"Pot #{pot.Index}: {pot.Amount} chips | contributors: {string.Join(", ", pot.Contributors.Select(playerId => $"#{playerId}"))} | eligible: {eligiblePlayers}");
             }
 
             var winnersByPot = new Dictionary<int, IReadOnlyCollection<ushort>>();
@@ -190,64 +252,40 @@ namespace PokerEngine.Console
             {
                 while (true)
                 {
-                    MSC.WriteLine($"Pot #{pot.Index} is contested by players: {string.Join(", ", pot.EligiblePlayers.Select(playerId => $"#{playerId}"))}.");
-                    if (pot.EligiblePlayers.Count == 1)
-                    {
-                        MSC.WriteLine($"Only one player is eligible for this pot, so Player #{pot.EligiblePlayers[0]} is the winner by default.");
-                        winnersByPot[pot.Index] = new ushort[] { pot.EligiblePlayers[0] };
-                        break;
-                    }
-                    MSC.Write("Inform the winning player id(s) for this pot (comma separated, or press Enter to select the first eligible player): ");
+                    HoldemRunner.WriteInfo($"Pot #{pot.Index} is contested by players: {string.Join(", ", pot.EligiblePlayers.Select(playerId => $"#{playerId}"))}.");
+                    HoldemRunner.WriteWaiting("Inform the winning player id(s) for this pot (comma separated, or press Enter/'continue' to keep the pot open for the next round): ");
                     string? rawWinners = MSC.ReadLine();
+
+                    if (Program.IsQuitCommand(rawWinners))
+                    {
+                        MSC.WriteLine("Quit requested. Exiting the betting flow.");
+                        return;
+                    }
 
                     try
                     {
-                        IReadOnlyCollection<ushort> winners;
-                        if (string.IsNullOrWhiteSpace(rawWinners))
+                        IReadOnlyCollection<ushort>? winners = ResolvePotWinnerSelection(pot, rawWinners);
+                        if (winners is null)
                         {
-                            winners = new ushort[] { pot.EligiblePlayers[0] };
-                        }
-                        else
-                        {
-                            var parsedWinners = rawWinners
-                                .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-                                .Select(winner =>
-                                {
-                                    if (!ushort.TryParse(winner, out ushort playerId))
-                                    {
-                                        throw new ArgumentException($"Invalid player id '{winner}'. Use numeric ids only.");
-                                    }
-
-                                    return playerId;
-                                })
-                                .ToArray();
-
-                            if (parsedWinners.Length == 0)
-                            {
-                                throw new ArgumentException("At least one winner must be informed.");
-                            }
-
-                            var duplicateWinners = parsedWinners
-                                .GroupBy(player => player)
-                                .Where(group => group.Count() > 1)
-                                .Select(group => group.Key)
+                            HoldemRunner.WriteInfo("Pot continues to the next betting round without a final winner.");
+                            IReadOnlyList<BettingPlayer> continuedPlayers = round.Players
+                                .Where(player => player.RemainingStack > 0)
                                 .ToList();
 
-                            if (duplicateWinners.Count > 0)
+                            if (continuedPlayers.Count < 2)
                             {
-                                throw new ArgumentException($"Winner ids must be unique. Duplicates: {string.Join(", ", duplicateWinners.Select(playerId => $"#{playerId}"))}.");
+                                HoldemRunner.WriteInfo("Betting ended because fewer than two players still have chips.");
+                                return;
                             }
 
-                            var invalidWinners = parsedWinners
-                                .Where(playerId => !pot.EligiblePlayers.Contains(playerId))
-                                .ToArray();
-
-                            if (invalidWinners.Length > 0)
+                            HoldemRunner.WriteInfo("Starting a new betting round with the current players and chip values.");
+                            foreach (BettingPlayer player in continuedPlayers)
                             {
-                                throw new ArgumentException($"Invalid winner ids for this pot: {string.Join(", ", invalidWinners.Select(playerId => $"#{playerId}"))}. Eligible players are {string.Join(", ", pot.EligiblePlayers.Select(playerId => $"#{playerId}"))}.");
+                                HoldemRunner.WriteInfo($"Player #{player.Id} starts with {player.RemainingStack} chips.");
                             }
 
-                            winners = parsedWinners;
+                            Betting(continuedPlayers, preserveCurrentPotState: true);
+                            return;
                         }
 
                         winnersByPot[pot.Index] = winners;
@@ -262,26 +300,26 @@ namespace PokerEngine.Console
 
             BettingSettlement settlement = round.Settle(winnersByPot);
 
-            MSC.WriteLine("Settlement payouts:");
+            HoldemRunner.WriteInfo("Settlement payouts:");
             foreach (BettingPayout payout in settlement.Payouts.OrderBy(payout => payout.PotIndex).ThenBy(payout => payout.PlayerId))
             {
-                MSC.WriteLine($"Pot #{payout.PotIndex}: Player #{payout.PlayerId} receives {payout.Amount} chips.");
+                HoldemRunner.WriteInfo($"Pot #{payout.PotIndex}: Player #{payout.PlayerId} receives {payout.Amount} chips.");
             }
 
-            MSC.WriteLine($"Total pot: {settlement.TotalPot}; total payouts: {settlement.TotalPayout}.");
+            HoldemRunner.WriteInfo($"Total pot: {settlement.TotalPot}; total payouts: {settlement.TotalPayout}.");
 
             IReadOnlyList<BettingPlayer> nextPlayers = settlement.NextPlayers;
 
             if (nextPlayers.Count < 2)
             {
-                MSC.WriteLine("Betting ended because fewer than two players still have chips.");
+                HoldemRunner.WriteInfo("Betting ended because fewer than two players still have chips.");
                 return;
             }
 
-            MSC.WriteLine("Starting a new betting round with the current players and chip values.");
+            HoldemRunner.WriteInfo("Starting a new betting round with the current players and chip values.");
             foreach (BettingPlayer player in nextPlayers)
             {
-                MSC.WriteLine($"Player #{player.Id} starts with {player.RemainingStack} chips.");
+                HoldemRunner.WriteInfo($"Player #{player.Id} starts with {player.RemainingStack} chips.");
             }
             Betting(nextPlayers);
         }
@@ -294,22 +332,22 @@ namespace PokerEngine.Console
 
         private static void QuitBettingRound(BettingRound round)
         {
-            MSC.WriteLine("Betting round quit. Current players and pots:");
+            HoldemRunner.WriteInfo("Betting round quit. Current players and pots:");
 
             foreach (BettingPlayer player in round.Players)
             {
-                MSC.WriteLine($"Player #{player.Id}: status={player.Status}, remaining={player.RemainingStack}, contribution={player.Contribution}");
+                HoldemRunner.WriteInfo($"Player #{player.Id}: status={player.Status}, remaining={player.RemainingStack}, contribution={player.Contribution}");
             }
 
             PrintCurrentPots(round);
 
             if (CanContinueBettingRound(round.Players))
             {
-                MSC.WriteLine("A new betting round can start because more than one player still has chips.");
+                HoldemRunner.WriteInfo("A new betting round can start because more than one player still has chips.");
             }
             else
             {
-                MSC.WriteLine("A new betting round cannot start because fewer than two players still have chips.");
+                HoldemRunner.WriteInfo("A new betting round cannot start because fewer than two players still have chips.");
             }
         }
 
@@ -324,7 +362,7 @@ namespace PokerEngine.Console
 
             if (levels.Count == 0)
             {
-                MSC.WriteLine("Current pots: none");
+                HoldemRunner.WriteInfo("Current pots: none");
                 return;
             }
 
@@ -342,7 +380,7 @@ namespace PokerEngine.Console
                     .Where(playerId => round.Players.Single(player => player.Id == playerId).Status != BettingPlayerStatus.Folded)
                     .ToList();
 
-                MSC.WriteLine($"Current pot #{index}: {amount} chips | contributors: {string.Join(", ", contributors.Select(playerId => $"#{playerId}"))} | eligible: {string.Join(", ", eligiblePlayers.Select(playerId => $"#{playerId}"))}");
+                HoldemRunner.WriteInfo($"Current pot #{index}: {amount} chips | contributors: {string.Join(", ", contributors.Select(playerId => $"#{playerId}"))} | eligible: {string.Join(", ", eligiblePlayers.Select(playerId => $"#{playerId}"))}");
                 previousLevel = level;
             }
         }

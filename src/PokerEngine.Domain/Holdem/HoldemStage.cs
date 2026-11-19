@@ -1,4 +1,4 @@
-namespace PokerEngine.Domain.Models
+namespace PokerEngine.Domain.Holdem
 {
     public enum HoldemStage
     {
